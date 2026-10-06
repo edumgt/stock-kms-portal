@@ -12,3 +12,7 @@
 ![alt text](image.png)
 
 ## 4시까지의 작업이 원할히 진행되면, 람다, API GW 를 붙여보는 작업을 추가합니다.
+## 2026-10-06 GitHub Actions 정비 (에이전트, 미커밋)
+- ECR 경로 제거: `.github/workflows/cd-ecr.yml`, `docker-compose.ecr.yml` 삭제(git rm). GitHub 에서 "CD — Build to ECR and Deploy" disable.
+- `cd.yml` rsync 에 `--exclude 'data/lean-workflows'`, `--filter 'protect data/'` 추가(domain-rag-lab 과 동일).
+- 시크릿: `EC2_SSH_PRIVATE_KEY`(fd.edumgt.co.kr.pem)·`EC2_USER=ubuntu` 만 등록. `EC2_HOST`/`EC2_APP_DIR` 은 **의도적으로 비움** — 현재 `cd.yml` 은 `-p domain-rag-lab -f docker-compose.prod.yml`(자체 Caddy 80/443) 이라 fd 서버에 그대로 올리면 pr 스택과 충돌. 대상 서버·compose·프로젝트명 결정 후 등록(domain-rag-lab todo.md 8-1 참고).
