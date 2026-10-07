@@ -44,6 +44,8 @@ def rag_status():
     """Expose the local model configuration and sampled host CPU utilization."""
     endpoint = urlparse(settings.vllm_base_url)
     provider = "Ollama (로컬)" if "ollama" in (endpoint.hostname or "") else "OpenAI 호환 API"
+    if settings.llm_transport == "ssh":
+        provider = "Docker Ollama (사설 SSH)"
     return {
         "provider": provider,
         "model": settings.vllm_model,
