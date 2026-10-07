@@ -64,6 +64,26 @@ curl -s -X POST -H 'Content-Type: application/json' -d '{"tickers":["005930.KS",
 
 같은 블록이 pr(`frontend/style.css`)·fd(`public/css/app.css`)·st(`frontend/css/style.css`, 가이드 주석은 `kis-practice.css` 에도)·iv(`frontend/style.css`, `investment-native/styles.css`) 에 들어 있다. 캐시 버전이 있는 링크는 각 페이지에서 갱신 필요(st `style.css?v=…`, pr/iv `style.css?v=…`); fd `/css` 는 no-cache.
 
+
+### 6-5. 2026-10-07 공통 LLM 모델 qwen2.5:7b → 3b 교체 (사용자 요청)
+
+**배경**: fd 호스트는 2 vCPU · 8GB 를 15개 컨테이너가 공유한다. 7b(4.7GB)는 메모리의 절반 이상을 차지하고 콜드 로딩만 30초대였다.
+
+**fd Ollama 실측** (호스트 load 1.27, num_ctx 2048 · num_predict 160, 앱과 같은 조건)
+
+| 모델 | 콜드(로딩 포함) | 웜 | 생성 속도 |
+|------|------|------|------|
+| qwen2.5:3b | 40.7초 | 16.6초 (33토큰) | 1.99 tok/s |
+| qwen2.5:1.5b | 53.2초 | 39.4초 (160토큰) | 4.06 tok/s |
+
+토큰당 속도는 1.5b 가 3b 의 약 2배다. 160토큰 답변 기준 3b ≈ 80초, 1.5b ≈ 39초로 추정된다.
+
+**변경**: `app/services/qwen_remote.py`·`chart_llm.py` 의 하드코딩 `MODEL` 을 `os.environ.get('QWEN_MODEL', 'qwen2.5:3b')` 로(다음 교체는 설정만으로). `app/core/config.py` `vllm_model`, `deploy/st-iv/compose.yml` 에 `QWEN_MODEL`·`VLLM_MODEL` 3b, `.env*.example` 의 vLLM 경로 `Qwen/Qwen2.5-3B-Instruct`.
+
+**주의**: 모델 교체만으로는 체감이 크게 좋아지지 않는다. `num_predict` 를 100 이하로 줄이고 `keep_alive` 를 30분 이상으로 두어 콜드 로딩을 피하는 쪽이 효과가 크다. 벤치마크 시 `ollama run` CLI 는 토큰 상한이 없어 수천 토큰을 생성하며 호스트를 포화시킨다(2026-10-07 실제 발생). HTTP API 에 `num_predict` 를 주고 측정할 것.
+
+**7b 삭제 순서**: 배포 전에 지우면 구 코드가 도는 컨테이너가 깨진다. ① 이 변경 배포 → ② `sudo docker exec fin-ai-ollama ollama rm qwen2.5:7b`(4.7GB 회수).
+
 ## 7. 사용자 의사결정 필요 항목
 
 | # | 결정할 것 | 선택지와 영향 | 에이전트 권고 |

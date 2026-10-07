@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     llm_transport: str = "http"
     vllm_base_url: str = "http://localhost:8001/v1"
-    vllm_model: str = "qwen2.5:7b"
+    vllm_model: str = "qwen2.5:3b"
     vllm_api_key: str = "EMPTY"
 
     upload_dir: str = "/app/data/uploads"

@@ -63,7 +63,8 @@ services:
       REDIS_PORT: 6379
       QDRANT_HOST: kms-qdrant
       QDRANT_PORT: 6333
-      VLLM_MODEL: qwen2.5:7b
+      VLLM_MODEL: qwen2.5:3b
+      QWEN_MODEL: qwen2.5:3b
       LLM_TRANSPORT: ssh
       LLM_TIMEOUT_SECONDS: 600
       LEAN_RUNNER: remote
