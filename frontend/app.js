@@ -1451,7 +1451,7 @@ KOSDAQ|웹젠|게임`,
   function renderHome() {
     $messages.innerHTML = '<article class="content-page investment-native-dashboard-page"><div id="investmentNativeDashboard"><div class="backtest-empty"><i class="fa-solid fa-spinner fa-spin"></i><p>차트 대시보드를 준비하고 있습니다.</p></div></div></article>';
     const mount = document.getElementById('investmentNativeDashboard');
-    import('/static/investment-native/js/views/home.js')
+    import('/static/investment-native/js/views/home.js?v=20261007-lightweight')
       .then(({ homeView }) => {
         if (state.activeView === 'home' || state.activeView === 'chart-drawing') homeView(mount);
       })

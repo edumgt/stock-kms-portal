@@ -1,3 +1,53 @@
+// TradingView Lightweight Charts™ (Apache-2.0); attribution logo stays enabled.
+class HomeFinancialChart {
+  constructor(element, config) { this.element=element; this.config=config; this.chart=null; this.observer=null; }
+  async render() {
+    const L=window.LightweightCharts;
+    if (!L) throw new Error('차트 라이브러리를 불러오지 못했습니다.');
+    const c=this.config;
+    const height=typeof c.chart.height==='number' ? c.chart.height : Math.max(120,this.element.clientHeight);
+    this.element.replaceChildren();
+    this.chart=L.createChart(this.element,{width:Math.max(1,this.element.clientWidth),height,
+      layout:{background:{type:'solid',color:'#fff'},textColor:'#64748b',fontFamily:'Pretendard, sans-serif',attributionLogo:true},
+      grid:{vertLines:{color:'#f1f5f9'},horzLines:{color:'#f1f5f9'}},
+      timeScale:{timeVisible:c.xaxis?.labels?.format?.includes('HH'),secondsVisible:false},
+      localization:{locale:'ko-KR'},rightPriceScale:{borderColor:'#e2e8f0'},crosshair:{mode:L.CrosshairMode.Normal}});
+    const normalized=(data,candle=false)=>{
+      const byTime=new Map();
+      for (const p of data) {
+        const time=Math.floor(Number(p.x)/1000);
+        if (!Number.isFinite(time) || (candle ? !Array.isArray(p.y)||!p.y.every(Number.isFinite) : !Number.isFinite(p.y))) continue;
+        byTime.set(time,candle ? {time,open:p.y[0],high:p.y[1],low:p.y[2],close:p.y[3]} : {time,value:p.y,...(p.fillColor?{color:p.fillColor}:{})});
+      }
+      return [...byTime.values()].sort((a,b)=>a.time-b.time);
+    };
+    let candles=null;
+    c.series.forEach((spec,i)=>{
+      if (spec.type==='scatter') return;
+      const color=c.colors?.[i] || '#2563eb';
+      let series;
+      if(spec.type==='candlestick') {
+        series=this.chart.addSeries(L.CandlestickSeries,{upColor:UPWARD_COLOR,downColor:DOWNWARD_COLOR,borderVisible:false,wickUpColor:UPWARD_COLOR,wickDownColor:DOWNWARD_COLOR});
+        candles=series;
+      } else if(spec.type==='bar') {
+        const volume=spec.name==='거래량';
+        series=this.chart.addSeries(L.HistogramSeries,{color,priceScaleId:volume?'volume':'right',priceFormat:{type:volume?'volume':'price'},lastValueVisible:false,priceLineVisible:false});
+        if(volume) {series.priceScale().applyOptions({scaleMargins:{top:0.82,bottom:0}});this.chart.priceScale('right').applyOptions({scaleMargins:{top:0.08,bottom:0.22}});}
+      } else series=this.chart.addSeries(L.LineSeries,{color,lineWidth:2,title:spec.name,priceLineVisible:false,lastValueVisible:false});
+      series.setData(normalized(spec.data,spec.type==='candlestick'));
+      if(spec.name==='RSI') for (const price of [30,70]) series.createPriceLine({price,color:'#94a3b8',lineWidth:1,lineStyle:L.LineStyle.Dashed,axisLabelVisible:true,title:''});
+    });
+    if(candles) {
+      const markers=c.series.filter(s=>s.type==='scatter').flatMap(s=>normalized(s.data).map(p=>({time:p.time,position:s.name==='매수'?'belowBar':'aboveBar',color:s.name==='매수'?BUY_SIGNAL_COLOR:SELL_SIGNAL_COLOR,shape:s.name==='매수'?'arrowUp':'arrowDown',text:s.name}))).sort((a,b)=>a.time-b.time);
+      this.markers=L.createSeriesMarkers(candles,markers);
+    }
+    this.chart.timeScale().fitContent();
+    this.observer=new ResizeObserver(()=>{if(this.chart && this.element.isConnected) this.chart.resize(Math.max(1,this.element.clientWidth),typeof c.chart.height==='number'?height:Math.max(120,this.element.clientHeight));});
+    this.observer.observe(this.element);
+  }
+  destroy() { this.observer?.disconnect();this.chart?.remove();this.chart=null; }
+}
+
 const HOME_MARKETS = [
   { id: 'kospi', name: 'KOSPI', ticker: '^KS11', color: '#0078d4' },
   { id: 'kosdaq', name: 'KOSDAQ', ticker: '^KQ11', color: '#8b5cf6' },
@@ -494,11 +544,11 @@ export function homeView(container) {
 
       const series = computeChartSeries(ohlcv, data.display_from || null);
 
-      const chart = new ApexCharts(chartEl, buildCandleConfig(market, series, period, 250));
+      const chart = new HomeFinancialChart(chartEl, buildCandleConfig(market, series, period, 250));
       charts.set(id, chart);
       await chart.render();
 
-      const macdChart = new ApexCharts(macdEl, buildMacdConfig(series, period, 110));
+      const macdChart = new HomeFinancialChart(macdEl, buildMacdConfig(series, period, 110));
       macdCharts.set(id, macdChart);
       await macdChart.render();
 
@@ -546,13 +596,13 @@ export function homeView(container) {
       const series = computeChartSeries(ohlcv, data.display_from || null);
       trend.innerHTML = trendAnalysis(ohlcv, interval);
 
-      modalChart = new ApexCharts(chartEl, buildCandleConfig(market, series, period, '100%', interval));
+      modalChart = new HomeFinancialChart(chartEl, buildCandleConfig(market, series, period, '100%', interval));
       await modalChart.render();
 
-      modalMacdChart = new ApexCharts(macdEl, buildMacdConfig(series, period, '100%', interval));
+      modalMacdChart = new HomeFinancialChart(macdEl, buildMacdConfig(series, period, '100%', interval));
       await modalMacdChart.render();
 
-      modalRsiChart = new ApexCharts(rsiEl, buildRsiConfig(series, period, '100%', interval));
+      modalRsiChart = new HomeFinancialChart(rsiEl, buildRsiConfig(series, period, '100%', interval));
       await modalRsiChart.render();
 
       loading.style.display = 'none';
