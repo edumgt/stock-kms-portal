@@ -14,6 +14,7 @@ from app.api.routes.chat import router as chat_router
 from app.api.routes.health import router as health_router
 from app.api.routes.ingest import router as ingest_router
 from app.api.routes.market import router as market_router
+from app.api.routes.home_dashboard import router as home_dashboard_router
 from app.api.routes.backtest import router as backtest_router
 from app.api.routes.simulation import router as simulation_router
 from app.api.routes.auth import router as auth_router
@@ -89,6 +90,8 @@ async def prevent_frontend_cache(request: Request, call_next):
 app.include_router(health_router)
 app.include_router(ingest_router)
 app.include_router(market_router)
+# 홈 대시보드 차트·시세: 아래 /api/{path} 프록시(investment-backend)보다 먼저 등록해 포털이 직접 응답한다
+app.include_router(home_dashboard_router)
 app.include_router(backtest_router)
 app.include_router(simulation_router)
 app.include_router(auth_router)

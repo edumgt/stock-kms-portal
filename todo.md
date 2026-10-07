@@ -18,12 +18,37 @@ domain-rag-lab 포크 + investment-analysis 웹앱 통합 포털(`test.md` 과�
 
 **검증**: `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/cd.yml'))"` OK. 배포는 대상 미확정으로 실행하지 않음.
 
+### 6-2. 2026-10-07 iv.edumgt.co.kr 홈 대시보드 차트 502 → 포털 자체 API 로 대체 (사용자 요청)
+
+**진단**: 홈(`investment-native/js/views/home.js`)의 지수 카드 4개는 `/api/home/market-candle`, 시세 패널은 `POST /api/market/snapshot`, 확대 모달 검색은 `/api/home/chart-search` 를 부른다. `/api/*` 전체는 `app/main.py` 의 프록시가 `investment_api_base`(`http://investment-backend:8000`) 로 넘기는데 st 서버 iv 스택(`/opt/stock-kms-portal`, compose 프로젝트 `stock-kms-portal`, `deploy/st-iv/compose.yml`)에 그 컨테이너가 없다(K2) → 전부 502 "투자 분석 API에 연결하지 못했습니다". 서버 코드는 로컬과 동일(md5 일치)했다.
+
+| 변경 | 내용 |
+|------|------|
+| `app/api/routes/home_dashboard.py` 신설 | `integration-src/investment-backend/main.py` 의 세 엔드포인트를 이식. Yahoo chart JSON(httpx, `/market/intraday` 와 같은 방식)으로 받아 yfinance·pandas 미사용. 응답 형식 동일(`ohlcv[{date,o,h,l,c,v}]`, `is_simulated`, `display_from`, `interval` / `items[{ticker,label,value,change_pct,status}]` / `items[{ticker,name,exchange}]`). 3분봉은 1분봉 집계, 주·월·연봉은 일봉 집계. 캔들 60초·시세 30초 캐시. Yahoo 실패 시 원본과 같은 시뮬레이션 봉(`is_simulated=true`, 화면 "시뮬레이션 데이터") |
+| `app/main.py` | 라우터를 `/api/{path}` 프록시보다 먼저 등록. 나머지 `/api/*`(데이터 시각화 6종, `/api/search` 등)는 여전히 프록시 → K2 결정 전까지 502 그대로 |
+| 배포 | **반영 완료(2026-10-07, 사용자 수행)** — 에이전트의 서버 배포 명령은 정책(운영 배포)으로 거부되어 사용자가 아래 명령으로 반영. 서버 파일 md5 = 로컬. 재빌드 직후 ~1분은 nginx 가 HTML 502 를 주므로 curl 확인은 컨테이너 `(healthy)` 뒤에 |
+
+```bash
+# 1) 로컬 → st 서버 파일 복사 (lumina 작업 PC에서)
+scp -i /home/ubuntu/stock-coin-trade/pr-test.pem app/main.py ubuntu@43.202.161.134:/tmp/main.py
+scp -i /home/ubuntu/stock-coin-trade/pr-test.pem app/api/routes/home_dashboard.py ubuntu@43.202.161.134:/tmp/home_dashboard.py
+# 2) 서버에서 설치 + api 컨테이너만 재빌드(pip 레이어 캐시, 1~2분)
+ssh -i /home/ubuntu/stock-coin-trade/pr-test.pem ubuntu@43.202.161.134 'sudo install -m 644 /tmp/main.py /opt/stock-kms-portal/app/main.py && sudo install -m 644 /tmp/home_dashboard.py /opt/stock-kms-portal/app/api/routes/home_dashboard.py && cd /opt/stock-kms-portal && sudo docker compose -p stock-kms-portal -f deploy/st-iv/compose.yml up -d --build api'
+# 3) 확인: 200 과 bars 수
+curl -s 'https://iv.edumgt.co.kr/api/home/market-candle?market=kospi&period=3mo' | python3 -c 'import sys,json; d=json.load(sys.stdin); print(len(d["ohlcv"]), d["is_simulated"])'
+curl -s -X POST -H 'Content-Type: application/json' -d '{"tickers":["005930.KS","AAPL"]}' https://iv.edumgt.co.kr/api/market/snapshot
+```
+
+**검증(로컬, 실데이터)**: kospi/kosdaq/nasdaq/sp500 3mo·1y 일봉 87~277봉, `^KS11` 5분봉·3분봉 당일, 주봉 267·월봉 123, 미존재 티커는 시뮬레이션 폴백, 시세 14종목 전부 ok(0.5초), 검색 "삼성"→삼성전자·삼성바이오로직스·삼성물산·삼성SDI. 라우터 단독 FastAPI 앱 + httpx ASGI 로 확인(포털 `app.main` 은 import 시 DB 연결).
+
+**남은 것(K2)**: 데이터 시각화 메뉴(세계 시장·거래량/섹터 클라우드·그룹사 네트워크·투자 성향 트리·자산배분 국면)와 상단 종목 검색(`/api/search`)은 investment-backend(MongoDB) 컨테이너가 있어야 한다. 선택: ① `integration-src/investment-backend` 를 st-iv compose 에 `investment-backend` 서비스로 추가 ② 자주 쓰는 것만 이 라우터처럼 이식. 이 세션은 대시보드(홈)만 복구.
+
 ## 7. 사용자 의사결정 필요 항목
 
 | # | 결정할 것 | 선택지와 영향 | 에이전트 권고 |
 |---|-----------|---------------|---------------|
 | K1 | 배포 대상 서버·compose 방식 | 현재 `cd.yml` 은 `-p domain-rag-lab -f docker-compose.prod.yml`(자체 Caddy 80/443). ① fd 서버(43.201.229.188)에 올리면 pr 스택(프로젝트명 `domain-rag-lab`)과 **충돌**. ② st 서버(43.202.161.134)는 nginx+certbot·에이전트 SSH 불가·50GB. ③ 별도 EC2 | fd 서버 + pr-edumgt 방식(`deploy/<name>/compose.yml`, 호스트 포트 없음, shared-net alias, Caddy 블록 추가, `-p stock-kms-portal`). 결정 후 `EC2_HOST`/`EC2_APP_DIR` 등록·`cd.yml` compose 명령 교체 |
-| K2 | 레거시 `/api/*` 프록시 대상 investment-backend(MongoDB 필요) | 컨테이너 정의 없음 → 별도 compose 작성 vs 해당 메뉴 제거 | 과제 범위면 제거, 운영이면 compose 추가 |
+| K2 | 레거시 `/api/*` 프록시 대상 investment-backend(MongoDB 필요) | 컨테이너 정의 없음 → 별도 compose 작성 vs 해당 메뉴 제거. **2026-10-07 홈 대시보드 3개 경로는 포털 자체 구현으로 대체(6-2)**, 데이터 시각화 6종·`/api/search` 는 아직 502 | 과제 범위면 제거, 운영이면 compose 추가(또는 6-2 방식으로 이식) |
 | K3 | 새 호스트명 DNS | 미등록. 도메인 결정 필요 | fd Caddy 블록 추가 시점에 A 레코드 등록 |
 | K4 | domain-rag-lab 변경 추적 | 포크 이후 upstream 과 분기(`lean_reference_data` 등 누락). 주기적 머지 vs 독립 | 통합 포털 목적이면 독립, LEAN 기능 쓰면 `lean_reference_data` 만 가져오기 |
 | K5 | 변경분 커밋 | 6-1 변경 4경로 미커밋 | 기능 단위 커밋 |
@@ -35,5 +60,5 @@ domain-rag-lab 포크 + investment-analysis 웹앱 통합 포털(`test.md` 과�
 | origin/main | `25d97ba` (Enhance lesson page styles…, 2026-09-22). 10-06 fetch/pull 로컬=원격 |
 | 로컬 미커밋 | `cd.yml`(헬스체크 `--retry-connrefused`), `todo.md`(신규), `test.md`(작업 메모 → todo.md 이동). 에이전트 커밋·푸시는 분류기 거부 → 사용자 수행 |
 | 워크플로 | `CI — Lint & Test` dfaa7e1 성공. `CD — Deploy to EC2` dfaa7e1(사용자 푸시) 는 `EC2_HOST` 비어 있어 ssh-keyscan 단계에서 **의도대로 실패**(배포 안 함). ECR disable·파일 삭제 완료(a8c9b8c). 10-06 추가 수정(미커밋): 헬스체크 curl 에 `--retry-connrefused`(domain-rag-lab 과 동일 원인 선반영) |
-| 배포 서버 | **없음**. K1 결정 전까지 미배포 |
+| 배포 서버 | st 서버(43.202.161.134) `/opt/stock-kms-portal`, compose 프로젝트 `stock-kms-portal`(`deploy/st-iv/compose.yml`), nginx `deploy/st-iv/nginx.iv.conf` → https://iv.edumgt.co.kr (2026-10-07 확인, git 체크아웃 아님 — rsync/scp 로 파일 반영) |
 | 참고 | 2026-10-02 판단(메모리/domain-rag-lab 8절): fd 권고, st 부적합 |
