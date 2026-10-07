@@ -1,4 +1,4 @@
-import { homeView }            from './views/home.js';
+import { homeView }            from './views/home.js?v=20261007-qwen';
 import { serverResourcesView } from './views/serverResources.js';
 import { volumeCloudView }    from './views/volumeCloud.js';
 import { sectorCloudView }    from './views/sectorCloud.js';

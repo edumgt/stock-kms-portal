@@ -328,3 +328,11 @@ async def home_chart_search(q: str = Query("")) -> dict[str, Any]:
             if lowered in config["ticker"].lower() or lowered in config["name"].lower():
                 items.append({"ticker": config["ticker"], "name": config["name"], "exchange": ""})
     return {"items": items[:12]}
+
+
+from app.services.chart_llm import ChartAnalysisRequest, analyze_chart
+
+
+@router.post('/home/chart-analysis')
+def home_chart_analysis(payload: ChartAnalysisRequest):
+    return analyze_chart(payload)

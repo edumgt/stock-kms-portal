@@ -22,8 +22,9 @@ class Settings(BaseSettings):
     embedding_model: str = "hashing-384"
     embedding_dim: int = 384
 
+    llm_transport: str = "http"
     vllm_base_url: str = "http://localhost:8001/v1"
-    vllm_model: str = "Qwen/Qwen2.5-7B-Instruct"
+    vllm_model: str = "qwen2.5:7b"
     vllm_api_key: str = "EMPTY"
 
     upload_dir: str = "/app/data/uploads"
@@ -59,7 +60,7 @@ class Settings(BaseSettings):
     lean_docker_image: str = "quantconnect/lean:latest"
     lean_timeout_seconds: int = 300
     # Local Ollama models on CPU need a longer generation window than vLLM/GPU.
-    llm_timeout_seconds: int = 180
+    llm_timeout_seconds: int = 600
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

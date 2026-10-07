@@ -1,3 +1,10 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   공통 타이포그래피 가이드 — pr(domain-rag-lab) · fd(lumina-invest) · st(stock-coin-trade) · iv(stock-kms-portal) 4개 사이트 통일 (2026-10-07)
+   1) 화면 타이틀(h1·h2)은 Pretendard 18px 로 고정한다(--title-size). 페이지·섹션마다 다른 크기를 쓰지 않는다.
+   2) 18px 를 초과하는 font-size 는 사용 금지. 숫자 KPI·히어로 문구도 예외 없이 18px 이하로 두고, 강조는 크기 대신 굵기(700~800)·색으로 한다.
+   3) 새 규칙을 추가할 때 font-size 는 18px 이하만 쓴다. 18px 초과가 꼭 필요하면 todo.md 7절에 결정 항목으로 올린 뒤 적용한다.
+   4) 고정 규칙은 각 사이트 주 CSS 맨 끝의 "타이틀 고정" 블록이 !important 로 적용한다(인라인·유틸리티 클래스보다 우선). 지우거나 완화하지 말 것.
+   ══════════════════════════════════════════════════════════════════════════════ */
 /* ═══════════════════════════════════════════════════════
    EDUMGT 주식상식 웹앱 — Global Styles
    Font: Pretendard (Korean), -apple-system fallback
@@ -1354,16 +1361,18 @@ body.modal-open { overflow: hidden; }
 .home-chart-modal-close { display: grid; flex: 0 0 auto; place-items: center; width: 38px; height: 38px; border-radius: 9px; color: #64748b; font-size: 1.1rem; }
 .home-chart-modal-close:hover, .home-chart-modal-close:focus-visible { color: #0f172a; background: #f1f5f9; }
 .home-chart-modal-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 14px 32px 16px; max-width: 1600px; width: 100%; margin: 0 auto; overflow-y: auto; }
-.home-chart-modal-body .home-market-chart-wrap { flex: 3 1 0; min-height: 260px; }
-.home-chart-modal-body .home-market-chart { height: 100%; }
-.home-chart-modal-body .home-market-macd-wrap { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; margin-top: 4px; padding-top: 6px; }
+/* 2026-10-07 겹침 수정: LightweightCharts 는 컨테이너 안에 px 높이의 div 를 넣는다. 차트 컨테이너가 flex:1 1 auto(내용 크기)면 그 px 만큼
+   자라 부모의 배분 높이를 넘치고, 넘친 RSI 패널이 아래 「추세 해설」 위로 겹쳤다. 컨테이너를 배분 높이 기준(flex-basis 0)으로 두고 넘침을 잘라낸다. */
+.home-chart-modal-body .home-market-chart-wrap { flex: 3 1 0; min-height: 260px; overflow: hidden; }
+.home-chart-modal-body .home-market-chart { height: 100%; overflow: hidden; }
+.home-chart-modal-body .home-market-macd-wrap { flex: 1 1 0; min-height: 150px; display: flex; flex-direction: column; margin-top: 4px; padding-top: 6px; overflow: hidden; }
 .home-chart-modal-body .home-market-macd-label { flex: 0 0 auto; }
-.home-chart-modal-macd, .home-chart-modal-rsi { flex: 1 1 auto; min-height: 0; width: 100%; }
-.home-chart-trend { flex: 0 0 auto; margin-top: 8px; padding: 10px 12px; border: 1px solid #dbeafe; border-radius: 9px; background: #f8fbff; }
+.home-chart-modal-macd, .home-chart-modal-rsi { flex: 1 1 0; min-height: 0; width: 100%; overflow: hidden; }
+.home-chart-trend { position: relative; z-index: 1; flex: 0 0 auto; margin-top: 10px; padding: 10px 12px; border: 1px solid #dbeafe; border-radius: 9px; background: #f8fbff; }
 .home-chart-trend h3 { margin: 0 0 7px; color: #1e3a8a; font-size: .76rem; }.home-chart-trend h3 i { margin-right: 4px; }.home-chart-trend h3 small { margin-left: 5px; color: #64748b; font-size: .65rem; font-weight: 600; }
 .home-chart-trend p { margin: 8px 0 0; color: #475569; font-size: .72rem; line-height: 1.55; }.home-chart-trend p strong { color: #1e3a8a; }
 .home-chart-trend-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }.home-chart-trend-kpis span { padding: 6px 8px; border-radius: 6px; background: #fff; }.home-chart-trend-kpis b, .home-chart-trend-kpis small { display: block; }.home-chart-trend-kpis b { color: #0f172a; font-size: .73rem; }.home-chart-trend-kpis small { margin-top: 2px; color: #64748b; font-size: .62rem; line-height: 1.25; }
-.home-chart-learning { flex: 0 0 auto; margin-top: 9px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; }.home-chart-learning > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }.home-chart-learning h3 { margin: 0; color: #334155; font-size: .8rem; }.home-chart-learning h3 i { color: #2563eb; margin-right: 5px; }.home-chart-learning > header span { color: #94a3b8; font-size: .65rem; font-weight: 700; }
+.home-chart-learning { position: relative; z-index: 1; flex: 0 0 auto; margin-top: 9px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; }.home-chart-learning > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }.home-chart-learning h3 { margin: 0; color: #334155; font-size: .8rem; }.home-chart-learning h3 i { color: #2563eb; margin-right: 5px; }.home-chart-learning > header span { color: #94a3b8; font-size: .65rem; font-weight: 700; }
 .home-chart-learning-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }.trend-lesson { padding: 9px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; }.trend-lesson h4 { margin: 7px 0 4px; color: #334155; font-size: .73rem; }.trend-lesson h4 i { margin-right: 4px; }.trend-lesson.is-up h4 i { color: #16a34a; }.trend-lesson.is-down h4 i { color: #dc2626; }.trend-lesson.is-ma h4 i { color: #2563eb; }.trend-lesson p, .trend-lesson small { display: block; margin: 0; color: #64748b; font-size: .65rem; line-height: 1.45; }.trend-lesson small { margin-top: 6px; color: #475569; }.trend-lesson small b { color: #1e3a8a; }
 .trend-illustration { position: relative; height: 48px; overflow: hidden; border-bottom: 1px solid #cbd5e1; background: repeating-linear-gradient(0deg, transparent 0 15px, #e2e8f0 16px); }.trend-illustration i { position: absolute; bottom: 3px; width: 4px; border-radius: 2px; background: #94a3b8; }.trend-illustration i:nth-child(1) { left: 17%; height: 14px; }.trend-illustration i:nth-child(2) { left: 48%; height: 25px; }.trend-illustration i:nth-child(3) { left: 79%; height: 34px; }.trend-illustration b { position: absolute; left: 7%; width: 88%; height: 2px; border-radius: 99px; transform-origin: left center; }.trend-illustration .price-line { bottom: 13px; background: #2563eb; transform: rotate(-19deg); }.trend-illustration .ma-line { bottom: 9px; background: #f59e0b; transform: rotate(-13deg); }.trend-lesson.is-down .trend-illustration i:nth-child(1) { height: 34px; }.trend-lesson.is-down .trend-illustration i:nth-child(3) { height: 14px; }.trend-lesson.is-down .price-line { bottom: 37px; background: #dc2626; transform: rotate(19deg); }.trend-lesson.is-down .ma-line { bottom: 33px; background: #f59e0b; transform: rotate(13deg); }.trend-lesson.is-ma .price-line { bottom: 25px; background: #2563eb; transform: rotate(0deg); clip-path: polygon(0 40%,12% 70%,24% 10%,37% 65%,50% 30%,63% 75%,76% 15%,88% 60%,100% 22%,100% 52%,88% 90%,76% 45%,63% 100%,50% 55%,37% 92%,24% 42%,12% 100%,0 70%); }.trend-lesson.is-ma .ma-line { bottom: 20px; background: #f59e0b; transform: rotate(-4deg); }.home-chart-learning-note { margin: 10px 1px 0; color: #475569; font-size: .68rem; line-height: 1.5; }.home-chart-learning-note i { color: #f59e0b; margin-right: 4px; }
 .home-chart-modal-body .home-market-foot { flex: 0 0 auto; margin-top: 4px; }
@@ -1374,7 +1383,8 @@ body.modal-open { overflow: hidden; }
   .home-chart-instrument-select { flex: 1 1 170px; max-width: none; }
   .home-chart-modal-body { padding: 10px 16px 12px; overflow-y: auto; }
   .home-chart-modal-body .home-market-chart-wrap { flex: none; min-height: 320px; }
-  .home-chart-modal-macd, .home-chart-modal-rsi { flex: none; min-height: 140px; }
+  .home-chart-modal-body .home-market-macd-wrap { flex: none; min-height: 0; }
+  .home-chart-modal-macd, .home-chart-modal-rsi { flex: none; height: 140px; min-height: 140px; }
   .home-chart-trend-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .home-chart-learning-grid { grid-template-columns: 1fr; }
 }
@@ -2603,3 +2613,15 @@ body.modal-open { overflow: hidden; }
 .topbar { background:#0058a3; border-bottom:6px solid #ffda1a; box-shadow:none; }.topbar .brand-name,.topbar .brand-sub,.topbar .ticker-label,.topbar .ticker-item b,.topbar .topbar-ticker { color:#fff; }.topbar .brand-mark { border-radius:0; background:#003b6f; box-shadow:none; }.topbar-toggle { border-radius:0; color:#0058a3; background:#fff; }.global-search { border-radius:0; background:#fff; }.global-search>button { border-radius:0; background:#ffda1a; color:#111; }.visitor-badge,.health-badge,.auth-badge { border-radius:0; background:#fff; color:#0058a3; }.sidebar { border-right:0; background:#fff; }.nav-item.active { border-left-color:#ffda1a; background:#e8f1f8; color:#003b6f; }.nav-section-hdr>span i { color:#0058a3; }.content-wrap { background:#f5f5f5; }.content-main { padding:32px 42px 52px; }.home-market-card,.home-quote-dashboard { border-radius:0; border-color:#d7d7d7; box-shadow:0 2px 8px rgba(0,55,113,.10); }.home-market-card { border-top:5px solid #0058a3; }.home-market-periods,.home-market-expand,.home-quote-panel { border-radius:0; }.home-market-periods button.active { color:#111; background:#ffda1a; }.home-quote-panel-head { background:#e8f1f8; }.home-quote-actions button { border-radius:0; color:#003b6f; border-color:#0058a3; background:#fff; }.home-quote-actions button:hover { color:#fff; background:#0058a3; }.home-quote-row:hover { background:#f7f7f7; }.home-quote-note { padding-left:12px; border-left:4px solid #ffda1a; }
 html.embedded-dashboard,html.embedded-dashboard body { height:auto; min-height:100%; overflow:auto; background:#f5f5f5; }html.embedded-dashboard .topbar,html.embedded-dashboard .sidebar,html.embedded-dashboard .overlay,html.embedded-dashboard .floating-chatbot,html.embedded-dashboard .enterprise-modal-overlay { display:none!important; }html.embedded-dashboard .layout { height:auto; min-height:100vh; padding-top:0; overflow:visible; }html.embedded-dashboard .content-wrap { width:100%; height:auto; min-height:100vh; margin-left:0; overflow:visible; }html.embedded-dashboard .content-main { overflow:visible; padding:24px clamp(18px,3vw,46px) 42px; }html.embedded-dashboard .breadcrumb,html.embedded-dashboard .site-footer { display:none; }html.embedded-dashboard .home-dashboard { max-width:1420px; margin:0 auto; }html.embedded-dashboard .home-market-grid { gap:20px; }html.embedded-dashboard .home-quote-dashboard { margin-top:22px; padding:24px; }
 @media (max-width:760px) { .content-main,html.embedded-dashboard .content-main { padding:16px; }.topbar-ticker,.visitor-badge,.health-badge { display:none; }.home-market-grid { gap:12px; } }
+
+/* Live Docker Qwen chart commentary */
+#home-chart-ai-message { padding: 16px 18px; background: #f5f8ff; border: 1px solid #dce6f7; border-radius: 10px; color: #263b57; font-size: 14px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
+.home-chart-ai-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.home-chart-ai-actions small { color: #6b7c96; }
+.home-chart-ai-actions button { border: 1px solid #c4d5f1; border-radius: 7px; background: white; color: #245bc4; padding: 7px 12px; cursor: pointer; }
+.home-chart-ai-actions button:disabled { opacity: .5; cursor: wait; }
+
+/* ══ 타이틀 고정 (공통 타이포그래피 가이드 1·4항) — 이 블록은 파일 맨 끝에 두어 가장 나중에 적용된다 ══ */
+:root { --title-size: 18px; --title-font: 'Pretendard Variable', 'Pretendard', 'Pretendard Hangul 110', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Segoe UI', sans-serif; }
+h1, h2, .page-title { font-size: var(--title-size) !important; font-family: var(--title-font) !important; line-height: 1.3 !important; }
+h1 mark, h2 mark, h1 small, h2 small, h1 span, h2 span { font-size: inherit !important; }

@@ -63,6 +63,9 @@ services:
       REDIS_PORT: 6379
       QDRANT_HOST: kms-qdrant
       QDRANT_PORT: 6333
+      VLLM_MODEL: qwen2.5:7b
+      LLM_TRANSPORT: ssh
+      LLM_TIMEOUT_SECONDS: 600
       LEAN_RUNNER: remote
       LEAN_SSH_HOST: 43.201.229.188
       LEAN_SSH_USER: lean-iv

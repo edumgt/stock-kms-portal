@@ -43,6 +43,27 @@ curl -s -X POST -H 'Content-Type: application/json' -d '{"tickers":["005930.KS",
 
 **남은 것(K2)**: 데이터 시각화 메뉴(세계 시장·거래량/섹터 클라우드·그룹사 네트워크·투자 성향 트리·자산배분 국면)와 상단 종목 검색(`/api/search`)은 investment-backend(MongoDB) 컨테이너가 있어야 한다. 선택: ① `integration-src/investment-backend` 를 st-iv compose 에 `investment-backend` 서비스로 추가 ② 자주 쓰는 것만 이 라우터처럼 이식. 이 세션은 대시보드(홈)만 복구.
 
+### 6-3. 2026-10-07 홈 차트 모달 — RSI 패널이 「추세 해설」 과 겹치는 문제 (사용자 요청)
+
+**원인**: `frontend/investment-native/js/views/home.js` 의 LightweightCharts 어댑터는 컨테이너 안에 px 높이 div 를 만들고 ResizeObserver 로 `clientHeight` 를 따라간다. 모달 본문(세로 flex)에서 `.home-chart-modal-macd/-rsi` 가 `flex:1 1 auto`(내용 크기) 라 차트 px 만큼 자라 부모 `.home-market-macd-wrap`(`flex:1 1 0; min-height:0`)의 배분 높이를 넘겼고, overflow 가 잘리지 않아 RSI 패널·시간축이 아래 추세 해설 KPI 위로 겹쳤다.
+
+| 변경 | 내용 |
+|------|------|
+| `frontend/investment-native/styles.css` | 차트 컨테이너 `flex:1 1 0`(배분 높이 기준) + `overflow:hidden`, macd-wrap `min-height:150px; overflow:hidden`, 캔들 wrap/chart `overflow:hidden`, 「추세 해설」·「Qwen 차트 분석」 `position:relative; z-index:1`. 760px 이하는 `flex:none; height:140px` 고정 |
+| 배포 | 정적 파일(`/static/` no-store). st 서버 `/opt/stock-kms-portal` 에 styles.css 반영 후 api 재빌드: `scp -i /home/ubuntu/stock-coin-trade/pr-test.pem frontend/investment-native/styles.css ubuntu@43.202.161.134:/tmp/styles.css && ssh -i … 'sudo install -m 644 /tmp/styles.css /opt/stock-kms-portal/frontend/investment-native/styles.css && cd /opt/stock-kms-portal && sudo docker compose -p stock-kms-portal -f deploy/st-iv/compose.yml up -d --build api'` |
+
+**확인**: 모달에서 창 높이를 줄여도 RSI 패널이 해설 블록 위로 넘치지 않고, 본문 스크롤만 생기는지. 브라우저 미실행(정적 수정).
+
+
+### 6-4. 2026-10-07 공통 타이포그래피 가이드 — 타이틀 Pretendard 18px 고정, 18px 초과 금지 (사용자 요청, 4개 사이트 공통)
+
+| 변경 | 내용 |
+|------|------|
+| `frontend/style.css`, `frontend/investment-native/styles.css` | 파일 맨 위에 공통 가이드 주석(4항), 주 CSS 맨 끝에 「타이틀 고정」 블록: `--title-size:18px`·`--title-font: Pretendard…`, `h1, h2, .page-title { font-size:18px !important; font-family: Pretendard !important }`(인라인·유틸리티 클래스보다 우선), `h1/h2` 안의 mark·small·span 은 inherit |
+| 적용 범위 | 타이틀(h1·h2)만 강제. 본문·KPI 숫자 등 기존 18px 초과 선언은 그대로 두었다(아래 수치) — 가이드 2항에 따라 새 규칙에서는 금지, 기존 값은 화면별로 줄여 나간다 |
+
+같은 블록이 pr(`frontend/style.css`)·fd(`public/css/app.css`)·st(`frontend/css/style.css`, 가이드 주석은 `kis-practice.css` 에도)·iv(`frontend/style.css`, `investment-native/styles.css`) 에 들어 있다. 캐시 버전이 있는 링크는 각 페이지에서 갱신 필요(st `style.css?v=…`, pr/iv `style.css?v=…`); fd `/css` 는 no-cache.
+
 ## 7. 사용자 의사결정 필요 항목
 
 | # | 결정할 것 | 선택지와 영향 | 에이전트 권고 |

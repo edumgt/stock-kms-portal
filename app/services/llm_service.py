@@ -44,6 +44,15 @@ class LLMService:
         self.model = settings.vllm_model
         self.api_key = settings.vllm_api_key
 
+    def _completion(self, payload, headers):
+        if settings.llm_transport == 'ssh':
+            from app.services.qwen_remote import completion
+            return completion(payload, settings.lean_ssh_key_path, settings.lean_ssh_user)
+        with httpx.Client(timeout=settings.llm_timeout_seconds) as client:
+            response = client.post(f"{self.base_url}/chat/completions", json=payload, headers=headers)
+            response.raise_for_status()
+            return response.json()
+
     def generate_answer(
         self,
         question: str,
@@ -111,15 +120,8 @@ class LLMService:
         }
 
         try:
-            with httpx.Client(timeout=settings.llm_timeout_seconds) as client:
-                response = client.post(
-                    f"{self.base_url}/chat/completions",
-                    json=payload,
-                    headers=headers,
-                )
-                response.raise_for_status()
-                data = response.json()
-                return data["choices"][0]["message"]["content"].strip()
+            data = self._completion(payload, headers)
+            return data["choices"][0]["message"]["content"].strip()
         except Exception as e:
             titles = ", ".join(sorted(set(c["title"] for c in chunks))) if chunks else "없음"
             return (
@@ -153,14 +155,7 @@ class LLMService:
         }
 
         try:
-            with httpx.Client(timeout=settings.llm_timeout_seconds) as client:
-                response = client.post(
-                    f"{self.base_url}/chat/completions",
-                    json=payload,
-                    headers=headers,
-                )
-                response.raise_for_status()
-                return response.json()
+            return self._completion(payload, headers)
         except Exception as e:
             return {
                 "choices": [
