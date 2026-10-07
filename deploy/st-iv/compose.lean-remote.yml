@@ -1,0 +1,13 @@
+# Apply only after provisioning and approving the dedicated remote runner credentials.
+# docker compose -f deploy/st-iv/compose.yml -f deploy/st-iv/compose.lean-remote.yml up -d --no-deps api
+services:
+  api:
+    environment:
+      LEAN_RUNNER: remote
+      LEAN_SSH_HOST: 43.201.229.188
+      LEAN_SSH_USER: lean-iv
+      LEAN_SSH_KEY_PATH: /run/secrets/lean-runner.key
+      LEAN_REMOTE_WORKDIR: /home/lean-iv/workflows
+      LEAN_DOCKER_IMAGE: quantconnect/lean:latest
+    volumes:
+      - ../../secrets/lean-runner.key:/run/secrets/lean-runner.key:ro
