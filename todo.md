@@ -123,3 +123,20 @@ curl -s -X POST -H 'Content-Type: application/json' -d '{"tickers":["005930.KS",
 남겨 둔 것: `.atlas-header { padding: clamp(28px,5vw,54px) }` — 매거진형 히어로로 성격이 달라 패딩은 두었다(그 안의 `h2` 크기 선언은 제거됨). 타이틀 위 `content-kicker`(15.95px)는 타이틀이 아니라 손대지 않았다.
 
 **배포 필요**: iv.edumgt.co.kr 은 st 서버(43.202.161.134) `/opt/stock-kms-portal` 에 rsync/scp 로 반영하는 구조라, 위 변경은 동기화 전까지 화면에 안 나온다.
+
+## 10. 2026-10-08 LEAN 투자 판단 실습 — 저장된 실행 결과를 좌측 메뉴로 통합 + UI 개선 (사용자 요청)
+
+요구: 상단에 따로 떠 있던 「현대자동차·삼성전자·삼성전기」(저장된 LEAN 리포트) 메뉴를 좌측의 다른 클릭 메뉴와 같이 포함시키고 UI 개선.
+
+| 변경 | 내용 |
+|------|------|
+| `frontend/app.js` `renderBacktestWorkflow()` | 상단에 `insertAdjacentHTML` 로 주입하던 `.lean-report-library` 배너 제거. 좌측 레일(`aside.backtest-examples`)을 **두 그룹**으로 재구성 — ①「저장된 실행 결과 · 바로 보기」(LEAN 리포트 3개) ②「직접 검증 · 조건 수정 가능」(예시 5개). 각 그룹은 `<nav>` + `aria-label`, 구분 라벨에 아이콘·배지 |
+| 〃 선택 동기화 | `selectRail(kind, id)` 신설 — 저장된 리포트와 직접 검증 예시 중 **하나만** 선택 표시된다(종전에는 양쪽이 동시에 selected 로 남아 결과 영역이 무엇인지 알 수 없었다). `runBacktest()` 로 직접 실행해도 리포트 선택이 풀린다 |
+| 〃 모드 표시줄 | `setBacktestMode()` + `#backtestMode` 신설. 결과 영역 바로 위에 「저장된 LEAN 실행 결과 · 현대자동차 · 이동평균 추세추종」 또는 「직접 검증 · 005930.KS · 매수 후 보유」를 띄우고 한 줄 설명을 붙인다(리포트는 조건을 바꿔도 안 변한다는 점 명시) |
+| 〃 초기 상태 | 종전엔 예시 0번과 리포트 0번이 **둘 다 selected** 였다. 이제 폼만 예시 값으로 채우고(`applyBacktestExample(id, {select:false})`) 레일 선택·결과는 저장된 리포트 하나로 맞춘다 |
+| `frontend/style.css` | `.bt-rail-group`·`.bt-rail-label`·`.bt-rail-list`·`.bt-mode` 추가. 리포트 버튼을 예시 버튼과 같은 세로 카드 형태로(우측 눈 아이콘, 선택 시 강조). 레일이 길어져 `max-height:calc(100vh - 24px); overflow-y:auto` 추가. 쓰지 않게 된 `.lean-report-library`·`.lean-report-choices` 규칙과 전용 미디어쿼리·테마 참조 제거 |
+| 캐시 버전 | `style.css`·`investment-native/styles.css`·`app.js` → `?v=20261008-lean-rail` (3개 HTML, 5곳) |
+
+검증: `app.js` 문법 검사 통과, `style.css` 중괄호 1919/1919, `lean-report-library`/`lean-report-choices` 잔여 참조 0, 빈 규칙 없음. 이 저장소엔 테스트 스위트가 없다.
+
+**배포 필요**: 9절과 같이 st 서버(43.202.161.134) `/opt/stock-kms-portal` 로 rsync/scp 동기화해야 iv.edumgt.co.kr 에 반영된다.

@@ -1970,9 +1970,8 @@ KOSDAQ|웹젠|게임`,
     const today = new Date().toISOString().slice(0, 10);
     const strategyOptions = BACKTEST_STRATEGIES.map(s => `<option value="${s.value}">${escHtml(s.label)}</option>`).join('');
     const examples = BACKTEST_EXAMPLES.map((e, index) => `<button class="backtest-example ${index === 0 ? 'selected' : ''}" data-example="${e.id}" type="button"><span>${escHtml(e.tag)}</span><strong>${escHtml(e.title)}</strong><small>${escHtml(e.note)}</small><i class="fa-solid fa-arrow-right"></i></button>`).join('');
-    $messages.innerHTML = `<article class="content-page backtest-page"><header class="backtest-page-head"><div class="content-kicker">QUANTCONNECT LEAN · YFINANCE WORKFLOW</div><h1>LEAN <mark>투자 판단 실습</mark></h1><p class="content-lead">테스트 하나를 고르고, 무엇을 검증하는지부터 결과 해석까지 순서대로 확인합니다.</p></header><div class="backtest-workspace"><aside class="backtest-examples" aria-label="바로 실행할 수 있는 백테스트 예시"><div><span>TEST LIBRARY</span><h2>확인할 상황 선택</h2><p>선택하면 오른쪽에 테스트의 질문과 해석 기준이 표시됩니다.</p></div><div class="backtest-example-grid">${examples}</div></aside><main class="backtest-main"><section class="backtest-test-detail" id="backtestTestDetail" aria-live="polite"></section><section class="backtest-canvas" aria-label="백테스트 설정"><div class="workflow-node input"><span>01 · 전략</span><select id="btStrategy" aria-label="예시 전략 선택">${strategyOptions}</select><small id="btStrategyHint">${escHtml(BACKTEST_STRATEGIES[0].hint)}</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node input"><span>02 · 종목 / ETF</span><input id="btTicker" value="005930.KS" maxlength="12" aria-label="종목 티커" /><small>한국: 005930.KS · 미국 ETF: SPY</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node input"><span>03 · 검증 기간</span><div><input id="btStart" type="date" value="2023-01-01" /><input id="btEnd" type="date" value="${today}" /></div><small>전략 성과를 계산할 기간</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node input"><span>04 · 비교 기간</span><div><input id="btCompareStart" type="date" value="2022-01-01" /><input id="btCompareEnd" type="date" value="${today}" /></div><small>다른 시장 국면에서도 확인</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node engine"><span>05 · 실행 엔진</span><strong><i class="fa-brands fa-docker"></i> LEAN</strong><small>가격 데이터 → 원격 Docker</small></div></section><section class="backtest-parameters" aria-label="전략 세부 조건"><label>단기 이동평균 <input id="btShortWindow" type="number" min="2" max="120" value="20" /></label><label>장기 이동평균 <input id="btLongWindow" type="number" min="5" max="300" value="60" /></label><label>적립 간격(거래일) <input id="btDcaInterval" type="number" min="1" max="120" value="21" /></label><label>돌파 기준(거래일) <input id="btBreakoutWindow" type="number" min="5" max="120" value="20" /></label><small>선택한 전략에 해당하는 값만 계산에 반영됩니다.</small></section><div class="backtest-actions"><button class="content-cta" id="runBacktest"><i class="fa-solid fa-play"></i> 이 조건으로 검증하기</button><span>교육용 과거 검증이며 투자 권유가 아닙니다.</span></div></main></div><section class="backtest-result" id="backtestResult"><div class="backtest-empty"><i class="fa-solid fa-diagram-project"></i><p>왼쪽 테스트를 고른 뒤 조건을 확인하고 실행하세요.</p></div></section></article>`;
-    const reportChoices = LEAN_REPORTS.map((report, index) => `<button class="lean-report-choice ${index === 0 ? 'selected' : ''}" type="button" data-lean-report="${report.symbol}"><b>${escHtml(report.label)}</b><small>${escHtml(report.caption)}</small></button>`).join('');
-    document.querySelector('.backtest-page-head').insertAdjacentHTML('afterend', `<section class="lean-report-library" aria-label="저장된 LEAN 실행 결과"><div><span>COMPLETED LEAN RUNS</span><h2>저장된 실제 실행 결과</h2><p>8000번 LEAN 앱에서 생성한 완료 리포트를 이 화면에서 바로 확인합니다.</p></div><div class="lean-report-choices">${reportChoices}</div></section>`);
+    const reportChoices = LEAN_REPORTS.map(report => `<button class="lean-report-choice" type="button" data-lean-report="${report.symbol}"><b>${escHtml(report.label)}</b><small>${escHtml(report.caption)}</small><i class="fa-solid fa-eye" aria-hidden="true"></i></button>`).join('');
+    $messages.innerHTML = `<article class="content-page backtest-page"><header class="backtest-page-head"><div class="content-kicker">QUANTCONNECT LEAN · YFINANCE WORKFLOW</div><h1>LEAN <mark>투자 판단 실습</mark></h1><p class="content-lead">테스트 하나를 고르고, 무엇을 검증하는지부터 결과 해석까지 순서대로 확인합니다.</p></header><div class="backtest-workspace"><aside class="backtest-examples" aria-label="저장된 LEAN 실행 결과와 백테스트 예시"><div><span>TEST LIBRARY</span><h2>무엇을 볼지 고르기</h2><p>저장된 실제 LEAN 실행 결과를 바로 보거나, 조건을 바꿔 직접 검증할 상황을 고릅니다.</p></div><nav class="bt-rail-group" aria-label="저장된 LEAN 실행 결과"><div class="bt-rail-label"><i class="fa-solid fa-file-circle-check" aria-hidden="true"></i> 저장된 실행 결과 <em>바로 보기</em></div><div class="bt-rail-list">${reportChoices}</div></nav><nav class="bt-rail-group" aria-label="직접 검증할 상황"><div class="bt-rail-label"><i class="fa-solid fa-flask" aria-hidden="true"></i> 직접 검증 <em>조건 수정 가능</em></div><div class="backtest-example-grid">${examples}</div></nav></aside><main class="backtest-main"><section class="backtest-test-detail" id="backtestTestDetail" aria-live="polite"></section><section class="backtest-canvas" aria-label="백테스트 설정"><div class="workflow-node input"><span>01 · 전략</span><select id="btStrategy" aria-label="예시 전략 선택">${strategyOptions}</select><small id="btStrategyHint">${escHtml(BACKTEST_STRATEGIES[0].hint)}</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node input"><span>02 · 종목 / ETF</span><input id="btTicker" value="005930.KS" maxlength="12" aria-label="종목 티커" /><small>한국: 005930.KS · 미국 ETF: SPY</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node input"><span>03 · 검증 기간</span><div><input id="btStart" type="date" value="2023-01-01" /><input id="btEnd" type="date" value="${today}" /></div><small>전략 성과를 계산할 기간</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node input"><span>04 · 비교 기간</span><div><input id="btCompareStart" type="date" value="2022-01-01" /><input id="btCompareEnd" type="date" value="${today}" /></div><small>다른 시장 국면에서도 확인</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node engine"><span>05 · 실행 엔진</span><strong><i class="fa-brands fa-docker"></i> LEAN</strong><small>가격 데이터 → 원격 Docker</small></div></section><section class="backtest-parameters" aria-label="전략 세부 조건"><label>단기 이동평균 <input id="btShortWindow" type="number" min="2" max="120" value="20" /></label><label>장기 이동평균 <input id="btLongWindow" type="number" min="5" max="300" value="60" /></label><label>적립 간격(거래일) <input id="btDcaInterval" type="number" min="1" max="120" value="21" /></label><label>돌파 기준(거래일) <input id="btBreakoutWindow" type="number" min="5" max="120" value="20" /></label><small>선택한 전략에 해당하는 값만 계산에 반영됩니다.</small></section><div class="backtest-actions"><button class="content-cta" id="runBacktest"><i class="fa-solid fa-play"></i> 이 조건으로 검증하기</button><span>교육용 과거 검증이며 투자 권유가 아닙니다.</span></div></main></div><div class="bt-mode" id="backtestMode" role="status" aria-live="polite"></div><section class="backtest-result" id="backtestResult"><div class="backtest-empty"><i class="fa-solid fa-diagram-project"></i><p>왼쪽 테스트를 고른 뒤 조건을 확인하고 실행하세요.</p></div></section></article>`;
     document.getElementById('runBacktest').addEventListener('click', runBacktest);
     document.getElementById('btStrategy').addEventListener('change', (event) => {
       const chosen = BACKTEST_STRATEGIES.find(s => s.value === event.target.value);
@@ -1980,14 +1979,32 @@ KOSDAQ|웹젠|게임`,
     });
     document.querySelectorAll('[data-example]').forEach(button => button.addEventListener('click', () => applyBacktestExample(button.dataset.example)));
     document.querySelectorAll('[data-lean-report]').forEach(button => button.addEventListener('click', () => loadLeanReport(button.dataset.leanReport)));
-    applyBacktestExample(BACKTEST_EXAMPLES[0].id);
+    applyBacktestExample(BACKTEST_EXAMPLES[0].id, { select: false });
     loadLeanReport(LEAN_REPORTS[0].symbol);
+  }
+
+  function setBacktestMode(kind, title, sub) {
+    const el = document.getElementById('backtestMode');
+    if (!el) return;
+    const isReport = kind === 'report';
+    el.className = `bt-mode ${isReport ? 'report' : 'custom'}`;
+    el.innerHTML = `<i class="fa-solid ${isReport ? 'fa-file-circle-check' : 'fa-flask'}" aria-hidden="true"></i>`
+      + `<b>${escHtml(isReport ? '저장된 LEAN 실행 결과' : '직접 검증')}</b>`
+      + `<span>${escHtml(title)}</span>`
+      + (sub ? `<small>${escHtml(sub)}</small>` : '');
+  }
+
+  function selectRail(kind, id) {
+    document.querySelectorAll('[data-lean-report]').forEach(b => b.classList.toggle('selected', kind === 'report' && b.dataset.leanReport === id));
+    document.querySelectorAll('[data-example]').forEach(b => b.classList.toggle('selected', kind === 'example' && b.dataset.example === id));
   }
 
   async function loadLeanReport(symbol) {
     const result = document.getElementById('backtestResult');
     if (!result) return;
-    document.querySelectorAll('[data-lean-report]').forEach(button => button.classList.toggle('selected', button.dataset.leanReport === symbol));
+    const meta = LEAN_REPORTS.find(r => r.symbol === symbol);
+    selectRail('report', symbol);
+    setBacktestMode('report', meta ? `${meta.label} · ${meta.caption}` : symbol, '이미 실행이 끝난 리포트라 조건을 바꿔도 이 결과는 변하지 않습니다');
     result.innerHTML = '<div class="backtest-empty"><i class="fa-solid fa-spinner fa-spin"></i><p>저장된 LEAN 실행 결과를 불러오고 있습니다.</p></div>';
     try {
       const report = await fetchLocalBackendJson(`/backtests/reports/${encodeURIComponent(symbol)}`, payload => payload && payload.statistics && Array.isArray(payload.equity_curve));
@@ -2001,7 +2018,7 @@ KOSDAQ|웹젠|게임`,
     }
   }
 
-  function applyBacktestExample(id) {
+  function applyBacktestExample(id, { select = true } = {}) {
     const example = BACKTEST_EXAMPLES.find(item => item.id === id);
     if (!example) return;
     const today = new Date().toISOString().slice(0, 10);
@@ -2017,7 +2034,10 @@ KOSDAQ|웹젠|게임`,
     if (example.breakout) document.getElementById('btBreakoutWindow').value = example.breakout;
     const chosen = BACKTEST_STRATEGIES.find(item => item.value === example.strategy);
     document.getElementById('btStrategyHint').textContent = chosen ? chosen.hint : '';
-    document.querySelectorAll('[data-example]').forEach(button => button.classList.toggle('selected', button.dataset.example === id));
+    if (select) {
+      selectRail('example', id);
+      setBacktestMode('custom', example.title, '아래 조건을 바꾼 뒤 「이 조건으로 검증하기」를 눌러 실행합니다');
+    }
     renderBacktestExampleDetail(example);
   }
 
@@ -2032,6 +2052,11 @@ KOSDAQ|웹젠|게임`,
     const result = document.getElementById('backtestResult');
     const payload = { ticker: document.getElementById('btTicker').value, start_date: document.getElementById('btStart').value, end_date: document.getElementById('btEnd').value, compare_start_date: document.getElementById('btCompareStart').value, compare_end_date: document.getElementById('btCompareEnd').value, initial_cash: 10000, strategy: document.getElementById('btStrategy').value, short_window: Number(document.getElementById('btShortWindow').value), long_window: Number(document.getElementById('btLongWindow').value), dca_interval_days: Number(document.getElementById('btDcaInterval').value), breakout_window: Number(document.getElementById('btBreakoutWindow').value) };
     button.disabled = true; button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> LEAN 실행 중';
+    // 직접 실행하면 저장된 리포트 선택을 풀어, 결과 영역이 무엇을 보여 주는지 어긋나지 않게 한다.
+    document.querySelectorAll('[data-lean-report]').forEach(b => b.classList.remove('selected'));
+    const chosenStrategy = BACKTEST_STRATEGIES.find(item => item.value === payload.strategy);
+    setBacktestMode('custom', `${payload.ticker} · ${chosenStrategy ? chosenStrategy.label : payload.strategy}`,
+                    `검증 ${payload.start_date} ~ ${payload.end_date}`);
     result.innerHTML = '<div class="backtest-empty"><i class="fa-solid fa-spinner fa-spin"></i><p>yfinance 데이터를 정리하고 원격 LEAN 컨테이너를 실행하고 있습니다.</p></div>';
     try {
       const data = await fetchLocalBackendJson('/backtests/run', null, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
