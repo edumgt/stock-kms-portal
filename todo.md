@@ -140,3 +140,29 @@ curl -s -X POST -H 'Content-Type: application/json' -d '{"tickers":["005930.KS",
 검증: `app.js` 문법 검사 통과, `style.css` 중괄호 1919/1919, `lean-report-library`/`lean-report-choices` 잔여 참조 0, 빈 규칙 없음. 이 저장소엔 테스트 스위트가 없다.
 
 **배포 필요**: 9절과 같이 st 서버(43.202.161.134) `/opt/stock-kms-portal` 로 rsync/scp 동기화해야 iv.edumgt.co.kr 에 반영된다.
+
+## 11. 2026-10-08 주식투자 4개 저장소 푸터 통일 — 검정 배경·높이 25px 고정·동일 문구 (사용자 요청)
+
+요구: 4개 저장소(pr `domain-rag-lab` / fd `lumina-invest` / st `stock-coin-trade` / iv `stock-kms-portal`)의 **모든 `<footer>`** 를 검정색·높이 25px 고정·동일 스타일·동일 문구로 통일. 적용 범위는 사용자가 "모든 `<footer>` 요소"로 지정했다(카드·모달·섹션 내부 푸터 포함).
+
+문구: `© 2026 (주)에듀엠지티 All rights reserved.`
+마크업: `<footer class="site-footer-unified">© 2026 (주)에듀엠지티 All rights reserved.</footer>`
+스타일: `height/min-height/max-height:25px` · `background:#000` · `color:#fff` · `font-size:11.5px` · 가운데 정렬 1줄 · `overflow:hidden` · `white-space:nowrap` · border/radius/shadow 제거. 기존 푸터 규칙과 테마 오버라이드를 덮어야 해서 전 속성 `!important`. 선택자는 `footer, .site-footer-unified` 로 동적 생성 푸터까지 걸리게 했다.
+
+| 변경 | 내용 |
+|------|------|
+| `frontend/style.css`, `frontend/days/assets/site.css`, `frontend/investment-native/styles.css` | 맨 끝에 공통 푸터 블록 추가 |
+| `frontend/index.html`, `days/01~04.html`, `days/index.html`, `investment-native/index.html`, `investment-native/pages/youtube.html` | 푸터 마크업 12곳 교체 |
+| `frontend/app.js`(7곳), `days/assets/site.js`, `investment-native/js/views/{learn,home,assetClasses,worldMarkets,globalCapitalMap}.js` | 템플릿 문자열 안의 푸터 교체(learn.js 13곳 포함) |
+| 예외 보존 | `investment-native/styles.css` 의 `html.embedded-dashboard .site-footer{display:none}` 가 통일 규칙에 덮이지 않도록 `html.embedded-dashboard footer{display:none!important}` 를 뒤에 추가 |
+| **기능 복구** `investment-native/js/views/home.js` | 차트 카드·차트 모달의 `footer.home-market-foot`(기간 라벨 `[data-foot-label]`·출처 `[data-source]`, `#home-chart-modal-foot-label`·`#home-chart-modal-source`) → `div` 로 복구. 안 하면 `home.js:499-500`·`579-580` 이 null 참조 |
+| **기능 복구** `investment-native/js/views/todayGainers.js` | 급등주 시세 모달의 `footer#gainers-quote-source` → `div` 로 복구(`todayGainers.js:56` 참조 유지) |
+| 캐시 버전 | 변경 자산 전부 `?v=20261008-footer-25px` (14곳) |
+
+**4개 저장소 합계**: `<footer>` 106곳 중 101곳을 통일 푸터로 교체, 5곳은 기능 요소라 `div` 로 바꿔 동작을 지켜냈다(위 "기능 복구" 항목). 통일 CSS 블록은 9곳(CSS 8개 + `hts.html` 인라인).
+
+**카드·모달 내부 푸터의 내용은 사라졌다**: 투자 판단 체크리스트 결론, 기업분석 모달 면책 문구, `day-offcanvas-footer` 의 Swagger·상태확인 링크, 공시/숫자 읽기 원칙, tr-pine 단계별 요약 코드(`guide.footer`) 등. "모든 `<footer>` 통일" 지시에 따른 결과이며, 되살리려면 해당 블록만 `div` 로 바꾸면 된다.
+
+검증: 남은 `<footer>` 101곳이 모두 동일 문자열, 변경 JS 전부 `node --check` 통과, 변경 CSS 중괄호 균형 일치, 푸터와 함께 사라진 id·class 중 JS가 참조하는 것 없음(`#footer-year` 만 남았고 null 가드 있음).
+
+**커밋 안 했다** — 변경만 남겨 두었다.

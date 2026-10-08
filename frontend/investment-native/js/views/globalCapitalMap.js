@@ -88,7 +88,7 @@ export function globalCapitalMapView(container) {
         <article><span class="impact-no">03</span><h3>장기 자금도 위험을 줄입니다</h3><p>국부펀드·연기금도 환율, 지정학, 유동성, 밸류에이션에 따라 비중을 조정합니다. ‘장기’가 ‘절대 팔지 않음’을 뜻하지는 않습니다.</p></article>
       </section>
 
-      <footer class="capital-sources"><i class="fa-solid fa-link"></i> 수치 기준일과 원문은 선택한 기관의 ‘공식 출처 열기’에서 확인할 수 있습니다. 이 화면은 학습용 정보이며 투자 권유가 아닙니다.</footer>
+      <footer class="site-footer-unified">© 2026 (주)에듀엠지티 All rights reserved.</footer>
     </section>`;
 
   let selectedId = 'gpfg';

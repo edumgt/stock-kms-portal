@@ -42,7 +42,7 @@ function installQuoteModal(container) {
         <div id="gainers-quote-chart" class="gainers-quote-chart"></div>
         <div id="gainers-quote-loading" class="gainers-quote-loading"><i class="fa-solid fa-spinner fa-spin"></i> 시세를 불러오는 중…</div>
       </div>
-      <footer id="gainers-quote-source" class="gainers-quote-source"></footer>
+      <div id="gainers-quote-source" class="gainers-quote-source"></div>
     </section>`;
   document.body.appendChild(modal);
 

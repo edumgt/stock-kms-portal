@@ -1,4 +1,4 @@
-import { homeView }            from './views/home.js?v=20261007-qwen';
+import { homeView }            from './views/home.js?v=20261008-footer-25px';
 import { serverResourcesView } from './views/serverResources.js';
 import { volumeCloudView }    from './views/volumeCloud.js';
 import { sectorCloudView }    from './views/sectorCloud.js';
@@ -47,7 +47,7 @@ import { ragChatView } from './views/ragChat.js';
 import { llmBenchView } from './views/llmBenchView.js';
 import { companyFinancialView } from './views/companyFinancial.js';
 // 학습 화면 오류 수정본을 기존 ES 모듈 캐시와 분리해 항상 새로 불러온다.
-import { learnView }            from './views/learn.js?v=35';
+import { learnView }            from './views/learn.js?v=20261008-footer-25px';
 import { taxAccountingView }         from './views/taxAccounting.js';
 import { dartFinancialAnalysisView } from './views/dartFinancialAnalysis.js';
 import { api }                 from './api.js';

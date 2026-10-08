@@ -59,10 +59,7 @@ function indexChartCard(idx) {
         <div class="home-market-chart" data-idx-chart="${idx.id}"></div>
         <div class="home-market-loading" data-idx-loading="${idx.id}"><i class="fa-solid fa-spinner fa-spin"></i> 데이터 불러오는 중…</div>
       </div>
-      <footer class="home-market-foot">
-        <span><i class="fa-solid fa-chart-line"></i> 일봉 · MA20 · 거래량</span>
-        <span data-idx-source="${idx.id}"></span>
-      </footer>
+      <footer class="site-footer-unified">© 2026 (주)에듀엠지티 All rights reserved.</footer>
     </section>`;
 }
 

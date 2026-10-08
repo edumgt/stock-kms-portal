@@ -331,10 +331,10 @@ function chartCard(market) {
         <div class="home-market-macd-label">MACD (12, 26, 9)</div>
         <div class="home-market-macd" data-macd="${market.id}"></div>
       </div>
-      <footer class="home-market-foot">
+      <div class="home-market-foot">
         <span data-foot-label="${market.id}"><i class="fa-solid fa-chart-line"></i> ${barsFootLabel('3mo')}</span>
         <span data-source="${market.id}"></span>
-      </footer>
+      </div>
     </section>`;
 }
 
@@ -396,10 +396,10 @@ function chartModal() {
             <div id="home-chart-ai-message" role="status" aria-live="polite">차트 데이터를 기다리고 있습니다.</div>
             <div class="home-chart-ai-actions"><small id="home-chart-ai-context"></small><button type="button" id="home-chart-ai-retry">분석 다시 요청</button></div>
           </section>
-          <footer class="home-market-foot">
+          <div class="home-market-foot">
             <span id="home-chart-modal-foot-label"><i class="fa-solid fa-chart-line"></i> ${barsFootLabel('3mo', true)}</span>
             <span id="home-chart-modal-source"></span>
-          </footer>
+          </div>
         </div>
       </section>
     </div>`;
