@@ -4,7 +4,7 @@ import { cloudResourceCard } from './cloudAiResources.js';
 export function pipelineView(container) {
   container.innerHTML = `
     <div style="margin-bottom:24px;">
-      <h1 style="font-size:1.25rem; font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-diagram-project"></i> 퀀트 파이프라인</h1>
+      <h1 style="font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-diagram-project"></i> 퀀트 파이프라인</h1>
       <p style="font-size:0.875rem; color:#94a3b8; line-height:1.6;">
         데이터 생성 → 기술적 지표 계산 → 백테스트 → RandomForest ML 예측까지 4단계 퀀트 파이프라인을 실행합니다.
       </p>

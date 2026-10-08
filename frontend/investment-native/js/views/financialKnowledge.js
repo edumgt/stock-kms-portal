@@ -33,7 +33,7 @@ const SCENARIO_ADJUST = { slow: -0.03, normal: 0, fast: 0.03 };
 export function financialKnowledgeView(container) {
   container.innerHTML = `
     <div style="margin-bottom:18px;">
-      <h1 style="font-size:1.18rem; font-weight:760; color:#131722; margin:0 0 6px;">
+      <h1 style="font-weight:760; color:#131722; margin:0 0 6px;">
         <i class="fa-solid fa-layer-group"></i> 쉬운 자산배분 체험
       </h1>
       <p style="font-size:0.9rem; color:#475569; line-height:1.6; margin:0;">
@@ -81,7 +81,7 @@ export function financialKnowledgeView(container) {
     </section>
 
     <section style="border:1px solid #d9e1ec; border-radius:8px; padding:16px; background:#fff; margin-top:14px;">
-      <h2 style="font-size:1rem; color:#131722; margin:0 0 8px;">
+      <h2 style="color:#131722; margin:0 0 8px;">
         <i class="fa-solid fa-scale-balanced"></i> ETF 2종 비교 (선택 조건 중심)
       </h2>
       <p style="font-size:0.8rem; color:#64748b; margin:0 0 12px; line-height:1.5;">
@@ -227,7 +227,7 @@ function renderSummary(preset, money, years, expected, risk, futureMoney) {
 function renderAllocations(weights, money, years, scenarioAdjust) {
   return `
     <section style="border:1px solid #d9e1ec; border-radius:8px; padding:12px; background:#fff;">
-      <h2 style="font-size:0.95rem; color:#131722; margin:0 0 8px;">선택 금액(${formatWon(money)}) 자산배분 결과</h2>
+      <h2 style="color:#131722; margin:0 0 8px;">선택 금액(${formatWon(money)}) 자산배분 결과</h2>
       <div style="display:grid; gap:8px;">
         ${Object.entries(weights).map(([asset, weight]) => {
           const nowMoney = money * weight;

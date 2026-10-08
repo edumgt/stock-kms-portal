@@ -13,7 +13,7 @@ function fmtPct(n, digits = 1) {
 function tabShell(tabs) {
   return `
     <div style="margin-bottom:24px;">
-      <h1 style="font-size:1.25rem;font-weight:700;color:#0f172a;margin-bottom:6px;">
+      <h1 style="font-weight:700;color:#0f172a;margin-bottom:6px;">
         <i class="fa-solid fa-calculator"></i> 밸류에이션 실습
       </h1>
       <p style="font-size:0.875rem;color:#475569;line-height:1.6;">
@@ -693,7 +693,7 @@ function renderReport(content) {
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
           <div>
             <div style="font-size:0.75rem;color:#475569;margin-bottom:4px;">투자분석 리포트 | ${new Date().toLocaleDateString('ko-KR')}</div>
-            <h2 style="font-size:1.2rem;font-weight:800;color:#0f172a;margin:0 0 4px;">${company}</h2>
+            <h2 style="font-weight:800;color:#0f172a;margin:0 0 4px;">${company}</h2>
             <div style="font-size:0.82rem;color:#475569;">${g('rpt-sector')} | WACC ${g('rpt-wacc')}% | 분석기간 ${g('rpt-horizon')}년</div>
           </div>
           <div style="text-align:right;">

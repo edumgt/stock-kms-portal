@@ -3,7 +3,7 @@ import { api } from '../api.js';
 export function riskView(container) {
   container.innerHTML = `
     <div style="margin-bottom:24px;">
-      <h1 style="font-size:1.25rem; font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-shield-halved"></i> 리스크 분석 (VaR / CVaR)</h1>
+      <h1 style="font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-shield-halved"></i> 리스크 분석 (VaR / CVaR)</h1>
       <p style="font-size:0.875rem; color:#94a3b8; line-height:1.6;">
         정규분포 및 역사적 시뮬레이션을 통해 Value at Risk와 Conditional VaR(Expected Shortfall)를 계산합니다.
       </p>

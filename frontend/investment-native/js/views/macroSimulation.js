@@ -3,7 +3,7 @@ import { api } from '../api.js';
 export function macroSimulationView(container) {
   container.innerHTML = `
     <div style="margin-bottom:24px;">
-      <h1 style="font-size:1.25rem; font-weight:700; color:#131722; margin-bottom:6px;"><i class="fa-solid fa-chart-area"></i> 거시경제현황 2 — 시뮬레이션 대시보드</h1>
+      <h1 style="font-weight:700; color:#131722; margin-bottom:6px;"><i class="fa-solid fa-chart-area"></i> 거시경제현황 2 — 시뮬레이션 대시보드</h1>
       <p style="font-size:0.875rem; color:#6b7280; line-height:1.6;">
         GBM(기하브라운운동)으로 기준금리·CPI·유가·환율·KOSPI·S&amp;P 500을 시뮬레이션하고
         경기사이클(상승기→과열기→침체기→회복기) 국면을 함께 표시합니다.

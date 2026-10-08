@@ -63,7 +63,7 @@ function renderResult(target, data) {
   target.innerHTML = `
     <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:16px;">
       <div>
-        <h2 style="margin:0 0 4px; font-size:1.05rem; font-weight:700; color:var(--text);">${data.label} <span style="color:#64748b; font-weight:500; font-size:.85rem;">(${data.code})</span></h2>
+        <h2 style="margin:0 0 4px; font-weight:700; color:var(--text);">${data.label} <span style="color:#64748b; font-weight:500; font-size:.85rem;">(${data.code})</span></h2>
         <p style="margin:0; color:#94a3b8; font-size:.82rem;">${data.strategy_name} · ${fmtDate(data.start_date)} ~ ${fmtDate(data.end_date)}</p>
       </div>
       <span style="padding:5px 12px; border-radius:20px; font-size:.75rem; font-weight:700; background:${data.status === 'Completed' ? 'rgba(34,197,94,.15)' : 'rgba(148,163,184,.15)'}; color:${data.status === 'Completed' ? '#22c55e' : '#94a3b8'};">
@@ -105,7 +105,7 @@ async function loadSymbol(container, symbol) {
 export function quantView(container) {
   container.innerHTML = `
     <div style="margin-bottom:24px;">
-      <h1 style="font-size:1.25rem; font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-chart-simple"></i> Quant · LEAN 백테스트 리포트</h1>
+      <h1 style="font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-chart-simple"></i> Quant · LEAN 백테스트 리포트</h1>
       <p style="font-size:0.875rem; color:#94a3b8; line-height:1.6;">
         QuantConnect LEAN 엔진으로 실행한 현대자동차·삼성전자·삼성전기 백테스트 결과를 확인합니다.
       </p>

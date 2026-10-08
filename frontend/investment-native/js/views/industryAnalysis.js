@@ -17,7 +17,7 @@ function fmt(value, suffix = '') {
 function tabShell(tabs) {
   return `
     <div style="margin-bottom:24px;">
-      <h1 style="font-size:1.25rem; font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-industry"></i> 산업 경쟁력 분석</h1>
+      <h1 style="font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-industry"></i> 산업 경쟁력 분석</h1>
       <p style="font-size:0.875rem; color:#94a3b8; line-height:1.6;">
         Porter 5 Forces · 산업별 KPI · Peer Comparison · 뉴스/공시 메모 · PEST · 생애주기로 산업 경쟁력을 분석합니다.
       </p>

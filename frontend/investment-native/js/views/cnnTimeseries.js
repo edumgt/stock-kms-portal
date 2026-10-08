@@ -4,7 +4,7 @@ import { cloudResourceCard } from './cloudAiResources.js';
 export function cnnTimeseriesView(container) {
   container.innerHTML = `
     <div style="margin-bottom:24px;">
-      <h1 style="font-size:1.25rem; font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-wave-square"></i> 1D CNN 시계열 예측</h1>
+      <h1 style="font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-wave-square"></i> 1D CNN 시계열 예측</h1>
       <p style="font-size:0.875rem; color:#94a3b8; line-height:1.6;">
         1D Convolutional Neural Network으로 시계열 데이터의 패턴을 학습하고 다음 N 스텝을 예측합니다.
       </p>

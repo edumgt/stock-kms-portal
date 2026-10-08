@@ -4,7 +4,7 @@ import { cloudResourceCard } from './cloudAiResources.js';
 export function backtestView(container) {
   container.innerHTML = `
     <div style="margin-bottom:24px;">
-      <h1 style="font-size:1.25rem; font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-clock-rotate-left"></i> 백테스트 엔진</h1>
+      <h1 style="font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-clock-rotate-left"></i> 백테스트 엔진</h1>
       <p style="font-size:0.875rem; color:var(--text-muted); line-height:1.6;">
         GBM으로 시뮬레이션된 가격에 이동평균 크로스오버 전략을 적용하고 성과를 분석합니다.
       </p>

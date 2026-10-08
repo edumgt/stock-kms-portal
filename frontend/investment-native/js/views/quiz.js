@@ -77,7 +77,7 @@ export function quizHomeView(app, navigate) {
 
   app.innerHTML = `
     <div style="margin-bottom:24px;">
-      <h2 style="margin:0 0 4px;font-size:1.25rem;font-weight:800">
+      <h2 style="margin:0 0 4px;font-weight:800">
         <i class="fa-solid fa-calendar-check" style="color:var(--primary);margin-right:8px;"></i>
         주식 기초 통합 퀴즈
       </h2>
@@ -183,7 +183,7 @@ function renderQuiz(app, day, questions, navigate) {
     app.innerHTML = `
       <div class="quiz-header">
         <div>
-          <h2 style="margin:0 0 2px;font-size:1.1rem;font-weight:800">
+          <h2 style="margin:0 0 2px;font-weight:800">
             <i class="fa-solid fa-circle-question" style="color:var(--primary);margin-right:7px;"></i>
             주식 ${day} · ${topic}
           </h2>
@@ -357,7 +357,7 @@ function renderQuiz(app, day, questions, navigate) {
   function renderWrongReview(wrongs) {
     app.innerHTML = `
       <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
-        <h2 style="margin:0;font-size:1.1rem;font-weight:800">
+        <h2 style="margin:0;font-weight:800">
           <i class="fa-solid fa-list-check" style="color:var(--red);margin-right:7px;"></i>
           오답 복습 (${wrongs.length}문항)
         </h2>

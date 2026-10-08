@@ -30,7 +30,7 @@ const PRESET_GROUPS = [
 export function groupNetworkView(container) {
   container.innerHTML = `
     <div style="margin-bottom:24px;">
-      <h1 style="font-size:1.45rem; font-weight:700; color:#131722; margin-bottom:8px;">
+      <h1 style="font-weight:700; color:#131722; margin-bottom:8px;">
         <i class="fa-solid fa-sitemap"></i> 그룹사 상장 계열사 네트워크
       </h1>
       <p style="font-size:0.88rem; color:#6b7280; line-height:1.65;">

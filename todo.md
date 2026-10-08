@@ -103,3 +103,23 @@ curl -s -X POST -H 'Content-Type: application/json' -d '{"tickers":["005930.KS",
 | 워크플로 | `CI — Lint & Test` dfaa7e1 성공. `CD — Deploy to EC2` dfaa7e1(사용자 푸시) 는 `EC2_HOST` 비어 있어 ssh-keyscan 단계에서 **의도대로 실패**(배포 안 함). ECR disable·파일 삭제 완료(a8c9b8c). 10-06 추가 수정(미커밋): 헬스체크 curl 에 `--retry-connrefused`(domain-rag-lab 과 동일 원인 선반영) |
 | 배포 서버 | st 서버(43.202.161.134) `/opt/stock-kms-portal`, compose 프로젝트 `stock-kms-portal`(`deploy/st-iv/compose.yml`) → https://iv.edumgt.co.kr (git 체크아웃 아님 — rsync/scp 로 파일 반영). **nginx 역프록시 정본은 stock-coin-trade `docker/nginx.ssl.conf` 의 iv 블록**(stock-coin-trade todo 6-12). `deploy/st-iv/nginx.iv.conf` 는 참고 사본 |
 | 참고 | 2026-10-02 판단(메모리/domain-rag-lab 8절): fd 권고, st 부적합 |
+
+## 9. 2026-10-08 타이틀 크기 정상화 (사용자 요청)
+
+사용자 스크린샷: 실시간 분봉차트 페이지의 히어로 타이틀이 비정상적으로 큼. "비정상적인 크기의 타이틀 모두 제거, 타이틀을 다른 페이지와 동일하게".
+
+**왜 아직 컸나**: 공통 타이포그래피 가이드(lumina todo 6-27, 2026-10-07)가 `h1, h2, .page-title { font-size:18px !important }` 블록을 두 CSS 맨 끝에 넣었지만, **`style.css?v=` 캐시 버전을 올리지 않아** 브라우저가 옛 CSS 를 계속 썼다. 코드상으로는 이미 18px 로 눌리고 있었다.
+
+| 변경 | 내용 |
+|------|------|
+| `frontend/style.css` | 타이틀(h1·h2·.page-title 및 그 안의 mark/small/span)에 걸린 개별 `font-size` 선언 **52건 제거**. `!important` 블록이 이미 무력화해 둔 죽은 선언이라 남겨 두면 "페이지마다 크기가 다르다"는 착시만 준다. 빈 껍데기가 된 규칙 정리 |
+| `frontend/investment-native/styles.css` | 같은 기준으로 **58건 제거** |
+| `frontend/investment-native/js/views/*.js` (26개 파일) | `<h1>`·`<h2>` 인라인 `style="font-size:…"` **32건 제거** |
+| `frontend/style.css` (배너) | 분봉차트·통합대시보드 히어로 `padding:clamp(24px,4vw,54px)`·`border-bottom:12px`, 통합학습 `clamp(20px,3vw,38px)`·`10px` → 이 포털 표준인 `.practice-hub-head` 와 동일하게 **`padding:30px 32px` · `border-bottom:8px`** 로 통일. 18px 타이틀에 54px 패딩이면 빈 파란 박스만 커 보인다 |
+| `frontend/index.html`·`investment-native/index.html`·`investment-native/pages/youtube.html` | 스타일시트 캐시 버전 4곳 → **`?v=20261008-title18`** (이게 있어야 실제 화면이 바뀐다) |
+
+검증: 타이틀 font-size 선언 잔여 **0건**(두 CSS), 인라인 잔여 **0건**, 중괄호 균형 OK(1907/1907·2505/2505), 수정한 JS 26개 파일 문법 검사 통과. 이 저장소엔 테스트 스위트가 없다.
+
+남겨 둔 것: `.atlas-header { padding: clamp(28px,5vw,54px) }` — 매거진형 히어로로 성격이 달라 패딩은 두었다(그 안의 `h2` 크기 선언은 제거됨). 타이틀 위 `content-kicker`(15.95px)는 타이틀이 아니라 손대지 않았다.
+
+**배포 필요**: iv.edumgt.co.kr 은 st 서버(43.202.161.134) `/opt/stock-kms-portal` 에 rsync/scp 로 반영하는 구조라, 위 변경은 동기화 전까지 화면에 안 나온다.

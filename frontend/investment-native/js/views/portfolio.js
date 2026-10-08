@@ -3,7 +3,7 @@ import { api } from '../api.js';
 export function portfolioView(container) {
   container.innerHTML = `
     <div style="margin-bottom:24px;">
-      <h1 style="font-size:1.25rem; font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-briefcase"></i> 포트폴리오 최적화</h1>
+      <h1 style="font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-briefcase"></i> 포트폴리오 최적화</h1>
       <p style="font-size:0.875rem; color:#94a3b8; line-height:1.6;">
         몬테카를로 시뮬레이션으로 효율적 프론티어를 도출하고 샤프 비율 최적 및 위험균등 포트폴리오를 계산합니다.
       </p>

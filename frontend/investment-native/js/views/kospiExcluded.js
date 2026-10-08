@@ -12,7 +12,7 @@ const PERIODS = [
 export function kospiExcludedView(container) {
   container.innerHTML = `
     <div style="margin-bottom:22px;">
-      <h1 style="font-size:1.25rem; font-weight:800; color:var(--text); margin:0 0 6px; display:flex; align-items:center; gap:8px;">
+      <h1 style="font-weight:800; color:var(--text); margin:0 0 6px; display:flex; align-items:center; gap:8px;">
         <i class="fa-solid fa-filter-circle-xmark" style="color:var(--primary);"></i>
         KOSPI 제외 지수 분석
       </h1>

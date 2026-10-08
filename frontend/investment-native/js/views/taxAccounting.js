@@ -311,7 +311,7 @@ function renderTaxOfficeReport(data, container) {
 export function taxAccountingView(container) {
   container.innerHTML = `
     <div style="margin-bottom:20px;">
-      <h1 style="font-size:1.25rem; font-weight:700; color:#1e293b; margin-bottom:6px;">
+      <h1 style="font-weight:700; color:#1e293b; margin-bottom:6px;">
         <i class="fa-solid fa-file-invoice-dollar" style="margin-right:8px; color:#3b82f6;"></i>세무·회계 시뮬레이션
       </h1>
       <p style="font-size:0.875rem; color:#64748b; line-height:1.6;">

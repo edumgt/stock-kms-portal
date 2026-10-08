@@ -429,7 +429,7 @@ export function investmentTreeView(container) {
     </style>
 
     <div style="margin-bottom:18px;">
-      <h1 style="font-size:1.18rem;font-weight:760;color:#131722;margin:0 0 5px;">
+      <h1 style="font-weight:760;color:#131722;margin:0 0 5px;">
         <i class="fa-solid fa-sitemap"></i> 투자 성향 분석 — 의사결정 트리
       </h1>
       <p style="font-size:0.87rem;color:#475569;margin:0;line-height:1.6;">

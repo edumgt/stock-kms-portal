@@ -4,7 +4,7 @@ import { cloudResourceCard } from './cloudAiResources.js';
 function tabShell(title, desc, tabs) {
   return `
     <div style="margin-bottom:18px;">
-      <h1 style="font-size:1.15rem;font-weight:700;color:#111;margin-bottom:5px;">
+      <h1 style="font-weight:700;color:#111;margin-bottom:5px;">
         <i class="fa-solid fa-chart-line"></i> ${title}
       </h1>
       <p style="font-size:0.88rem;color:#757575;line-height:1.6;margin:0;">${desc}</p>

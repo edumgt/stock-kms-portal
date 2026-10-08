@@ -4,7 +4,7 @@ import { cloudResourceCard } from './cloudAiResources.js';
 export function lstmView(container) {
   container.innerHTML = `
     <div style="margin-bottom:24px;">
-      <h1 style="font-size:1.25rem; font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-repeat"></i> LSTM 예측기</h1>
+      <h1 style="font-weight:700; color:var(--text); margin-bottom:6px;"><i class="fa-solid fa-repeat"></i> LSTM 예측기</h1>
       <p style="font-size:0.875rem; color:#94a3b8; line-height:1.6;">
         Long Short-Term Memory 신경망으로 시계열 시퀀스를 학습하고 미래 값을 예측합니다.
       </p>

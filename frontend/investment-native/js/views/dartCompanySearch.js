@@ -13,7 +13,7 @@ function escapeHtml(value) {
 export function dartCompanySearchView(container) {
   container.innerHTML = `
     <div style="margin-bottom:28px;">
-      <h1 style="font-size:1.45rem; font-weight:760; color:#131722; margin-bottom:8px;">
+      <h1 style="font-weight:760; color:#131722; margin-bottom:8px;">
         <i class="fa-solid fa-magnifying-glass-chart"></i> DART 상장기업 검색
       </h1>
       <p style="font-size:0.88rem; color:#6b7280; line-height:1.65;">
