@@ -364,3 +364,125 @@ python3 shared-css/audit.py --live   # 라이브 4개 사이트
 **실행 순서(사용자)**: ① `GATEWAY_API_KEY=... bash lex/scripts/deploy.sh`(서울 봇 생성 + Lambda + 훅) ② 출력된 ID 로 `LEX_BOT_ID=.. LEX_BOT_ALIAS_ID=.. bash deploy/st-iv/deploy-lex.sh --iam && bash deploy/st-iv/deploy-lex.sh` ③ iv 화면 확인 후 `DELETE_OLD_BOT=1 bash lex/scripts/deploy.sh --delete-virginia`. 에이전트는 Lex 생성·삭제 호출이 자동 모드에 막혀 미실행.
 **추가(2026-10-14 16:40 KST, 사용자 보고 "iv 첫 화면에 챗봇 창 없음")**: 원인 — 챗봇 DOM 을 만드는 `investment-native/js/sidebarUI.js` 는 투자분석 원본 앱(index.html)에서만 로드되고, 포털이 `/` 에 서빙하는 `frontend/index.html` 은 그 스크립트를 넣지 않는다(정적 자산만 `/investment-static` 로 마운트). 해결 — 포털용 `frontend/chatbot.js` 신설(ensureSidebarChatbot 이식 + Lex 대화 상태 활용: ElicitSlot 이면 입력창 힌트, ConfirmIntent 면 네/아니오 버튼, session_attributes 왕복)·`frontend/index.html` 맨 끝에 `<script src="/static/chatbot.js?v=20261014-lex">`·styles.css 에 `.floating-chatbot-quick`. deploy-lex.sh FILES 에 추가(이미지 재빌드에 포함). 서버 index.html 은 HEAD 와 md5 동일 확인.
 **API 키 발급**: 에이전트의 MariaDB 쓰기(api_key 해시 등록)는 자동 모드가 차단(Secret-Store Writes). `deploy/st-iv/issue-gateway-key.sh`(키 생성 → 해시만 서버 mockinv.api_key 에 INSERT(member 1, scopes 'kis:order kis:read') → 원문은 `secrets/lex-gateway-api-key` 600) 를 사용자가 실행. `.gitignore` 에 `secrets/` 추가(기존 `*.key` 줄에 붙어 깨졌던 것 복구).
+
+---
+
+지금까지 논의한 **AWS Lex 기반 주식 투자/매매 챗봇 설계 및 슬롯 필링 관점의 주요 내용**을 한눈에 보실 수 있도록 Markdown(MD) 형식으로 정리해 두었습니다.
+
+---
+
+# 📈 AWS Lex 기반 주식 투자 챗봇 구축 안내서
+
+## 1. 개요
+
+본 문서는 AWS Lex V2를 활용하여 **주식 조회 및 거래 매매 챗봇**을 구축할 때 필요한 슬롯(Slot) 설계, 슬롯 필링(Slot Filling) 메커니즘, Lambda 연동 및 비용 체계를 정리한 요약서입니다.
+
+---
+
+## 2. 주요 슬롯 유형 (Slot Types) 구성
+
+주식 챗봇에서 사용자의 발화로부터 핵심 매개변수를 추출하기 위한 슬롯 구성입니다.
+
+| 슬롯명 | 역할 | 추천 슬롯 유형 (Slot Type) | 비고 / 예시 |
+| --- | --- | --- | --- |
+| **`CompanyName`** | 종목명 / 티커 | **Custom Slot Type** (`StockSymbol`) | `삼성전자` (동의어: `삼전`, `005930`), `테슬라` |
+| **`Quantity`** | 매수/매도 수량 | **`AMAZON.Number`** (Built-in) | `10` ("10주 사줘") |
+| **`Price`** | 지정 가격 | **`AMAZON.Number`** / **`AMAZON.Currency`** | `70000` ("7만 원에 주문") |
+| **`OrderType`** | 매수 / 매도 / 조회 | **Custom Slot Type** (`OrderType`) | `매수` (`사기`), `매도` (`팔기`), `조회` |
+| **`PriceType`** | 시장가 / 지정가 | **Custom Slot Type** (`PriceType`) | `시장가`, `지정가` |
+| **`TargetDate`** | 조회 시점/날짜 | **`AMAZON.Date`** (Built-in) | `오늘`, `어제`, `지난주` |
+
+---
+
+## 3. 슬롯 필링 (Slot Filling) 대화 설계
+
+사용자가 한 번에 모든 정보를 입력하지 않아도 대화를 통해 단계별로 정보를 수집하는 과정입니다.
+
+### ① 대화 흐름 (Conversation Flow) 예시
+
+1. **사용자**: *"주식 사줘"* (Intent: `BuyStock` 감지, 슬롯 미비)
+2. **Lex Prompt**: *"어떤 종목을 매수하시겠어요?"* $\rightarrow$ **`CompanyName` 채우기**
+3. **사용자**: *"삼성전자"*
+4. **Lex Prompt**: *"몇 주를 매수하시겠어요?"* $\rightarrow$ **`Quantity` 채우기**
+5. **사용자**: *"10주"*
+6. **Lex Prompt**: *"시장가로 주문할까요, 지정가로 주문할까요?"* $\rightarrow$ **`PriceType` 채우기**
+7. **사용자**: *"7만 원에 지정가로 해줘"* $\rightarrow$ **`Price` 채우기**
+8. **Lex Prompt (Confirmation)**: *"삼성전자 10주를 70,000원에 지정가 매수할까요? (예/아니오)"*
+
+### ② 슬롯 필링 핵심 고려사항
+
+* **Multi-Slot Extraction**: 한 번에 여러 값이 들어오면 되묻기를 건너뛰고 다음 단계로 즉시 이동합니다.
+* 예: *"삼성전자 7만 원에 10주 사줘"* $\rightarrow$ 한 번에 모든 필수 슬롯 충족.
+
+
+* **Conditional Branching (조건부 분기)**:
+* `PriceType` = "시장가" $\rightarrow$ `Price` 입력 단계 생략.
+* `PriceType` = "지정가" $\rightarrow$ `Price` 필수 요구.
+
+
+
+---
+
+## 4. Lambda (Dialog Code Hook) 연동 방식
+
+대화 진행 도중 슬롯 값의 유효성을 검증(Validation)하거나 슬롯을 동적으로 제어하기 위해 AWS Lambda를 연동합니다.
+
+### ① 연동 시점
+
+* **Dialog Code Hook**: 슬롯 필링 중간중간 호출되어 값 검증, 종목코드 매핑, 동적 질문 제어를 수행합니다.
+* **Fulfillment Code Hook**: 모든 슬롯이 채워진 뒤 실제 증권사 API를 호출하여 매매를 체결합니다.
+
+### ② Lambda 구현 역할
+
+* **입력값 검증 (Validation)**: 상/하한가 이탈 여부, 거래 수량 제한(예: 1회 최대 100주) 체크 후 재질문(`ElicitSlot`).
+* **동적 기본값 처리**: 조회 날짜가 없으면 자동으로 `TargetDate = 오늘` 설정.
+* **검증 통과 시**: `Delegate` 응답으로 Lex의 기본 대화 프로세스로 제어권 반환.
+
+---
+
+## 5. 수천 개(2,600여 개) 종목 처리 아키텍처
+
+### ① AWS Lex 수량 제한 (Quota)
+
+* Custom Slot Type 당 **최대 10,000개**의 Slot Values / Synonyms 허용.
+* 2,677개 종목 등록은 Lex 제약상 **기술적으로 완전히 가능**함.
+
+### ② 실무 추천 아키텍처 (자유 텍스트 + 외부 DB 매핑)
+
+상장폐지/신규 상장 및 수많은 동의어(삼전, 애플 등)의 정적 관리 부담을 줄이기 위해 아래 구조를 권장합니다.
+
+```
+[유저 입력: "삼전 10주 사줘"]
+        │
+        ▼
+[Lex Slot: AMAZON.FreeFormInput] ──▶ "삼전"을 자유 텍스트로 수집
+        │
+        ▼
+[Dialog Code Hook (Lambda)] ──────▶ Redis / DynamoDB Master DB 조회
+        │                          ("삼전" ➔ "005930 삼성전자" 자동 매핑)
+        ▼
+[슬롯 값 확정 및 거래 진행]
+
+```
+
+---
+
+## 6. 과금 체계 (Lex Pricing)
+
+AWS Lex는 **사용한 질의응답 건수(Turn)** 기반의 Pay-as-you-go 요금제입니다.
+
+### ① 단가 (Request-and-Response 기준)
+
+| 구분 | 건당 비용 (USD) | 한화 추산 (1달러 = 1,350원 기준) |
+| --- | --- | --- |
+| **텍스트 요청 (Text Request)** | **$0.00075** / 건 | **약 1원** / 건 |
+| **음성 요청 (Speech Request)** | **$0.00400** / 건 | **약 5.4원** / 건 |
+
+### ② 과금 단위 기준 (Turn)
+
+* **1건 = 사용자가 챗봇에게 메시지를 전송(엔터)할 때마다 1회 발생.**
+* 하나의 매수 주문을 완료하기 위해 4번의 주고받는 대화(턴)가 이루어졌다면 총 4건($0.003, 약 4원)으로 청구됩니다.
+
+### ③ Free Tier 혜택
+
+* AWS 신규 계정/최초 사용 시 **12개월간 매달 텍스트 10,000건, 음성 5,000건 무료** 제공.

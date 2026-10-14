@@ -61,6 +61,22 @@ def create_bot(lex) -> tuple[str, str]:
     return bot_id, alias_id
 
 
+def wait_build(lex, base: dict, timeout: int) -> str:
+    """build_bot_locale 제출 후 Built/Failed 까지 대기. 진행 상태가 바뀔 때와 1분마다 한 줄씩 찍는다."""
+    cur = lex.describe_bot_locale(**base)["botLocaleStatus"]
+    if cur not in ("Building", "ReadyExpressTesting"):          # 이미 빌드 중이면 다시 제출하지 않는다
+        lex.build_bot_locale(**base)
+    start, last, shown = time.time(), "", 0.0
+    while time.time() - start < timeout:
+        status = lex.describe_bot_locale(**base)["botLocaleStatus"]
+        if status in ("Built", "Failed", "NotBuilt"):
+            return status
+        if status != last or time.time() - shown >= 60:
+            print(f"  build {status} ... {int(time.time() - start)}s", flush=True); last, shown = status, time.time()
+        time.sleep(10)
+    return lex.describe_bot_locale(**base)["botLocaleStatus"]
+
+
 def seed_base_intents(lex, base: dict) -> None:
     """옛 버지니아 봇에서 내보낸 기본 인텐트(Greeting·PortfolioHelp·MarketBasics 고정 응답)와 Fallback 응답을 넣는다."""
     cfg = json.loads((ROOT / "data" / "base_intents.json").read_text(encoding="utf-8"))
@@ -135,6 +151,9 @@ def main() -> int:
     ap.add_argument("--alias-id", default=ALIAS_ID)
     ap.add_argument("--create-bot", action="store_true", help="봇이 없으면 서울 리전에 새로 만들고 기본 인텐트를 넣는다")
     ap.add_argument("--delete-bot", nargs=2, metavar=("REGION", "BOT_ID"), help="옛 봇 삭제(예: us-east-1 SE3NCP7NMP). 서울 봇 전환 확인 후에만")
+    ap.add_argument("--skip-build", action="store_true", help="로캘 빌드 생략(뒤에 --lambda-arn 실행이 빌드할 때)")
+    ap.add_argument("--build-timeout", type=int, default=2700, help="로캘 빌드 대기 초(기본 45분; 2026-10-14 실측 25분 — 종목 슬롯 2,677개)")
+    ap.add_argument("--publish-only", action="store_true", help="슬롯 타입·인텐트 갱신과 빌드를 건너뛰고(DRAFT 가 이미 Built 일 때) 버전 발행·별칭 연결만 한다")
     args = ap.parse_args()
     if args.delete_bot:
         region, bot_id = args.delete_bot
@@ -149,6 +168,14 @@ def main() -> int:
         bot_id, alias_id = create_bot(lex)
         print(f"export LEX_REGION={REGION} LEX_BOT_ID={bot_id} LEX_BOT_ALIAS_ID={alias_id}")
     base = {"botId": bot_id, "botVersion": "DRAFT", "localeId": LOCALE}
+    if args.publish_only:
+        status = lex.describe_bot_locale(**base)["botLocaleStatus"]
+        if status != "Built":
+            print(f"--publish-only 인데 로캘 상태가 {status} 입니다. 먼저 빌드가 끝나야 합니다."); return 1
+        if not args.lambda_arn:
+            print("--publish-only 는 --lambda-arn 과 함께 씁니다."); return 1
+        print("publish-only: DRAFT(Built) 그대로 버전 발행")
+        return publish(lex, bot_id, alias_id, args)
     if args.create_bot or not BOT_ID:
         seed_base_intents(lex, base)
 
@@ -195,22 +222,24 @@ def main() -> int:
             lex.update_intent(**base, intentId=intent_id, **body, slotPriorities=priorities)
         print("  slots:", [s[0] for s in slots])
 
-    # 3) 로캘 빌드
-    lex.build_bot_locale(**base)
-    for _ in range(120):
-        status = lex.describe_bot_locale(**base)["botLocaleStatus"]
-        if status in ("Built", "Failed", "NotBuilt"):
-            break
-        time.sleep(5)
+    # 3) 로캘 빌드. ReadyExpressTesting 은 '아직 빌드 중(간이 테스트만 가능)' 이라 Built 까지 기다린다.
+    if args.skip_build:
+        print("locale build: skipped (--skip-build)")
+        return 0
+    status = wait_build(lex, base, args.build_timeout)
     print("locale build:", status)
     if status != "Built":
-        print(lex.describe_bot_locale(**base).get("failureReasons"))
+        print("failureReasons:", lex.describe_bot_locale(**base).get("failureReasons"))
         return 1
     if not args.lambda_arn:
         print("DRAFT 만 갱신. 운영 반영은 --lambda-arn 으로 다시 실행.")
         return 0
 
-    # 4) 버전 발행 + 별칭 갱신 (코드 훅 연결)
+    return publish(lex, bot_id, alias_id, args)
+
+
+def publish(lex, bot_id: str, alias_id: str, args) -> int:
+    """4) 버전 발행 + 별칭 생성/갱신 (코드 훅 연결)"""
     ver = lex.create_bot_version(botId=bot_id, botVersionLocaleSpecification={LOCALE: {"sourceBotVersion": "DRAFT"}})["botVersion"]
     for _ in range(60):
         if lex.describe_bot_version(botId=bot_id, botVersion=ver)["botStatus"] == "Available":

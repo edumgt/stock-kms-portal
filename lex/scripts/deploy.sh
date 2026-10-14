@@ -2,6 +2,7 @@
 # 6-10/6-11 배포(서울 리전): Lex 봇 생성·갱신 + 코드 훅 Lambda. stock-kms-portal 루트에서 실행. 관리자 AWS 자격증명 필요.
 #   GATEWAY_API_KEY=sk_... bash lex/scripts/deploy.sh                 # ① 서울에 봇 없으면 생성(+기본 인텐트) ② Lambda 생성/갱신 ③ Lex 호출 권한 ④ 거래 인텐트·빌드·버전·별칭 훅 ⑤ 스모크
 #   LEX_BOT_ID=... LEX_BOT_ALIAS_ID=... GATEWAY_API_KEY=... bash lex/scripts/deploy.sh   # 이미 만든 봇 갱신
+#   PUBLISH_ONLY=1 LEX_BOT_ID=... GATEWAY_API_KEY=... bash lex/scripts/deploy.sh      # DRAFT 가 이미 Built 면 재빌드 없이 발행만(약 1~2분)
 #   DELETE_OLD_BOT=1 bash lex/scripts/deploy.sh --delete-virginia      # 서울 전환 확인 후 옛 버지니아 봇(us-east-1 SE3NCP7NMP) 삭제
 # GATEWAY_API_KEY 는 st.edumgt.co.kr 회원 → API 키에서 발급(scopes "kis:order kis:read" 는 운영자가 DB 에서 부여). lumina 전용 키(id=2)와 분리 권장.
 set -euo pipefail
@@ -21,7 +22,7 @@ echo "python: $PY ($($PY -c 'import boto3; print("boto3", boto3.__version__)'))"
 
 if [ "${1:-}" = "--delete-virginia" ]; then
   [ "${DELETE_OLD_BOT:-}" = "1" ] || { echo "DELETE_OLD_BOT=1 을 함께 주세요(되돌릴 수 없음)"; exit 1; }
-  $PY lex/scripts/build_bot.py --delete-bot us-east-1 SE3NCP7NMP
+  $PY -u lex/scripts/build_bot.py --delete-bot us-east-1 SE3NCP7NMP
   aws lambda delete-function --region us-east-1 --function-name $FN 2>/dev/null && echo "deleted lambda $FN in us-east-1" || true
   exit 0
 fi
@@ -31,7 +32,7 @@ GATEWAY_BASE="${GATEWAY_BASE:-https://st.edumgt.co.kr}"; MAX_ORDER_QTY="${MAX_OR
 
 # ① 봇(없으면 생성 + 기본 인텐트). 별칭은 ④ 에서 버전 발행 뒤 만들어진다.
 if [ -z "${LEX_BOT_ID:-}" ]; then
-  OUT=$($PY lex/scripts/build_bot.py --create-bot | tee /dev/stderr)
+  OUT=$($PY -u lex/scripts/build_bot.py --create-bot --skip-build | tee /dev/stderr)   # 빌드는 ③ 에서 한 번만
   eval "$(echo "$OUT" | grep '^export LEX_')"; export LEX_BOT_ID
 fi
 echo "bot: $LEX_REGION $LEX_BOT_ID"
@@ -60,7 +61,8 @@ aws lambda wait function-updated --region $REGION --function-name $FN
 ARN=$(aws lambda get-function --region $REGION --function-name $FN --query 'Configuration.FunctionArn' --output text)
 
 # ③ 거래 인텐트·빌드 → 버전 발행 → 운영 별칭 생성/갱신(새 버전 + 코드 훅). 끝에 export 줄을 찍는다.
-OUT=$($PY lex/scripts/build_bot.py --lambda-arn "$ARN" ${LEX_BOT_ALIAS_ID:+--alias-id "$LEX_BOT_ALIAS_ID"} | tee /dev/stderr)
+# PUBLISH_ONLY=1 이면 인텐트 갱신·재빌드(약 25분)를 건너뛰고 Built 상태의 DRAFT 를 그대로 발행한다(인텐트·슬롯 정의를 바꾸지 않았을 때).
+OUT=$($PY -u lex/scripts/build_bot.py --lambda-arn "$ARN" ${LEX_BOT_ALIAS_ID:+--alias-id "$LEX_BOT_ALIAS_ID"} ${PUBLISH_ONLY:+--publish-only} | tee /dev/stderr)
 eval "$(echo "$OUT" | grep '^export LEX_')"; export LEX_BOT_ID LEX_BOT_ALIAS_ID
 echo "bot: $LEX_REGION $LEX_BOT_ID alias $LEX_BOT_ALIAS_ID"
 
