@@ -54,10 +54,10 @@ def create_bot(lex) -> tuple[str, str]:
                 break
             time.sleep(3)
         print("locale created:", LOCALE)
+    # 별칭은 숫자 버전만 가리킬 수 있어(DRAFT 불가) 버전 발행 뒤 main() 에서 만든다. 이미 있으면 그 ID.
     aliases = {a["botAliasName"]: a["botAliasId"] for a in lex.list_bot_aliases(botId=bot_id, maxResults=100).get("botAliasSummaries", [])}
-    alias_id = aliases.get(ALIAS_NAME) or lex.create_bot_alias(botId=bot_id, botAliasName=ALIAS_NAME, botVersion="DRAFT",
-                                                               botAliasLocaleSettings={LOCALE: {"enabled": True}})["botAliasId"]
-    print("alias:", ALIAS_NAME, alias_id)
+    alias_id = aliases.get(ALIAS_NAME, "")
+    print("alias:", ALIAS_NAME, alias_id or "(버전 발행 후 생성)")
     return bot_id, alias_id
 
 
@@ -216,11 +216,24 @@ def main() -> int:
         if lex.describe_bot_version(botId=bot_id, botVersion=ver)["botStatus"] == "Available":
             break
         time.sleep(5)
-    alias = lex.describe_bot_alias(botId=bot_id, botAliasId=alias_id)
-    lex.update_bot_alias(botId=bot_id, botAliasId=alias_id, botAliasName=alias["botAliasName"], botVersion=ver,
-                         botAliasLocaleSettings={LOCALE: {"enabled": True, "codeHookSpecification": {"lambdaCodeHook": {"lambdaARN": args.lambda_arn, "codeHookInterfaceVersion": "1.0"}}}},
-                         sentimentAnalysisSettings=alias.get("sentimentAnalysisSettings") or {"detectSentiment": False})
-    print(f"alias {alias['botAliasName']} -> version {ver}, lambda hook {args.lambda_arn}")
+    locale_settings = {LOCALE: {"enabled": True, "codeHookSpecification": {"lambdaCodeHook": {"lambdaARN": args.lambda_arn, "codeHookInterfaceVersion": "1.0"}}}}
+    if not alias_id:
+        aliases = {a["botAliasName"]: a["botAliasId"] for a in lex.list_bot_aliases(botId=bot_id, maxResults=100).get("botAliasSummaries", [])}
+        alias_id = aliases.get(ALIAS_NAME, "")
+    if alias_id:
+        alias = lex.describe_bot_alias(botId=bot_id, botAliasId=alias_id)
+        lex.update_bot_alias(botId=bot_id, botAliasId=alias_id, botAliasName=alias["botAliasName"], botVersion=ver,
+                             botAliasLocaleSettings=locale_settings,
+                             sentimentAnalysisSettings=alias.get("sentimentAnalysisSettings") or {"detectSentiment": False})
+        print(f"alias {alias['botAliasName']} ({alias_id}) -> version {ver}, lambda hook {args.lambda_arn}")
+    else:
+        alias_id = lex.create_bot_alias(botId=bot_id, botAliasName=ALIAS_NAME, botVersion=ver, botAliasLocaleSettings=locale_settings)["botAliasId"]
+        print(f"alias {ALIAS_NAME} created ({alias_id}) -> version {ver}, lambda hook {args.lambda_arn}")
+    for _ in range(30):
+        if lex.describe_bot_alias(botId=bot_id, botAliasId=alias_id)["botAliasStatus"] == "Available":
+            break
+        time.sleep(3)
+    print(f"export LEX_REGION={REGION} LEX_BOT_ID={bot_id} LEX_BOT_ALIAS_ID={alias_id}")
     return 0
 
 
