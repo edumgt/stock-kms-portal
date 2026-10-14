@@ -25,3 +25,4 @@ data/processed/
 data/lean-workflows/
 
 *.key
+secrets/

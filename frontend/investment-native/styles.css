@@ -2608,3 +2608,7 @@ html.embedded-dashboard,html.embedded-dashboard body { height:auto; min-height:1
 .home-chart-ai-actions button:disabled { opacity: .5; cursor: wait; }
 
 /* 공통 스타일(한글 스케일·최소 글자 크기·타이틀 고정·공통 푸터)은 https://www.edumgt.co.kr/css/common.css 정본에 있다. 여기에 다시 복제하지 말 것. */
+
+/* 6-11: Lex 확인 단계(네/아니오) 빠른 응답 */
+.floating-chatbot-quick { display: flex; gap: 8px; margin: 8px 0 2px; }.floating-chatbot-quick[hidden] { display: none; }
+.floating-chatbot-quick button { flex: 1; padding: 7px 0; border: 1px solid #bfdbfe; border-radius: 8px; background: #eff6ff; color: #123b68; font-weight: 700; font-size: .82rem; }.floating-chatbot-quick button:hover { background: #dbeafe; }

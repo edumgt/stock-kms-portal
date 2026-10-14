@@ -20,7 +20,7 @@ if [ "${1:-}" = "--iam" ]; then
   exit 0
 fi
 
-FILES="app/api/routes/lex.py app/main.py requirements.txt tests/test_lex.py deploy/st-iv/deploy-lex.sh deploy/st-iv/lex-policy.json"
+FILES="app/api/routes/lex.py app/main.py requirements.txt tests/test_lex.py frontend/index.html frontend/chatbot.js frontend/investment-native/styles.css deploy/st-iv/deploy-lex.sh deploy/st-iv/issue-gateway-key.sh deploy/st-iv/lex-policy.json"
 tar czf - $FILES | ssh -i "$K" -o StrictHostKeyChecking=no "$H" "
   set -e; cd /opt/stock-kms-portal && tar xzf - && echo 'host source updated'
   # ② .env.prod 에 Lex 설정(없을 때만 추가). 자격증명은 넣지 않는다 — 컨테이너가 EC2 인스턴스 역할(IMDS)로 받는다.
