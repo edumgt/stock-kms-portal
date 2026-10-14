@@ -324,3 +324,19 @@ python3 shared-css/audit.py --live   # 라이브 4개 사이트
 - pr↔iv 포크 중복 337KB(`days/assets/site.css` 147KB 등)를 S3 공통 파일로 끌어올리는 작업은 별건으로 남겼다
 
 **커밋 안 했다** — 변경만 남겨 두었다.
+
+### 6-9. 2026-10-14 iv.edumgt.co.kr 「AI 투자 도우미」(Amazon Lex V2) 복구 — Lex 라우터 포털 이식 (사용자 요청)
+
+**흔적 조사**: AWS 계정에 봇 **InvestmentAnalysisAssistant**(us-east-1, 봇 SE3NCP7NMP, 운영 별칭 investment-analysis-prod ZJFW9O3LZM, 2026-08-08, ko_KR, 인텐트 Greeting/PortfolioHelp/MarketBasics 고정 응답, 코드 훅·대화 로그 없음)이 남아 있고 `recognize-text` 로 응답 확인. 원본 저장소 edumgt/investment-analysis(`app/backend/routers/lex.py`, compose LEX_*)에서 이식된 `integration-src/investment-backend/routers/lex.py` 가 있으나, 그 백엔드 컨테이너가 st 서버에 없어(K2) `/api/lex/*` 는 502 "투자 분석 API에 연결하지 못했습니다". 같은 계정 ap-northeast-2 의 FinanceInvestBot(VP2C22LIIZ, 상담 예약 6슬롯 + 이행 Lambda)은 슬롯 필링 실습 봇으로 iv 와 무관.
+
+| 변경 | 내용 |
+|------|------|
+| `app/api/routes/lex.py` 신설 | investment-backend 의 lex.py 를 포털로 이식(6-2 홈 대시보드와 같은 방식). `GET /api/lex/status`(configured·region·locale·bot_id), `POST /api/lex/chat`(message·session_id·**session_attributes**). 응답에 Lex 대화 상태 — `intent`·`intent_state`·`dialog_action`·`slot_to_elicit`·`slots{이름: 해석값}`·`session_attributes` — 를 실어 슬롯 필링 단계를 화면이 알 수 있게 함. 리전은 `LEX_REGION`(없으면 AWS_REGION). 자격증명 오류 503, AccessDenied 403, 기타 502 |
+| `app/main.py` | `/api/{path}` 프록시보다 먼저 `lex_router` 등록 |
+| `requirements.txt` | `boto3==1.43.107` 추가(이미지 재빌드 필요) |
+| `tests/test_lex.py` | 3개(설정 상태·미설정 503, Lex 응답 → 대화 상태 매핑·session_attributes 전달, 세션 ID/빈 메시지 422·AccessDenied 403·NoCredentials 503·빈 응답) — 저장소 첫 tests/ 디렉터리(CI 가 pytest 를 돌리기 시작함) |
+| `deploy/st-iv/deploy-lex.sh`·`lex-policy.json` | `--iam`: 인스턴스 역할 StockCoinTradeSecretsReadRole 에 운영 별칭 한정 `lex:RecognizeText` 인라인 정책(추가 전용). 본 실행: 소스 tar 갱신 → `.env.prod` 에 LEX_REGION/BOT_ID/ALIAS_ID/LOCALE 추가 → api 재빌드·재기동 → 공개 주소로 status/chat 확인 |
+
+**검증**: `tests/test_lex.py` 3개 통과(lumina venv). 이 PC 의 관리자 자격증명으로 운영 별칭에 "포트폴리오를 어떻게 구성해" → PortfolioHelp/Fulfilled/Close 응답 확인. 브라우저 미실행.
+**배포(미완, 사용자)**: ① `bash deploy/st-iv/deploy-lex.sh --iam`(에이전트의 IAM 변경은 자동 모드가 차단 — 인스턴스 역할 StockCoinTradeSecretsReadRole 에는 현재 Secrets Manager 읽기만 있고 Lex 권한이 없음) ② `bash deploy/st-iv/deploy-lex.sh`. 컨테이너는 IMDS 로 역할 자격증명을 받으므로 키를 .env 에 넣지 않는다.
+**다음**: 슬롯 필링을 넣으려면 봇에 인텐트·슬롯·코드 훅 추가 + `sidebarUI.js` 가 `dialog_action`(ElicitSlot/ConfirmIntent) 과 `session_attributes` 를 쓰도록 확장.
