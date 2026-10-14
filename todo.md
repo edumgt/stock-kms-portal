@@ -340,3 +340,25 @@ python3 shared-css/audit.py --live   # 라이브 4개 사이트
 **검증**: `tests/test_lex.py` 3개 통과(lumina venv). 이 PC 의 관리자 자격증명으로 운영 별칭에 "포트폴리오를 어떻게 구성해" → PortfolioHelp/Fulfilled/Close 응답 확인. 브라우저 미실행.
 **배포(미완, 사용자)**: ① `bash deploy/st-iv/deploy-lex.sh --iam`(에이전트의 IAM 변경은 자동 모드가 차단 — 인스턴스 역할 StockCoinTradeSecretsReadRole 에는 현재 Secrets Manager 읽기만 있고 Lex 권한이 없음) ② `bash deploy/st-iv/deploy-lex.sh`. 컨테이너는 IMDS 로 역할 자격증명을 받으므로 키를 .env 에 넣지 않는다.
 **다음**: 슬롯 필링을 넣으려면 봇에 인텐트·슬롯·코드 훅 추가 + `sidebarUI.js` 가 `dialog_action`(ElicitSlot/ConfirmIntent) 과 `session_attributes` 를 쓰도록 확장.
+
+### 6-10. 2026-10-14 iv 챗봇 주식 대화 → Lambda 코드 훅 → KIS 모의 주문 (사용자 요청)
+
+**설계**: Lex 봇 InvestmentAnalysisAssistant(us-east-1) 에 인텐트 3개 추가. **TradeStock**(슬롯 Side=OrderSide BUY/SELL · Ticker=StockTicker(값 종목코드, 동의어 종목명 2,677개 — lumina `korea-universe.json`) · Quantity · OrderType=OrderTypeKind MARKET/LIMIT · Price(지정가만)), **CheckBalance**, **CheckOrder**. Lambda `iv-lex-trade-hook` 이 DialogCodeHook(값 검증·관리종목 매수 거절·수량/금액 상한·지정가 가격 요청·매도 보유수량 확인·확인 문구 ConfirmIntent) 과 FulfillmentCodeHook(장중 확인 → stock-coin-trade `POST /openapi/v1/kis/order-approval` → `POST /orders`, 계약 v0.6 2절, Bearer API 키) 을 맡는다. `environment` 는 코드에서 paper 고정. 세션 속성 lastTicker/lastOrderNo 로 "주문 확인" 후속 대화. 포털 lex.py(6-9)는 slots·dialog_action·session_attributes 를 이미 돌려주므로 프런트 변경 없이 동작(프롬프트는 Lex 메시지로 옴).
+
+| 파일 | 내용 |
+|------|------|
+| `lex/lambda/trade_hook/handler.py` + `tickers.json` | 코드 훅(표준 라이브러리만, zip 의존성 없음). 훅 예외는 Close 메시지로 변환 |
+| `lex/scripts/build_bot.py` | 슬롯 타입·인텐트·슬롯 생성/갱신(멱등) → 로캘 빌드 → `--lambda-arn` 이면 버전 발행 + 별칭 훅 연결. 페이로드는 botocore 서비스 모델로 오프라인 검증 |
+| `lex/scripts/deploy.sh` | Lambda 패키징·create/update(역할 chatbot-api-lambda-role 재사용, python3.12, env GATEWAY_BASE/GATEWAY_API_KEY/MAX_ORDER_QTY/MAX_ORDER_AMOUNT) → `lexv2.amazonaws.com` 호출 권한(별칭 ARN 한정) → build_bot → recognize-text 스모크("삼성전자 1주 시장가 매수" → 확인 → "아니오") |
+| `tests/test_lex_trade_hook.py` | 6개(슬롯 검증·Delegate/ElicitSlot 구분·관리종목·한도, 확인 문구·세션 속성·거절/확인, 매도 보유수량, 이행 승인→주문·clientOrderId, 장외 차단·게이트웨이 오류 매핑, 잔고·주문확인·미지 인텐트·예외) |
+| `lex/README.md` | 구성·안전장치·실행법 |
+
+**검증**: tests/ 9개 통과(lex 라우터 3 + 훅 6). AWS 호출(DRAFT 빌드 포함)은 자동 모드가 차단 → 미실행.
+**배포(미완, 사용자)**: ① st.edumgt.co.kr 회원 → API 키 발급 후 DB 에서 scopes `kis:order kis:read` 부여(lumina 키 id=2 와 분리) ② `GATEWAY_API_KEY=... bash lex/scripts/deploy.sh` ③ 6-9 의 포털 Lex 복구(deploy-lex.sh)가 먼저 되어 있어야 화면에서 보인다.
+**주의**: 챗봇에 접근하는 누구나 모의계좌 주문을 낼 수 있다(포털 로그인 뒤에만 챗봇을 노출하거나 Lambda 상한을 낮출 것). 게이트웨이의 비상 정지·예수금 검사·회당 1천만원 한도는 그대로 적용된다(현재 예수금 음수라 매수는 10-16 결제 전까지 거절됨).
+
+### 6-11. 2026-10-14 Lex 봇 서울 리전 전환 + 버지니아 봇 제거 + 전 리전 봇 조사 (사용자 요청)
+
+**조사(전 리전 `lexv2-models list-bots`)**: 봇은 두 리전뿐. ap-northeast-2: AcademyReservationBot2(38N5QKAZMD)·FinanceInvestBot(VP2C22LIIZ, 실습). us-east-1: InvestmentAnalysisAssistant(SE3NCP7NMP, iv 용 → 삭제 대상). 나머지 리전 없음. Lex V1(`lex-models get-bots`)은 전 리전 503(서비스 종료)이라 V1 봇 없음.
+**변경**: `lex/data/base_intents.json`(버지니아 봇의 Greeting·PortfolioHelp·MarketBasics·Fallback 응답 내보냄) · `lex/scripts/build_bot.py` 리전·봇 ID 환경변수화(기본 ap-northeast-2), `--create-bot`(봇·ko_KR 로캘·별칭 생성 + 기본 인텐트 시드), `--delete-bot REGION ID` · `lex/scripts/deploy.sh` 서울 기준(봇 없으면 생성 → Lambda(서울) → 훅 연결 → 스모크 3턴), `--delete-virginia`(DELETE_OLD_BOT=1 필요, 봇 + us-east-1 Lambda 삭제) · `deploy/st-iv/deploy-lex.sh` 봇 ID 환경변수 필수, 정책 JSON 실행 시 생성, `.env.prod` 기존 LEX_* 값 덮어씀. 신규 호출(CreateBot/CreateBotLocale/CreateBotAlias/DeleteBot/기본 인텐트/Fallback)도 botocore 모델로 오프라인 검증. 테스트 9개 통과.
+**실행 순서(사용자)**: ① `GATEWAY_API_KEY=... bash lex/scripts/deploy.sh`(서울 봇 생성 + Lambda + 훅) ② 출력된 ID 로 `LEX_BOT_ID=.. LEX_BOT_ALIAS_ID=.. bash deploy/st-iv/deploy-lex.sh --iam && bash deploy/st-iv/deploy-lex.sh` ③ iv 화면 확인 후 `DELETE_OLD_BOT=1 bash lex/scripts/deploy.sh --delete-virginia`. 에이전트는 Lex 생성·삭제 호출이 자동 모드에 막혀 미실행.
