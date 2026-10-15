@@ -114,7 +114,8 @@ def slot_type_defs() -> list[dict]:
                             {"sampleValue": {"value": "SELL"}, "synonyms": [{"value": s} for s in (
                                 "매도", "매도해", "매도해줘", "매도할래", "매도할게", "매도하자", "매도요", "매도로", "팔아", "팔래", "팔게", "팔자", "팔아줘", "팔고 싶어", "처분")]}]},
         {"slotTypeName": "OrderTypeKind", "description": "시장가/지정가", "valueSelectionSetting": {"resolutionStrategy": "TopResolution"},
-         "slotTypeValues": [{"sampleValue": {"value": "MARKET"}, "synonyms": [{"value": s} for s in ("시장가", "시장가로", "현재가로", "바로")]},
+         # "알아서 해줘"(2026-10-15 실사용) 류는 시장가로 받는다(훅의 DEFAULT_MARKET_RE 와 이중 안전망)
+         "slotTypeValues": [{"sampleValue": {"value": "MARKET"}, "synonyms": [{"value": s} for s in ("시장가", "시장가로", "현재가로", "바로", "알아서", "알아서 해줘", "아무거나", "상관없어", "그냥", "기본으로", "몰라")]},
                             {"sampleValue": {"value": "LIMIT"}, "synonyms": [{"value": s} for s in ("지정가", "지정가로", "가격 지정")]}]},
         {"slotTypeName": "StockTicker", "description": "KRX 종목 (값=종목코드, 동의어=종목명)", "valueSelectionSetting": {"resolutionStrategy": "TopResolution"},
          "slotTypeValues": values},
@@ -144,7 +145,9 @@ def intent_defs(slot_type_ids: dict[str, str]) -> list[dict]:
          ]},
         {"intentName": "CheckBalance", "description": "KIS 모의계좌 잔고·보유종목 요약",
          "sampleUtterances": [{"utterance": u} for u in ("잔고 알려줘", "내 계좌 보여줘", "보유 종목 알려줘", "예수금 얼마야", "평가손익 알려줘", "잔고 조회",
-                                                         "나의 잔고 조회해봐", "잔고 조회해봐", "계좌 잔고", "예수금 알려줘", "내 보유 종목", "총평가 얼마야")],
+                                                         "나의 잔고 조회해봐", "잔고 조회해봐", "계좌 잔고", "예수금 알려줘", "내 보유 종목", "총평가 얼마야",
+                                                         # 3차(2026-10-15): "내 KIS 잔고는?" → Fallback
+                                                         "내 KIS 잔고는", "KIS 잔고", "내 잔고는", "잔고는", "내 계좌 잔고는", "KIS 모의계좌 잔고", "내 모의계좌 잔고", "잔고 확인", "계좌 확인")],
          "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True}, "slots": []},
         {"intentName": "AccountFaq", "description": "모의계좌 주문 가능 여부·예수금 음수·거절 사유 질문 (코드 훅이 실제 잔고로 답한다)",
          # 실사용(2026-10-15): "예수금이 - 인데 가능해?" 는 CheckBalance 로, "모의 투자 계좌로는 가능해?" 는 PortfolioHelp 로 잘못 잡혔다.
@@ -155,13 +158,25 @@ def intent_defs(slot_type_ids: dict[str, str]) -> list[dict]:
              "D+2 가 뭐야", "결제일이 언제야", "주문 한도가 얼마야", "챗봇으로 주문하면 어떻게 돼",
              # 실사용(2026-10-15 2차): "그럼 언제 입금 받지?" → MarketBasics, "이 시스템 자체의 모의 투자는 가능해?" → Fallback
              "그럼 언제 입금 받지", "언제 입금 받지", "입금 언제 돼", "매도 대금 언제 들어와", "매도한 돈 언제 들어와", "예수금 언제 양수 돼", "예수금 언제 채워져",
-             "이 시스템 자체의 모의 투자는 가능해", "이 시스템에서 모의투자 가능해", "여기서 모의투자 할 수 있어", "모의투자 돼", "여기서 주문 돼")],
+             "이 시스템 자체의 모의 투자는 가능해", "이 시스템에서 모의투자 가능해", "여기서 모의투자 할 수 있어", "모의투자 돼", "여기서 주문 돼",
+             # 3차(2026-10-15): "언제 입금돼나?", "그럼 다른 모의 투자는 가능해?"
+             "언제 입금돼나", "언제 입금되나", "입금 언제 되나", "언제 들어와", "돈 언제 들어와", "그럼 다른 모의 투자는 가능해", "다른 모의투자 가능해",
+             "다른 계좌로 가능해", "다른 모의계좌 연동 돼", "실계좌로 가능해", "다른 사이트 연동 돼")],
+         "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True}, "slots": []},
+        {"intentName": "CheckRanking", "description": "st 모의투자 공개 수익 랭킹 (KIS 계좌는 공용 1개라 개인 랭킹 없음 안내)",
+         # 3차(2026-10-15): "내 KIS 모의 투자 랭킹을 알 수 있어?" → PortfolioHelp
+         "sampleUtterances": [{"utterance": u} for u in (
+             "내 KIS 모의 투자 랭킹을 알 수 있어", "모의투자 랭킹", "랭킹 알려줘", "랭킹 보여줘", "수익 랭킹", "내 랭킹", "내 순위", "순위 알려줘", "수익률 순위",
+             "모의투자 순위", "누가 1등이야", "랭킹은", "투자 랭킹 알려줘", "상위 투자자 알려줘")],
          "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True}, "slots": []},
         {"intentName": "CheckQuote", "description": "종목 현재 시세 (코드 훅이 게이트웨이 /quote 로 답한다)",
          # 실사용(2026-10-15 2차): "한화오션 현재 시세 알려줘" → CheckOrder 로 오분류
          "sampleUtterances": [{"utterance": u} for u in (
              "{Ticker} 현재 시세 알려줘", "{Ticker} 시세 알려줘", "{Ticker} 시세", "{Ticker} 현재가", "{Ticker} 현재가 알려줘", "{Ticker} 주가 알려줘", "{Ticker} 주가",
-             "{Ticker} 얼마야", "{Ticker} 지금 얼마야", "{Ticker} 가격 알려줘", "{Ticker} 오늘 어때", "{Ticker} 얼마에 거래돼", "시세 알려줘", "현재가 알려줘", "주가 알려줘")],
+             "{Ticker} 얼마야", "{Ticker} 지금 얼마야", "{Ticker} 가격 알려줘", "{Ticker} 오늘 어때", "{Ticker} 얼마에 거래돼", "시세 알려줘", "현재가 알려줘", "주가 알려줘",
+             # 3차(2026-10-15): "삼성전자 현재 주가는?", "SK하이닉스 주가는?"(TradeStock 으로 오분류), "주가는?"
+             "{Ticker} 현재 주가는", "{Ticker} 주가는", "{Ticker} 현재 주가", "{Ticker} 지금 주가", "{Ticker} 주가 얼마", "{Ticker} 가격은", "{Ticker} 시세는", "{Ticker} 현재가는",
+             "주가는", "현재 주가는", "시세는", "{Ticker} 주가 어때")],
          "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True},
          "slots": [("Ticker", slot_type_ids["StockTicker"], "Required", "어느 종목의 시세를 볼까요? 종목명이나 6자리 종목코드로 알려 주세요.")]},
         {"intentName": "MarketHours", "description": "한국·미국 장 시간, 지금 장중 여부",

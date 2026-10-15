@@ -388,6 +388,7 @@ python3 shared-css/audit.py --live   # 라이브 4개 사이트
 **배포(사용자, 미완)**: 인텐트·슬롯이 바뀌어 **재빌드 필요(약 25분)** — `cd /home/ubuntu/stock-kms-portal && PUBLISH_ONLY= bash lex/scripts/finish.sh` 한 번이면 ① 기본 인텐트·Fallback 재적용 → 슬롯 타입·인텐트 갱신 → 로캘 빌드 → Lambda 갱신 → 버전 4 발행 → 별칭 전환 → 스모크 → ③ 포털 반영(chatbot.js 환영문 + style.css 캡처 버튼 좌측 이동 + pytest.ini)까지 이어진다. 확인 후 `DELETE_OLD_BOT=1 bash lex/scripts/deploy.sh --delete-virginia`.
 **남은 제안(미구현)**: "한화오션 1주 주문하려면?" 같은 질문형은 TradeStock 으로 바로 들어가므로 괜찮지만, 질문만 하고 주문은 원치 않는 경우를 위해 "주문 방법 알려줘" 류 안내 인텐트(HowToOrder) 추가 검토. 챗봇은 포털 로그인 없이도 열리므로 주문 인텐트를 로그인 사용자에게만 노출하는 것(6-10 주의 항목)은 여전히 미결.
 
+**버전 4 확인(2026-10-15 11:17 KST)**: 10:52 시작한 `PUBLISH_ONLY= finish.sh` 완료 — 로캘 Built(인텐트 8), **버전 4 발행 11:14, 별칭 investment-analysis-prod → 4**, ③ 포털 api 이미지 재빌드·재기동 11:15:10. 라이브 별칭 호출: "예수금이 마이너스인데 가능해" → AccountFaq 정상, "매수해" → TradeStock BUY 인식, "매수해→한화오션→1→시장가" 가 맥락 되묻기 `[한화오션(042660) 1주 매수]` 를 거쳐 예수금 음수 사전 차단 Close 까지 정상. 사용자 보고 "대화가 안 되고 있음"(11:15~11:17)은 ③ 재기동 구간(컨테이너 재시작 + 헬스체크 ~30초)에 챗봇 호출이 실패한 것으로 판단 — 이후 사용자 세션 호출 모두 200. 부수 발견: 잔고를 몇 초 안에 연속 조회하면 KIS 모의 `EGW00215`(초당 거래건수 초과)가 나며 챗봇은 "잔고를 조회하지 못했습니다" 로 안내함(cash_blocker + CheckBalance 가 겹칠 때 가능 → 필요 시 Lambda 에 잔고 수초 캐시 검토). 아직 반영 안 된 것: 2차 보강(CheckQuote·MarketHours·MarketHolidays·임계값 0.6, 아래) — 재빌드 1회 더 필요.
 **2차 대화 분석(2026-10-15 11:3x, Lambda 는 새 코드·인텐트는 옛 버전 3 상태에서 수집)**:
 | 턴 | 증상 | 보강 |
 |---|---|---|
@@ -400,6 +401,20 @@ python3 shared-css/audit.py --live   # 라이브 4개 사이트
 **게이트웨이(stock-coin-trade) 변경**: `kis_autotrade.get_quote`(inquire-price → price/change(부호)/changeRate/prevClose/open/high/low/volume/upper·lowerLimit, 현재가 0 이면 KIS_QUOTE_UNAVAILABLE 502) + `openapi_kis.py` `GET /quote/{symbol}`(kis:order 스코프, 6자리 검증 422). 테스트 `test_quote_endpoint_returns_signed_change` 포함 26개 통과. 계약 문서 v0.7 로 3사본(stock-coin-trade·lumina-invest·domain-rag-lab) 동일 갱신. st 배포는 stock-coin-trade `main` push → GitHub Actions `deploy-ec2.yml`(자동). **Lambda 의 시세 답변은 이 배포가 끝나야 동작**(그 전엔 "시세를 조회하지 못했습니다 (HTTP_404)").
 **테스트**: 포털 17개 통과(신규 3: 영업일/휴장일/서머타임 계산, CheckQuote 검증·포맷·직전 종목·오류, MarketHours/MarketHolidays/입금일 문구). 인텐트 7개·발화 124개 botocore 모델 검증, 중복 없음.
 **배포 순서(사용자)**: 사용자가 10:52 에 시작한 `PUBLISH_ONLY= finish.sh`(AccountFaq·동의어 포함, 빌드 대기 중)가 끝나 버전 4 가 나온 뒤 → ① stock-coin-trade 커밋·push(deploy-ec2.yml 가 st 배포) ② `cd /home/ubuntu/stock-kms-portal && PUBLISH_ONLY= bash lex/scripts/finish.sh` 한 번 더(새 인텐트 3개·임계값·Lambda 갱신 → 재빌드 약 25분 → 버전 5 → 포털 chatbot.js 반영). 진행 중인 빌드를 끊고 재시작하면 Lex 가 빌드 중인 DRAFT 를 갱신하게 되어 권장하지 않음.
+
+**3차 대화 분석(2026-10-15 11:4x, 버전 4 = 1차 보강만 반영된 상태)**:
+| 턴 | 증상 | 보강 |
+|---|---|---|
+| 수량을 묻는데 "아니요/아니/아니오/아아니요요" → 같은 질문 5회 반복 | Lex 는 확인 단계에서만 부정을 이해하고 슬롯 되묻기 중에는 값이 아니면 재질문 | 훅 `CANCEL_RE`(아니요·취소·그만·됐어·안 할래·stop…, 반복 글자 허용) — TradeStock·CheckQuote 의 DialogCodeHook 에서 확인 단계가 아니면 Close "주문을 취소했습니다" + pendingTrade 삭제 |
+| "000000" → "[경방(000050) 매도]" | Lex StockTicker TopResolution 이 근사값으로 해석 | `ticker_matches`: 입력 원문(originalValue)이 숫자면 코드와 정확히 같아야 하고, 이름이면 종목명과 포함 관계여야 함. 아니면 "'000000' 종목을 찾지 못했습니다. 경방(000050)을 말씀하신 건가요? 맞으면 코드 입력" 으로 되물음(CheckQuote 도 동일) |
+| "알아서 해줘" → 주문유형 재질문 | 시장가/지정가 동의어에 없음 | OrderTypeKind MARKET 동의어에 알아서·아무거나·상관없어·그냥·기본으로·몰라 + 훅 `DEFAULT_MARKET_RE` 로 이중 처리, 프롬프트에 "(잘 모르면 '시장가' 또는 '알아서')" 안내 |
+| "삼성전자 현재 주가는?" → Fallback, "SK하이닉스 주가는?" → TradeStock(매수/매도 질문) | CheckQuote 미배포 + "~는?" 어미 발화 없음 | CheckQuote 발화 12개 추가(`{Ticker} 현재 주가는`, `{Ticker} 주가는`, `주가는` …) |
+| "내 KIS 잔고는?" → Fallback | 어미 변형 미등록 | CheckBalance 발화 9개 추가(내 KIS 잔고는, 잔고는, 잔고 확인 …) |
+| "언제 입금돼나?" → 예수금 음수 일반 설명(입금일 없음) | 2차 보강 미배포 + 질문별 맞춤 없음 | AccountFaq 가 `inputTranscript` 로 주제 분기: 입금/언제 → D+2 입금일 예시부터, 다른/연동/국한/실계좌 → 범위 설명(KIS 공용 계좌 1개만, 다른 계좌·사이트 미연동, st 자체 모의투자는 로그인 후 이용), 그 외 → 기존 잔고 상태 |
+| "그럼 다른 모의 투자는 가능해?" → Fallback, "…st.edumgt.co.kr 연동 가능한지 체크해줘" → 예수금 설명 | 발화 없음 | AccountFaq 발화 11개 추가 + 위 범위 설명 |
+| "내 KIS 모의 투자 랭킹을 알 수 있어?" → PortfolioHelp | 랭킹 인텐트 없음 | 신규 **CheckRanking**(14개 발화) → st 공개 API `GET https://st.edumgt.co.kr/api/member/investor-rankings`(인증 없음, 초기자산 1억 기준 상위 10, `RANKING_URL`) 상위 5명 + "KIS 모의계좌는 공용 1개라 개인 랭킹 없음, 수익률은 잔고로" 안내 |
+| "20000000" → 회당 100주 안내 | 정상 | 유지 |
+Fallback 문구·chatbot.js 환영문에 랭킹 예시와 "입력 중 '취소'" 안내 추가. **테스트** 21개 통과(신규 4: 취소어 9종·CheckQuote 취소, 종목 근사 해석 거부·이름 포함 관계, "알아서"→시장가·모호 답 재질문, AccountFaq 주제 분기·랭킹 성공/실패). 훅 인텐트 8개(+기본 3개)·발화 170개 botocore 모델 검증, 중복 없음. **배포**: 2차와 함께 `PUBLISH_ONLY= bash lex/scripts/finish.sh` 1회(재빌드 ~25분)로 반영. 시세 답변은 stock-coin-trade push(deploy-ec2.yml) 선행.
 
 **GitHub Actions 오류(2026-10-15 사용자 보고)**: ① **CI** — 10-14 `tests/test_lex.py` 추가 이후 전부 실패. 원인: ci.yml 이 `pytest tests/` 로 실행해 저장소 루트가 sys.path 에 없어 `from app.api.routes import lex` 가 ModuleNotFoundError(로컬은 `python -m pytest` 라 cwd 가 들어가 통과). 수정: `pytest.ini`(`pythonpath = .`, `testpaths = tests`) 신설, 로컬에서 bare `pytest tests/` 9개 통과 확인. ② **CD(cd.yml)** — 이 저장소에서 **한 번도 성공한 적 없음**(10-07 이후 전부 실패). 직접 원인: secrets `EC2_HOST`·`EC2_APP_DIR` 미등록(등록된 것은 EC2_SSH_PRIVATE_KEY·EC2_USER 뿐) → `ssh-keyscan ""` 가 exit 1. 근본 원인: cd.yml 이 domain-rag-lab 의 복사본(`-p domain-rag-lab`, `docker-compose.prod.yml`, `http://localhost/health`)이라 실제 st 서버 운영 방식(`/opt/stock-kms-portal`, `deploy/st-iv/compose.yml`, `-p stock-kms-portal`, Caddy 뒤)과 맞지 않는다. 시크릿만 채우면 `-p domain-rag-lab` 로 st 서버에 다른 compose 스택을 올려 버리므로 **그대로 켜면 안 됨**. 선택지: (a) cd.yml 을 st-iv 기준으로 재작성(rsync → `deploy/st-iv/compose.yml` build/up api, 서버 `.env.prod` 유지) 후 secrets EC2_HOST=43.202.161.134·EC2_APP_DIR=/opt/stock-kms-portal 등록, (b) 수동 배포(`deploy/st-iv/*.sh`) 유지 시 cd.yml 을 `workflow_dispatch` 전용으로 바꾸거나 삭제. 사용자 결정 → 7절.
 
@@ -524,3 +539,28 @@ AWS Lex는 **사용한 질의응답 건수(Turn)** 기반의 Pay-as-you-go 요�
 ### ③ Free Tier 혜택
 
 * AWS 신규 계정/최초 사용 시 **12개월간 매달 텍스트 10,000건, 음성 5,000건 무료** 제공.
+
+---
+
+
+[ 사용자 (User) ]
+       │
+       ▼
+[ Amazon Lex V2 ] ──(대화 로그 수집)──> [ CloudWatch Logs / S3 ] ──> [ Amazon Athena ] (배치 분석 및 패턴 개선)
+       │
+   (실시간 발화 처리)
+       ▼
+[ AWS Lambda ]
+       │
+       ├──> [ Amazon Comprehend ] (실시간 분석)
+       │         ├── 1. 감정 분석 (Sentiment: Positive / Negative / Neutral)
+       │         └── 2. 핵심 구문/엔티티 추출 (Key Phrases & Entities)
+       │
+       ▼ (Comprehend 분석 결과에 따른 분기 처리)
+  ┌────────────────────────────────────────────────────────┐
+  │                                                        │
+  ├─ [분정적 감정 / 불만 포착] ──> [ Amazon Connect ] (상담원 연결)
+  │                                                        │
+  ├─ [키워드/엔티티 매칭] ─────> [ Amazon DynamoDB / Kendra ] (정확한 Q&A 답변 반환)
+  │                                                        │
+  └─ [기본 의도 매칭] ─────────> [ Lex 기본 응답 ]

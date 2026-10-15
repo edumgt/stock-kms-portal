@@ -217,3 +217,56 @@ def test_market_hours_and_holidays_answers(monkeypatch):
     assert text.startswith("2026년 남은 한국 증시 휴장일(주말 제외)은 12/25(금) 성탄절, 12/31(목) 연말 휴장 총 2일입니다.")
     faq = hook.handler(ev(intent="AccountFaq", source="FulfillmentCodeHook"))["messages"][0]["content"]
     assert "예: 10/15(목) 체결 → 10/19(월) 입금" in faq
+
+
+# ── 2026-10-15 3차 대화 분석: 되묻기 중 취소·종목 근사 해석 거부·"알아서"·입금/범위 답변·랭킹 ────
+def _say(e, text):
+    e["inputTranscript"] = text
+    return e
+
+
+def test_cancel_words_end_slot_elicitation():
+    for word in ("아니요", "아니", "아니오", "아아니요요", "취소", "그만", "됐어", "안 할래", "cancel"):
+        r = hook.handler(_say(ev(attrs={"pendingTrade": "{}"}, Side="SELL", Ticker="000050"), word))
+        assert r["sessionState"]["dialogAction"]["type"] == "Close" and "취소" in r["messages"][0]["content"], word
+        assert "pendingTrade" not in r["sessionState"]["sessionAttributes"]
+    ok = hook.handler(_say(ev(Side="SELL", Ticker="000050"), "10"))          # 보통 답은 그대로 진행
+    assert ok["sessionState"]["dialogAction"]["type"] in ("ElicitSlot", "Delegate")
+    assert hook.handler(_say(ev(intent="CheckQuote", Ticker="042660"), "아니요"))["sessionState"]["dialogAction"]["type"] == "Close"
+
+
+def test_ticker_resolution_must_match_user_input():
+    bad = ev(Side="SELL", Ticker="000050")
+    bad["sessionState"]["intent"]["slots"]["Ticker"]["value"]["originalValue"] = "000000"     # Lex 가 000000 → 경방(000050) 으로 근사 해석
+    r = hook.handler(bad)
+    assert r["sessionState"]["dialogAction"]["slotToElicit"] == "Ticker" and "'000000' 종목을 찾지 못했습니다. 경방(000050)" in r["messages"][0]["content"]
+    name_ok = ev(Side="BUY", Ticker="042660")
+    name_ok["sessionState"]["intent"]["slots"]["Ticker"]["value"]["originalValue"] = "한화오션"
+    assert hook.handler(name_ok)["sessionState"]["dialogAction"]["type"] in ("ElicitSlot", "Delegate") and hook.handler(name_ok)["sessionState"]["dialogAction"].get("slotToElicit") != "Ticker"
+    name_bad = ev(intent="CheckQuote", Ticker="042660")
+    name_bad["sessionState"]["intent"]["slots"]["Ticker"]["value"]["originalValue"] = "현대중공업"
+    assert hook.handler(name_bad)["sessionState"]["dialogAction"]["slotToElicit"] == "Ticker"
+    assert hook.ticker_matches("005930", "005930") and hook.ticker_matches("삼성 전자", "005930") and not hook.ticker_matches("005935", "005930")
+
+
+def test_order_type_defaults_to_market_on_vague_answer():
+    r = hook.handler(_say(ev(Side="BUY", Ticker="005930", Quantity="10"), "알아서 해줘"))
+    assert r["sessionState"]["dialogAction"] == {"type": "ConfirmIntent"} and "10주 시장가 매수" in r["messages"][0]["content"]
+    assert r["sessionState"]["intent"]["slots"]["OrderType"]["value"]["interpretedValue"] == "MARKET"
+    r = hook.handler(_say(ev(Side="BUY", Ticker="005930", Quantity="10"), "음"))
+    assert r["sessionState"]["dialogAction"]["slotToElicit"] == "OrderType" and "'알아서'" in r["messages"][0]["content"]
+
+
+def test_account_faq_tailors_to_question_and_ranking(monkeypatch):
+    with patch.object(hook, "get_balance", lambda: {"cashBalance": -10977506, "holdings": []}):
+        t = hook.handler(_say(ev(intent="AccountFaq", source="FulfillmentCodeHook"), "언제 입금돼나?"))["messages"][0]["content"]
+        assert t.startswith("매도 대금은 체결일부터 2영업일 뒤(D+2)") and "현재 예수금은 -10,977,506원" in t
+        t = hook.handler(_say(ev(intent="AccountFaq", source="FulfillmentCodeHook"), "그럼 다른 모의 투자는 가능해?"))["messages"][0]["content"]
+        assert t.startswith("이 챗봇은 st.edumgt.co.kr 의 KIS 모의계좌 1개(공용)에만") and "랭킹 알려줘" in t
+    rows = {"rankings": [{"rank": 1, "username": "system02", "totalAsset": 123864557, "profit": 23864557, "profitRate": 23.86},
+                         {"rank": 2, "username": "system08", "totalAsset": 122461679, "profit": 22461679, "profitRate": 22.46}]}
+    with patch.object(hook, "fetch_json", lambda url: rows):
+        t = hook.handler(ev(intent="CheckRanking", source="FulfillmentCodeHook"))["messages"][0]["content"]
+    assert "상위 2명: 1위 system02 +23.86%(123,864,557원), 2위 system08 +22.46%" in t and "개인 랭킹은 없고" in t
+    with patch.object(hook, "fetch_json", side_effect=hook.GatewayError("UNREACHABLE", "x")):
+        assert "랭킹을 조회하지 못했습니다" in hook.handler(ev(intent="CheckRanking", source="FulfillmentCodeHook"))["messages"][0]["content"]

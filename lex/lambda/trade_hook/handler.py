@@ -15,6 +15,8 @@ Lex 가 DialogCodeHook(매 턴 검증·확인) 과 FulfillmentCodeHook(이행) �
   CheckQuote  : Ticker(StockTicker) → 현재가·전일대비·시고저·거래량 (게이트웨이 GET /quote/{symbol}, 계약 2-7)
   MarketHours : 슬롯 없음 → 한국·미국 정규장 시간(KST, 서머타임 반영)과 지금 장중 여부
   MarketHolidays: 슬롯 없음 → 올해 남은 KRX 휴장일(KRX_HOLIDAYS 상수)
+  CheckRanking: 슬롯 없음 → st 사이트 모의투자 공개 수익 랭킹 상위 5(RANKING_URL, 인증 없음) + KIS 계좌는 공용 1개라 개인 랭킹 없음 안내
+공통: 슬롯 되묻기 중 "아니요/취소/그만" 은 훅이 취소(CANCEL_RE) · 종목 해석은 입력 원문과 대조(ticker_matches: '000000'→경방 같은 근사 해석 거부) · 주문유형에 "알아서" 는 시장가
 세션 속성: pendingTrade(끊긴 주문 대화의 슬롯, PENDING_TTL 초) · lastTicker/lastTickerName · lastOrderNo · lastRejectCode
 """
 from __future__ import annotations
@@ -22,6 +24,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import time
 import urllib.error
 import urllib.request
@@ -39,6 +42,11 @@ ENVIRONMENT = "paper"                                               # 실전(rea
 MAX_ORDER_QTY = int(os.environ.get("MAX_ORDER_QTY", "100"))
 MAX_ORDER_AMOUNT = int(os.environ.get("MAX_ORDER_AMOUNT", "5000000"))
 HTTP_TIMEOUT = float(os.environ.get("HTTP_TIMEOUT", "12"))
+RANKING_URL = os.environ.get("RANKING_URL", "https://st.edumgt.co.kr/api/member/investor-rankings")   # st 모의투자 공개 수익 랭킹(인증 없음)
+# 슬롯을 묻는 중에 사용자가 그만두려는 말(Lex 는 확인 단계에서만 '아니요' 를 알아듣고, 슬롯 되묻기 중에는 같은 질문을 반복한다 → 훅이 직접 취소)
+CANCEL_RE = re.compile(r"^\W*(아+\s*니+\s*(요+|오+|야+)?|취소(요|해|해줘|할래|하자)?|그만(요|해|할래|하자)?|됐어(요)?|안\s*(해|할래|할게|살래|팔래)(요)?|중단|스톱|멈춰|나가기|닫아|no|cancel|stop|quit)\W*$", re.I)
+# 주문 유형을 묻는데 "알아서 해줘" 류로 답하면 시장가로 간다
+DEFAULT_MARKET_RE = re.compile(r"알아서|아무거나|아무렇게|상관\s*없|그냥|기본|몰라|너가|네가|추천")
 
 _TICKERS: dict[str, dict] | None = None
 
@@ -155,12 +163,49 @@ def get_quote(symbol: str) -> dict:
     return gateway("GET", f"/quote/{symbol}", params={"environment": ENVIRONMENT}).get("quote") or {}
 
 
+def fetch_json(url: str) -> dict:
+    """인증 없는 공개 JSON(st 모의투자 랭킹)."""
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as resp:
+            return json.loads(resp.read().decode() or "{}")
+    except urllib.error.HTTPError as exc:
+        raise GatewayError(f"HTTP_{exc.code}", f"{url} 응답 {exc.code}", exc.code)
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError) as exc:
+        raise GatewayError("UNREACHABLE", f"{url} 에 연결하지 못했습니다: {exc}")
+
+
 # ── Lex 응답 도우미 ───────────────────────────────────────────────────────────
 def slot_value(slots: dict, name: str) -> str | None:
     slot = (slots or {}).get(name) or {}
     value = slot.get("value") or {}
     v = value.get("interpretedValue") or value.get("originalValue")
     return str(v).strip() if v not in (None, "") else None
+
+
+def slot_original(slots: dict, name: str) -> str | None:
+    """사용자가 실제로 입력한 원문(Lex 가 해석한 값이 아니라)."""
+    v = (((slots or {}).get(name) or {}).get("value") or {}).get("originalValue")
+    return str(v).strip() if v not in (None, "") else None
+
+
+def transcript(event: dict) -> str:
+    return str(event.get("inputTranscript") or "").strip()
+
+
+def wants_cancel(event: dict) -> bool:
+    return bool(CANCEL_RE.match(transcript(event)))
+
+
+def ticker_matches(original: str, code: str) -> bool:
+    """Lex 의 종목 해석이 입력과 맞는지. '000000' 이 경방(000050) 으로, 비슷한 이름이 다른 종목으로 해석되는 것을 막는다."""
+    o = original.replace(" ", "")
+    if not o:
+        return True
+    if o.isdigit():
+        return o == code
+    name = ticker_name(code).replace(" ", "")
+    return o.lower() == code.lower() or o in name or name in o
 
 
 def _msg(text: str) -> dict:
@@ -322,6 +367,10 @@ def _trade_intent(event: dict) -> tuple[dict | None, str | None, str | None]:
     code = slot_value(slots, "Ticker") or ""
     if not code or code not in tickers():
         return None, "Ticker", "종목을 찾지 못했습니다. 종목명(예: 삼성전자)이나 6자리 종목코드로 알려 주세요."
+    orig = slot_original(slots, "Ticker") or ""
+    if not ticker_matches(orig, code):
+        return None, "Ticker", (f"'{orig}' 종목을 찾지 못했습니다. {ticker_name(code)}({code})을 말씀하신 건가요? 맞으면 종목코드 {code} 를, "
+                                "아니면 정확한 종목명이나 6자리 종목코드를 알려 주세요.")
     if side == "BUY" and not tickers()[code].get("buy", True):
         return None, "Ticker", f"{ticker_name(code)}({code})은 관리·거래정지 등으로 매수 대상이 아닙니다. 다른 종목을 알려 주세요."
     qty_raw = slot_value(slots, "Quantity")
@@ -334,8 +383,11 @@ def _trade_intent(event: dict) -> tuple[dict | None, str | None, str | None]:
     if qty > MAX_ORDER_QTY:
         return None, "Quantity", f"챗봇 주문은 회당 {MAX_ORDER_QTY:,}주까지입니다. 수량을 다시 알려 주세요."
     order_type = (slot_value(slots, "OrderType") or "").upper()
+    if order_type not in ("MARKET", "LIMIT") and DEFAULT_MARKET_RE.search(transcript(event)):
+        set_slot(event, "OrderType", "MARKET")                  # "알아서 해줘" → 시장가
+        order_type = "MARKET"
     if order_type not in ("MARKET", "LIMIT"):
-        return None, "OrderType", "시장가로 할까요, 지정가로 할까요?"
+        return None, "OrderType", "시장가로 할까요, 지정가로 할까요? (잘 모르면 '시장가' 또는 '알아서' 라고 하시면 시장가로 보냅니다)"
     price = 0
     if order_type == "LIMIT":
         price_raw = slot_value(slots, "Price")
@@ -355,6 +407,9 @@ def _trade_intent(event: dict) -> tuple[dict | None, str | None, str | None]:
 
 def trade_dialog(event: dict) -> dict:
     attrs = dict(event["sessionState"].get("sessionAttributes") or {})
+    if (event["sessionState"]["intent"].get("confirmationState") or "None") == "None" and wants_cancel(event):
+        attrs.pop("pendingTrade", None)                # 슬롯 되묻기 중 "아니요/취소/그만" → 주문 대화 종료
+        return close(event, "주문을 취소했습니다. 다른 주문이 필요하면 말씀해 주세요.", fulfilled=False, attrs=attrs)
     restore_pending(event, attrs)                      # 끊겼던 주문 대화의 슬롯 이어받기
     intent, slot, text = _trade_intent(event)
     if intent is None:
@@ -445,13 +500,21 @@ def account_faq_fulfill(event: dict) -> dict:
         cash = int(float(get_balance().get("cashBalance") or 0))
     except (GatewayError, TypeError, ValueError) as exc:
         return close(event, f"잔고를 확인하지 못해 답하기 어렵습니다. ({exc})", fulfilled=False, attrs=attrs)
+    q = transcript(event)
     lines = []
     if attrs.get("lastRejectCode"):
         code = attrs["lastRejectCode"]
         lines.append(f"직전 주문 거절 사유: {REJECT_HINTS.get(code, code)}.")
     today = datetime.now(KST).date()
     settle = f"매도 대금은 체결일부터 2영업일 뒤(D+2) 아침에 예수금으로 들어옵니다(주말·휴장일 제외). 예: {fmt_date(today)} 체결 → {fmt_date(add_business_days(today, 2))} 입금."
-    if cash < 0:
+    scope = ("이 챗봇은 st.edumgt.co.kr 의 KIS 모의계좌 1개(공용)에만 주문합니다. 다른 모의투자 계좌·실계좌·다른 사이트는 연동되어 있지 않습니다. "
+             "st 사이트 자체의 가상자산 모의투자(초기자산 1억원)는 st.edumgt.co.kr 에 로그인해 이용하고, 그 수익 랭킹은 '랭킹 알려줘' 로 볼 수 있습니다.")
+    if re.search(r"입금|들어와|결제|언제", q):                    # "언제 입금돼나?" → 입금 시점부터
+        lines.append(settle)
+        lines.append(f"현재 예수금은 {won(cash)}입니다." + (" 양수가 되면 매수가 다시 가능합니다." if cash < 0 else ""))
+    elif re.search(r"다른|연동|국한|타\s*사이트|실계좌|여기서|이 시스템", q):   # "다른 모의 투자는 가능해?" → 범위 설명
+        lines.append(scope)
+    elif cash < 0:
         lines.append(f"KIS 모의계좌 예수금이 {won(cash)}으로 음수입니다. 모의계좌라도 예수금이 음수면 매수 주문은 거절되고(INSUFFICIENT_BALANCE), "
                      "보유 종목 매도 대금이 결제되는 D+2 영업일 이후 예수금이 양수가 되면 매수할 수 있습니다. 매도·잔고 조회·주문 확인은 지금도 됩니다.")
         lines.append(settle)
@@ -462,12 +525,29 @@ def account_faq_fulfill(event: dict) -> dict:
     return close(event, " ".join(lines), attrs=attrs)
 
 
+def ranking_fulfill(event: dict) -> dict:
+    """CheckRanking: KIS 모의계좌는 공용 1개라 개인 랭킹이 없다 → st 사이트 모의투자 공개 수익 랭킹 상위 5명을 보여 준다."""
+    try:
+        rows = (fetch_json(RANKING_URL).get("rankings") or [])[:5]
+    except GatewayError as exc:
+        return close(event, f"랭킹을 조회하지 못했습니다. ({exc})", fulfilled=False)
+    if not rows:
+        return close(event, "아직 랭킹 데이터가 없습니다.", fulfilled=False)
+    top = ", ".join(f"{r.get('rank')}위 {r.get('username')} {float(r.get('profitRate') or 0):+.2f}%({won(r.get('totalAsset'))})" for r in rows)
+    return close(event, f"st.edumgt.co.kr 모의투자 수익 랭킹(초기자산 1억원 기준) 상위 {len(rows)}명: {top}. "
+                        "이 챗봇이 주문하는 KIS 모의계좌는 1개 공용 계좌라 개인 랭킹은 없고, 수익률은 '잔고 알려줘' 로 확인할 수 있습니다.")
+
+
 # ── CheckQuote · MarketHours · MarketHolidays ─────────────────────────────────
 def quote_dialog(event: dict) -> dict:
+    if wants_cancel(event):
+        return close(event, "알겠습니다. 다른 질문이 있으면 말씀해 주세요.", fulfilled=False)
     slots = event["sessionState"]["intent"].get("slots") or {}
     code = slot_value(slots, "Ticker")
     if code and code not in tickers():
         return elicit_slot(event, "Ticker", "종목을 찾지 못했습니다. 종목명(예: 한화오션)이나 6자리 종목코드로 알려 주세요.")
+    if code and not ticker_matches(slot_original(slots, "Ticker") or "", code):
+        return elicit_slot(event, "Ticker", f"'{slot_original(slots, 'Ticker')}' 종목을 찾지 못했습니다. {ticker_name(code)}({code})이 맞으면 종목코드 {code} 를, 아니면 정확한 종목명을 알려 주세요.")
     return delegate(event)
 
 
@@ -557,6 +637,8 @@ def handler(event: dict, context: Any = None) -> dict:
             return delegate(event) if source == "DialogCodeHook" else market_hours_fulfill(event)
         if name == "MarketHolidays":
             return delegate(event) if source == "DialogCodeHook" else holidays_fulfill(event)
+        if name == "CheckRanking":
+            return delegate(event) if source == "DialogCodeHook" else ranking_fulfill(event)
         return delegate(event)
     except Exception as exc:                       # 훅 예외는 Lex 에 500 으로 가 대화가 깨진다 → 메시지로 돌려준다
         logger.exception("lex hook failed")
