@@ -173,3 +173,47 @@ def test_balance_note_and_account_faq():
     with patch.object(hook, "get_balance", lambda: {"cashBalance": 5_000_000, "holdings": []}):
         r = hook.handler(ev(intent="AccountFaq", source="FulfillmentCodeHook"))
         assert "예수금 5,000,000원 범위에서 매수할 수 있습니다" in r["messages"][0]["content"] and "회당 100주" in r["messages"][0]["content"]
+
+
+# ── 2026-10-15 2차 대화 분석: 시세·장 시간·휴장일·입금일 ─────────────────────
+def test_business_days_and_market_open_respect_krx_holidays():
+    from datetime import date
+    assert not hook.is_business_day(date(2026, 12, 25)) and not hook.is_business_day(date(2026, 10, 17)) and hook.is_business_day(date(2026, 10, 15))
+    assert hook.add_business_days(date(2026, 10, 15), 2) == date(2026, 10, 19)          # 목 → 월 (주말 건너뜀)
+    assert hook.add_business_days(date(2026, 12, 23), 2) == date(2026, 12, 28)          # 성탄절·주말 건너뜀
+    assert not hook.market_open(datetime(2026, 12, 25, 10, 0, tzinfo=KST)) and hook.market_open(datetime(2026, 12, 24, 10, 0, tzinfo=KST))
+    assert hook.us_dst(date(2026, 7, 1)) and not hook.us_dst(date(2026, 11, 2)) and hook.us_dst(date(2026, 3, 8)) and not hook.us_dst(date(2026, 3, 7))
+
+
+def test_quote_intent_validates_ticker_and_formats_quote():
+    r = hook.handler(ev(intent="CheckQuote", Ticker="999999"))
+    assert r["sessionState"]["dialogAction"]["slotToElicit"] == "Ticker"
+    assert hook.handler(ev(intent="CheckQuote", Ticker="042660"))["sessionState"]["dialogAction"] == {"type": "Delegate"}
+    quote = {"symbol": "042660", "price": 71500, "change": -500, "changeRate": -0.69, "open": 72000, "high": 72300, "low": 71200, "volume": 1234567}
+    with patch.object(hook, "get_quote", lambda s: quote), patch.object(hook, "market_open", lambda now=None: False):
+        r = hook.handler(ev(intent="CheckQuote", source="FulfillmentCodeHook", Ticker="042660"))
+    text = r["messages"][0]["content"]
+    assert text.startswith("한화오션(042660) 현재가 71,500원 (▼500원, -0.69%)") and "거래량 1,234,567주" in text and "장 시간이 아니라" in text
+    assert r["sessionState"]["sessionAttributes"]["lastTicker"] == "042660"
+    with patch.object(hook, "get_quote", lambda s: quote):                                 # 종목 생략 → 직전 종목 재사용
+        r = hook.handler(ev(intent="CheckQuote", source="FulfillmentCodeHook", attrs={"lastTicker": "042660"}))
+    assert "한화오션(042660)" in r["messages"][0]["content"]
+    r = hook.handler(ev(intent="CheckQuote", source="FulfillmentCodeHook"))
+    assert r["sessionState"]["intent"]["state"] == "Failed" and "어느 종목" in r["messages"][0]["content"]
+    with patch.object(hook, "get_quote", side_effect=hook.GatewayError("KIS_QUOTE_UNAVAILABLE", "현재가를 확인할 수 없습니다.", 502)):
+        r = hook.handler(ev(intent="CheckQuote", source="FulfillmentCodeHook", Ticker="042660"))
+    assert "시세를 조회하지 못했습니다" in r["messages"][0]["content"]
+
+
+def test_market_hours_and_holidays_answers(monkeypatch):
+    class _Now(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 10, 15, 11, 30, tzinfo=KST)
+    monkeypatch.setattr(hook, "datetime", _Now)
+    text = hook.handler(ev(intent="MarketHours", source="FulfillmentCodeHook"))["messages"][0]["content"]
+    assert "09:00~15:30" in text and "지금은 열려 있습니다" in text and "22:30~05:00(서머타임" in text and "다음 한국 휴장일은 12/25(금) 성탄절" in text
+    text = hook.handler(ev(intent="MarketHolidays", source="FulfillmentCodeHook"))["messages"][0]["content"]
+    assert text.startswith("2026년 남은 한국 증시 휴장일(주말 제외)은 12/25(금) 성탄절, 12/31(목) 연말 휴장 총 2일입니다.")
+    faq = hook.handler(ev(intent="AccountFaq", source="FulfillmentCodeHook"))["messages"][0]["content"]
+    assert "예: 10/15(목) 체결 → 10/19(월) 입금" in faq

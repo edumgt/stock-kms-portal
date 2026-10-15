@@ -11,7 +11,10 @@ Lex 가 DialogCodeHook(매 턴 검증·확인) 과 FulfillmentCodeHook(이행) �
   TradeStock  : Side(OrderSide: BUY/SELL) · Ticker(StockTicker: 종목코드, 동의어=종목명) · Quantity(AMAZON.Number) · OrderType(OrderTypeKind: MARKET/LIMIT) · Price(AMAZON.Number, 지정가일 때만)
   CheckBalance: 슬롯 없음 → 잔고 요약
   CheckOrder  : OrderNo(AMAZON.AlphaNumeric, 선택; 없으면 세션의 lastOrderNo)
-  AccountFaq  : 슬롯 없음 → 예수금 음수·거절 사유·모의계좌 주문 가능 여부를 실제 잔고로 답한다
+  AccountFaq  : 슬롯 없음 → 예수금 음수·거절 사유·모의계좌 주문 가능 여부·매도 대금 입금일(D+2)을 실제 잔고로 답한다
+  CheckQuote  : Ticker(StockTicker) → 현재가·전일대비·시고저·거래량 (게이트웨이 GET /quote/{symbol}, 계약 2-7)
+  MarketHours : 슬롯 없음 → 한국·미국 정규장 시간(KST, 서머타임 반영)과 지금 장중 여부
+  MarketHolidays: 슬롯 없음 → 올해 남은 KRX 휴장일(KRX_HOLIDAYS 상수)
 세션 속성: pendingTrade(끊긴 주문 대화의 슬롯, PENDING_TTL 초) · lastTicker/lastTickerName · lastOrderNo · lastRejectCode
 """
 from __future__ import annotations
@@ -22,7 +25,7 @@ import os
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -52,9 +55,43 @@ def ticker_name(code: str) -> str:
     return (tickers().get(code) or {}).get("name") or code
 
 
+# KRX 휴장일(주말 제외, 날짜 → 이름). 2026년 17일: 2026-01-29 공휴일법 개정(제헌절 재지정)·6-3 지방선거 반영. 해가 바뀌면 거래소 발표대로 여기만 갱신한다.
+KRX_HOLIDAYS = {
+    "2026-01-01": "신정", "2026-02-16": "설날 연휴", "2026-02-17": "설날", "2026-02-18": "설날 연휴", "2026-03-02": "삼일절 대체공휴일",
+    "2026-05-01": "근로자의 날", "2026-05-05": "어린이날", "2026-05-25": "부처님오신날 대체공휴일", "2026-06-03": "전국동시지방선거일",
+    "2026-07-17": "제헌절", "2026-08-17": "광복절 대체공휴일", "2026-09-24": "추석 연휴", "2026-09-25": "추석", "2026-10-05": "개천절 대체공휴일",
+    "2026-10-09": "한글날", "2026-12-25": "성탄절", "2026-12-31": "연말 휴장",
+}
+WEEKDAY_KO = "월화수목금토일"
+
+
+def is_business_day(d: date) -> bool:
+    return d.weekday() < 5 and d.isoformat() not in KRX_HOLIDAYS
+
+
+def add_business_days(d: date, n: int) -> date:
+    """d 에서 영업일 n 일 뒤(매도 대금 결제 D+2 계산용)."""
+    while n > 0:
+        d += timedelta(days=1)
+        if is_business_day(d):
+            n -= 1
+    return d
+
+
+def fmt_date(d: date) -> str:
+    return f"{d.month}/{d.day}({WEEKDAY_KO[d.weekday()]})"
+
+
 def market_open(now: datetime | None = None) -> bool:
     t = (now or datetime.now(KST)).astimezone(KST)
-    return t.weekday() < 5 and 9 * 60 <= t.hour * 60 + t.minute <= 15 * 60 + 30
+    return is_business_day(t.date()) and 9 * 60 <= t.hour * 60 + t.minute <= 15 * 60 + 30
+
+
+def us_dst(d: date) -> bool:
+    """미국 서머타임(3월 둘째 일요일 ~ 11월 첫째 일요일)."""
+    second_sun_mar = date(d.year, 3, 1) + timedelta(days=(6 - date(d.year, 3, 1).weekday()) % 7 + 7)
+    first_sun_nov = date(d.year, 11, 1) + timedelta(days=(6 - date(d.year, 11, 1).weekday()) % 7)
+    return second_sun_mar <= d < first_sun_nov
 
 
 # ── 게이트웨이 ────────────────────────────────────────────────────────────────
@@ -111,6 +148,11 @@ def place_order(intent: dict) -> dict:
 
 def get_order(order_no: str) -> dict:
     return gateway("GET", f"/orders/{order_no}", params={"environment": ENVIRONMENT}).get("order") or {}
+
+
+def get_quote(symbol: str) -> dict:
+    """계약 2-7 `GET /quote/{symbol}` — 현재가·전일대비(부호 포함)·시고저·거래량."""
+    return gateway("GET", f"/quote/{symbol}", params={"environment": ENVIRONMENT}).get("quote") or {}
 
 
 # ── Lex 응답 도우미 ───────────────────────────────────────────────────────────
@@ -407,13 +449,77 @@ def account_faq_fulfill(event: dict) -> dict:
     if attrs.get("lastRejectCode"):
         code = attrs["lastRejectCode"]
         lines.append(f"직전 주문 거절 사유: {REJECT_HINTS.get(code, code)}.")
+    today = datetime.now(KST).date()
+    settle = f"매도 대금은 체결일부터 2영업일 뒤(D+2) 아침에 예수금으로 들어옵니다(주말·휴장일 제외). 예: {fmt_date(today)} 체결 → {fmt_date(add_business_days(today, 2))} 입금."
     if cash < 0:
         lines.append(f"KIS 모의계좌 예수금이 {won(cash)}으로 음수입니다. 모의계좌라도 예수금이 음수면 매수 주문은 거절되고(INSUFFICIENT_BALANCE), "
                      "보유 종목 매도 대금이 결제되는 D+2 영업일 이후 예수금이 양수가 되면 매수할 수 있습니다. 매도·잔고 조회·주문 확인은 지금도 됩니다.")
+        lines.append(settle)
     else:
         lines.append(f"KIS 모의계좌 예수금 {won(cash)} 범위에서 매수할 수 있습니다. 챗봇 주문은 회당 {MAX_ORDER_QTY:,}주·{won(MAX_ORDER_AMOUNT)}까지, "
                      "장중(평일 09:00~15:30)에만 보냅니다. 예: '삼성전자 1주 시장가 매수'")
+        lines.append(settle)
     return close(event, " ".join(lines), attrs=attrs)
+
+
+# ── CheckQuote · MarketHours · MarketHolidays ─────────────────────────────────
+def quote_dialog(event: dict) -> dict:
+    slots = event["sessionState"]["intent"].get("slots") or {}
+    code = slot_value(slots, "Ticker")
+    if code and code not in tickers():
+        return elicit_slot(event, "Ticker", "종목을 찾지 못했습니다. 종목명(예: 한화오션)이나 6자리 종목코드로 알려 주세요.")
+    return delegate(event)
+
+
+def quote_fulfill(event: dict) -> dict:
+    attrs = dict(event["sessionState"].get("sessionAttributes") or {})
+    slots = event["sessionState"]["intent"].get("slots") or {}
+    code = slot_value(slots, "Ticker") or attrs.get("lastTicker")
+    if not code or code not in tickers():
+        return close(event, "어느 종목의 시세를 볼까요? 종목명이나 6자리 종목코드로 말씀해 주세요.", fulfilled=False, attrs=attrs)
+    name = ticker_name(code)
+    try:
+        q = get_quote(code)
+    except GatewayError as exc:
+        return close(event, f"{name}({code}) 시세를 조회하지 못했습니다. ({exc})", fulfilled=False, attrs=attrs)
+    change = int(q.get("change") or 0)
+    arrow = "▲" if change > 0 else "▼" if change < 0 else "-"
+    try:
+        rate = f"{float(q.get('changeRate') or 0):+.2f}%"
+    except (TypeError, ValueError):
+        rate = "-"
+    text = (f"{name}({code}) 현재가 {won(q.get('price'))} ({arrow}{won(abs(change))}, {rate}) · 시가 {won(q.get('open'))} 고가 {won(q.get('high'))} "
+            f"저가 {won(q.get('low'))} · 거래량 {int(q.get('volume') or 0):,}주.")
+    if not market_open():
+        text += " 지금은 장 시간이 아니라 마지막 체결가 기준입니다."
+    attrs.update({"lastTicker": code, "lastTickerName": name})
+    return close(event, text, attrs=attrs)
+
+
+def market_hours_fulfill(event: dict) -> dict:
+    now = datetime.now(KST)
+    krx = "열려 있습니다" if market_open(now) else "닫혀 있습니다"
+    dst = us_dst(now.date())
+    us_kst = "22:30~05:00" if dst else "23:30~06:00"
+    upcoming = [(d, n) for d, n in sorted(KRX_HOLIDAYS.items()) if date.fromisoformat(d) >= now.date()][:1]
+    nxt = f" 다음 한국 휴장일은 {fmt_date(date.fromisoformat(upcoming[0][0]))} {upcoming[0][1]}입니다." if upcoming else ""
+    text = (f"한국(KRX) 정규장은 평일 09:00~15:30 KST(장 시작 동시호가 08:30~09:00, 마감 동시호가 15:20~15:30)이고 주말·공휴일은 휴장입니다. 지금은 {krx}.{nxt} "
+            f"미국(NYSE·나스닥) 정규장은 현지 09:30~16:00 ET, 한국시간 {us_kst}({'서머타임' if dst else '표준시'} 기준)이며 미국 주말·공휴일에 휴장합니다. "
+            "챗봇 주문은 한국 정규장 중에만 보냅니다.")
+    return close(event, text)
+
+
+def holidays_fulfill(event: dict) -> dict:
+    today = datetime.now(KST).date()
+    rest = [(date.fromisoformat(d), n) for d, n in sorted(KRX_HOLIDAYS.items()) if date.fromisoformat(d) >= today and d.startswith(str(today.year))]
+    if rest:
+        text = (f"{today.year}년 남은 한국 증시 휴장일(주말 제외)은 " + ", ".join(f"{fmt_date(d)} {n}" for d, n in rest) + f" 총 {len(rest)}일입니다. "
+                f"마지막 거래일은 12/30 이고, 그 밖의 평일은 모두 개장합니다.")
+    elif any(d.startswith(str(today.year)) for d in KRX_HOLIDAYS):
+        text = f"{today.year}년에는 남은 휴장일이 없습니다. 내년 휴장일은 거래소 발표 뒤 반영됩니다."
+    else:
+        text = f"{today.year}년 휴장일 자료가 아직 없습니다. 거래소 발표 뒤 반영됩니다."
+    return close(event, text)
 
 
 def order_fulfill(event: dict) -> dict:
@@ -445,6 +551,12 @@ def handler(event: dict, context: Any = None) -> dict:
             return delegate(event) if source == "DialogCodeHook" else order_fulfill(event)
         if name == "AccountFaq":
             return delegate(event) if source == "DialogCodeHook" else account_faq_fulfill(event)
+        if name == "CheckQuote":
+            return quote_dialog(event) if source == "DialogCodeHook" else quote_fulfill(event)
+        if name == "MarketHours":
+            return delegate(event) if source == "DialogCodeHook" else market_hours_fulfill(event)
+        if name == "MarketHolidays":
+            return delegate(event) if source == "DialogCodeHook" else holidays_fulfill(event)
         return delegate(event)
     except Exception as exc:                       # 훅 예외는 Lex 에 500 으로 가 대화가 깨진다 → 메시지로 돌려준다
         logger.exception("lex hook failed")

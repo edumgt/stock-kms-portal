@@ -152,7 +152,29 @@ def intent_defs(slot_type_ids: dict[str, str]) -> list[dict]:
              "예수금이 마이너스인데 가능해", "예수금이 음수인데 매수 돼", "예수금이 마이너스야", "예수금이 왜 마이너스야", "예수금이 음수면 어떻게 돼",
              "모의 투자 계좌로는 가능해", "모의투자 계좌로 가능해", "모의계좌로 주문할 수 있어", "모의투자 가능해", "모의계좌로 매수 돼",
              "지금 매수할 수 있어", "언제 매수할 수 있어", "매수 가능해", "주문 가능해", "주문이 왜 거절됐어", "거절 이유가 뭐야", "왜 안 돼",
-             "D+2 가 뭐야", "결제일이 언제야", "주문 한도가 얼마야", "챗봇으로 주문하면 어떻게 돼")],
+             "D+2 가 뭐야", "결제일이 언제야", "주문 한도가 얼마야", "챗봇으로 주문하면 어떻게 돼",
+             # 실사용(2026-10-15 2차): "그럼 언제 입금 받지?" → MarketBasics, "이 시스템 자체의 모의 투자는 가능해?" → Fallback
+             "그럼 언제 입금 받지", "언제 입금 받지", "입금 언제 돼", "매도 대금 언제 들어와", "매도한 돈 언제 들어와", "예수금 언제 양수 돼", "예수금 언제 채워져",
+             "이 시스템 자체의 모의 투자는 가능해", "이 시스템에서 모의투자 가능해", "여기서 모의투자 할 수 있어", "모의투자 돼", "여기서 주문 돼")],
+         "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True}, "slots": []},
+        {"intentName": "CheckQuote", "description": "종목 현재 시세 (코드 훅이 게이트웨이 /quote 로 답한다)",
+         # 실사용(2026-10-15 2차): "한화오션 현재 시세 알려줘" → CheckOrder 로 오분류
+         "sampleUtterances": [{"utterance": u} for u in (
+             "{Ticker} 현재 시세 알려줘", "{Ticker} 시세 알려줘", "{Ticker} 시세", "{Ticker} 현재가", "{Ticker} 현재가 알려줘", "{Ticker} 주가 알려줘", "{Ticker} 주가",
+             "{Ticker} 얼마야", "{Ticker} 지금 얼마야", "{Ticker} 가격 알려줘", "{Ticker} 오늘 어때", "{Ticker} 얼마에 거래돼", "시세 알려줘", "현재가 알려줘", "주가 알려줘")],
+         "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True},
+         "slots": [("Ticker", slot_type_ids["StockTicker"], "Required", "어느 종목의 시세를 볼까요? 종목명이나 6자리 종목코드로 알려 주세요.")]},
+        {"intentName": "MarketHours", "description": "한국·미국 장 시간, 지금 장중 여부",
+         # 실사용(2026-10-15 2차): "미국장의 휴장 시간대는?" → Fallback
+         "sampleUtterances": [{"utterance": u} for u in (
+             "장 시간 알려줘", "장 언제 열어", "개장 시간", "마감 시간", "장 몇 시에 열어", "장 몇 시에 닫아", "지금 장중이야", "장 열렸어", "한국 장 시간",
+             "미국장 시간", "미국장의 휴장 시간대는", "미국장 휴장 시간", "미국 장 언제 열어", "미국 증시 거래 시간", "미국장 몇 시야", "나스닥 장 시간", "거래 시간 알려줘")],
+         "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True}, "slots": []},
+        {"intentName": "MarketHolidays", "description": "올해 남은 한국 증시 휴장일",
+         # 실사용(2026-10-15 2차): "12월 까지 한국 장의 휴장일 알려줘" → CheckBalance 로 오분류
+         "sampleUtterances": [{"utterance": u} for u in (
+             "휴장일 알려줘", "한국 증시 휴장일", "한국 장 휴장일 알려줘", "12월까지 한국 장의 휴장일 알려줘", "올해 휴장일", "남은 휴장일", "다음 휴장일 언제야",
+             "언제 휴장이야", "휴장일 목록", "연말 휴장일", "공휴일에 장 열어", "주식 시장 쉬는 날", "장 쉬는 날 알려줘", "휴장 언제야")],
          "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True}, "slots": []},
         {"intentName": "CheckOrder", "description": "주문 체결 상태 확인",
          "sampleUtterances": [{"utterance": u} for u in ("주문 확인", "주문 상태 알려줘", "체결됐어?", "방금 주문 어떻게 됐어", "주문번호 {OrderNo} 확인", "{OrderNo} 체결 확인")],
@@ -207,6 +229,14 @@ def main() -> int:
             r = lex.create_slot_type(**base, **d)
             slot_type_ids[d["slotTypeName"]] = r["slotTypeId"]
             print("created slot type", d["slotTypeName"], len(d["slotTypeValues"]), "values")
+
+    # 1-b) NLU 신뢰도 임계값(base_intents.json). 0.4 에서는 "휴장일 알려줘" 가 CheckBalance 로 가는 식의 오분류가 잦아 2026-10-15 에 0.6 으로 올렸다(미만이면 Fallback 안내).
+    thr = float(json.loads((ROOT / "data" / "base_intents.json").read_text(encoding="utf-8")).get("nluIntentConfidenceThreshold") or 0.4)
+    cur_locale = lex.describe_bot_locale(**base)
+    if abs(float(cur_locale.get("nluIntentConfidenceThreshold") or 0) - thr) > 1e-9:
+        lex.update_bot_locale(**base, nluIntentConfidenceThreshold=thr, **({"description": cur_locale["description"]} if cur_locale.get("description") else {}),
+                              **({"voiceSettings": cur_locale["voiceSettings"]} if cur_locale.get("voiceSettings") else {}))
+        print(f"updated locale nluIntentConfidenceThreshold {cur_locale.get('nluIntentConfidenceThreshold')} -> {thr}")
 
     # 2) 인텐트 + 슬롯
     intents = {i["intentName"]: i["intentId"] for i in lex.list_intents(**base, maxResults=100).get("intentSummaries", [])}
