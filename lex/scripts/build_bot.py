@@ -108,8 +108,11 @@ def slot_type_defs() -> list[dict]:
               for code, v in sorted(tickers.items())][:10000]
     return [
         {"slotTypeName": "OrderSide", "description": "매수/매도", "valueSelectionSetting": {"resolutionStrategy": "TopResolution"},
-         "slotTypeValues": [{"sampleValue": {"value": "BUY"}, "synonyms": [{"value": s} for s in ("매수", "사줘", "사", "살래", "매입", "구매")]},
-                            {"sampleValue": {"value": "SELL"}, "synonyms": [{"value": s} for s in ("매도", "팔아", "팔래", "팔아줘", "처분")]}]},
+         # 실사용(2026-10-15)에서 "매수해" 가 BUY 로 안 잡혀 Side 를 되물었다 → 활용형을 동의어로 넓힌다.
+         "slotTypeValues": [{"sampleValue": {"value": "BUY"}, "synonyms": [{"value": s} for s in (
+                                "매수", "매수해", "매수해줘", "매수할래", "매수할게", "매수하자", "매수요", "매수로", "사줘", "사", "살래", "살게", "사자", "사고 싶어", "매입", "구매")]},
+                            {"sampleValue": {"value": "SELL"}, "synonyms": [{"value": s} for s in (
+                                "매도", "매도해", "매도해줘", "매도할래", "매도할게", "매도하자", "매도요", "매도로", "팔아", "팔래", "팔게", "팔자", "팔아줘", "팔고 싶어", "처분")]}]},
         {"slotTypeName": "OrderTypeKind", "description": "시장가/지정가", "valueSelectionSetting": {"resolutionStrategy": "TopResolution"},
          "slotTypeValues": [{"sampleValue": {"value": "MARKET"}, "synonyms": [{"value": s} for s in ("시장가", "시장가로", "현재가로", "바로")]},
                             {"sampleValue": {"value": "LIMIT"}, "synonyms": [{"value": s} for s in ("지정가", "지정가로", "가격 지정")]}]},
@@ -124,7 +127,11 @@ def intent_defs(slot_type_ids: dict[str, str]) -> list[dict]:
         {"intentName": "TradeStock", "description": "KIS 모의계좌 주식 매수·매도 (코드 훅이 검증·확인·주문)",
          "sampleUtterances": [{"utterance": u} for u in (
              "{Ticker} {Quantity}주 {Side}", "{Ticker} {Quantity}주 {OrderType} {Side}", "{Ticker} {Side}", "{Side} 주문", "주식 {Side}",
-             "{Ticker} {Quantity}주 {Price}원에 {Side}", "{Ticker} 사고 싶어", "{Ticker} 팔고 싶어", "{Quantity}주 {Side}해줘", "주문할래", "매매하고 싶어")],
+             "{Ticker} {Quantity}주 {Price}원에 {Side}", "{Ticker} 사고 싶어", "{Ticker} 팔고 싶어", "{Quantity}주 {Side}해줘", "주문할래", "매매하고 싶어",
+             # 실사용(2026-10-15): "한화오션 1주 주문하려면?", "매수해", "매수" 단독
+             "{Ticker} {Quantity}주 주문하려면", "{Ticker} 주문하려면", "{Ticker} {Quantity}주 주문", "{Ticker} {Quantity}주 주문해줘", "{Ticker} 주문",
+             "{Side}", "{Side}해", "{Side}해줘", "{Side}할래", "{Ticker} {Side}해", "{Ticker} {Quantity}주 {Side}해", "{Ticker} {Quantity}주 {Side}하려면",
+             "{Quantity}주 {Side}", "{Side} {Quantity}주", "{Ticker} {OrderType} {Side}", "{OrderType}로 {Quantity}주 {Side}")],
          "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True},
          "intentConfirmationSetting": {"promptSpecification": msg("이 주문을 KIS 모의계좌로 보낼까요? (네/아니요)")["promptSpecification"],
                                        "declinationResponse": plain("주문을 취소했습니다."), "active": True},
@@ -136,7 +143,16 @@ def intent_defs(slot_type_ids: dict[str, str]) -> list[dict]:
              ("Price", "AMAZON.Number", "Optional", "지정가 1주 가격을 원 단위로 알려 주세요."),
          ]},
         {"intentName": "CheckBalance", "description": "KIS 모의계좌 잔고·보유종목 요약",
-         "sampleUtterances": [{"utterance": u} for u in ("잔고 알려줘", "내 계좌 보여줘", "보유 종목 알려줘", "예수금 얼마야", "평가손익 알려줘", "잔고 조회")],
+         "sampleUtterances": [{"utterance": u} for u in ("잔고 알려줘", "내 계좌 보여줘", "보유 종목 알려줘", "예수금 얼마야", "평가손익 알려줘", "잔고 조회",
+                                                         "나의 잔고 조회해봐", "잔고 조회해봐", "계좌 잔고", "예수금 알려줘", "내 보유 종목", "총평가 얼마야")],
+         "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True}, "slots": []},
+        {"intentName": "AccountFaq", "description": "모의계좌 주문 가능 여부·예수금 음수·거절 사유 질문 (코드 훅이 실제 잔고로 답한다)",
+         # 실사용(2026-10-15): "예수금이 - 인데 가능해?" 는 CheckBalance 로, "모의 투자 계좌로는 가능해?" 는 PortfolioHelp 로 잘못 잡혔다.
+         "sampleUtterances": [{"utterance": u} for u in (
+             "예수금이 마이너스인데 가능해", "예수금이 음수인데 매수 돼", "예수금이 마이너스야", "예수금이 왜 마이너스야", "예수금이 음수면 어떻게 돼",
+             "모의 투자 계좌로는 가능해", "모의투자 계좌로 가능해", "모의계좌로 주문할 수 있어", "모의투자 가능해", "모의계좌로 매수 돼",
+             "지금 매수할 수 있어", "언제 매수할 수 있어", "매수 가능해", "주문 가능해", "주문이 왜 거절됐어", "거절 이유가 뭐야", "왜 안 돼",
+             "D+2 가 뭐야", "결제일이 언제야", "주문 한도가 얼마야", "챗봇으로 주문하면 어떻게 돼")],
          "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True}, "slots": []},
         {"intentName": "CheckOrder", "description": "주문 체결 상태 확인",
          "sampleUtterances": [{"utterance": u} for u in ("주문 확인", "주문 상태 알려줘", "체결됐어?", "방금 주문 어떻게 됐어", "주문번호 {OrderNo} 확인", "{OrderNo} 체결 확인")],

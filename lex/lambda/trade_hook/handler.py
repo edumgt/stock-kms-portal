@@ -11,6 +11,8 @@ Lex 가 DialogCodeHook(매 턴 검증·확인) 과 FulfillmentCodeHook(이행) �
   TradeStock  : Side(OrderSide: BUY/SELL) · Ticker(StockTicker: 종목코드, 동의어=종목명) · Quantity(AMAZON.Number) · OrderType(OrderTypeKind: MARKET/LIMIT) · Price(AMAZON.Number, 지정가일 때만)
   CheckBalance: 슬롯 없음 → 잔고 요약
   CheckOrder  : OrderNo(AMAZON.AlphaNumeric, 선택; 없으면 세션의 lastOrderNo)
+  AccountFaq  : 슬롯 없음 → 예수금 음수·거절 사유·모의계좌 주문 가능 여부를 실제 잔고로 답한다
+세션 속성: pendingTrade(끊긴 주문 대화의 슬롯, PENDING_TTL 초) · lastTicker/lastTickerName · lastOrderNo · lastRejectCode
 """
 from __future__ import annotations
 
@@ -57,9 +59,17 @@ def market_open(now: datetime | None = None) -> bool:
 
 # ── 게이트웨이 ────────────────────────────────────────────────────────────────
 class GatewayError(Exception):
-    def __init__(self, code: str, message: str, status: int = 0):
+    def __init__(self, code: str, message: str, status: int = 0, details: dict | None = None):
         super().__init__(message)
-        self.code, self.status = code, status
+        self.code, self.status, self.details = code, status, details or {}
+
+
+def _gateway_error(payload: dict, status: int) -> GatewayError:
+    """게이트웨이 오류 본문 {ok:false, error:<코드>, message:<문구>, ...세부} → GatewayError. (FastAPI 기본 {detail} 도 수용)"""
+    code = str(payload.get("code") or payload.get("error_code") or payload.get("error") or (f"HTTP_{status}" if status else "GATEWAY_ERROR"))
+    message = str(payload.get("message") or payload.get("detail") or payload.get("error") or (f"게이트웨이 HTTP {status}" if status else "게이트웨이 오류"))
+    details = {k: v for k, v in payload.items() if k not in ("ok", "code", "error_code", "error", "message", "detail")}
+    return GatewayError(code, message, status, details)
 
 
 def gateway(method: str, path: str, body: dict | None = None, params: dict | None = None) -> dict:
@@ -79,12 +89,11 @@ def gateway(method: str, path: str, body: dict | None = None, params: dict | Non
             payload = json.loads(exc.read().decode() or "{}")
         except Exception:
             payload = {}
-        raise GatewayError(str(payload.get("code") or payload.get("error_code") or f"HTTP_{exc.code}"),
-                           str(payload.get("error") or payload.get("message") or payload.get("detail") or f"게이트웨이 HTTP {exc.code}"), exc.code)
+        raise _gateway_error(payload, exc.code)
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
         raise GatewayError("GATEWAY_UNREACHABLE", f"게이트웨이에 연결하지 못했습니다: {exc}")
     if payload.get("ok") is False:
-        raise GatewayError(str(payload.get("code") or "GATEWAY_ERROR"), str(payload.get("error") or "게이트웨이 오류"))
+        raise _gateway_error(payload, 0)
     return payload
 
 
@@ -161,6 +170,106 @@ def won(v: Any) -> str:
         return "-"
 
 
+# ── 주문 대화 상태(세션 속성) ────────────────────────────────────────────────
+PENDING_TTL = int(os.environ.get("PENDING_TRADE_TTL", "600"))     # 잔고 조회 등 다른 인텐트로 끊긴 주문 대화를 이어 주는 시간(초)
+TRADE_SLOTS = ("Side", "Ticker", "Quantity", "OrderType", "Price")
+REJECT_HINTS = {"INSUFFICIENT_BALANCE": "주문 가능 예수금 부족", "INSUFFICIENT_HOLDINGS": "보유수량 부족", "LIMIT_EXCEEDED": "회당 주문 한도(수량·금액) 초과",
+                "MARKET_CLOSED": "장 시간 아님", "KIS_QUOTE_UNAVAILABLE": "현재가 조회 불가", "FORBIDDEN": "API 키 권한 없음", "NOT_CONFIGURED": "게이트웨이 미설정",
+                "GATEWAY_UNREACHABLE": "게이트웨이 연결 실패", "APPROVAL_MISSING": "승인 토큰 없음"}
+
+
+def set_slot(event: dict, name: str, value: str) -> None:
+    """코드 훅이 슬롯 값을 채워 Lex 에 돌려준다(Lex 는 응답의 intent.slots 를 그대로 받아들인다)."""
+    slots = event["sessionState"]["intent"].get("slots") or {}
+    slots[name] = {"shape": "Scalar", "value": {"originalValue": value, "interpretedValue": value, "resolvedValues": [value]}}
+    event["sessionState"]["intent"]["slots"] = slots
+
+
+def restore_pending(event: dict, attrs: dict) -> list[str]:
+    """직전 주문 대화에서 받아 둔 슬롯(pendingTrade)을 비어 있는 슬롯에 채운다. 예: '한화오션 1주 주문' → 잔고 조회 → '매수' 로 돌아와도 종목·수량을 다시 묻지 않는다."""
+    raw = attrs.get("pendingTrade")
+    if not raw:
+        return []
+    try:
+        pend = json.loads(raw)
+    except ValueError:
+        attrs.pop("pendingTrade", None)
+        return []
+    if time.time() - float(pend.get("ts") or 0) > PENDING_TTL:
+        attrs.pop("pendingTrade", None)
+        return []
+    slots = event["sessionState"]["intent"].get("slots") or {}
+    filled = []
+    for name in TRADE_SLOTS:
+        if slot_value(slots, name) is None and pend.get(name):
+            set_slot(event, name, str(pend[name]))
+            filled.append(name)
+    return filled
+
+
+def remember_pending(event: dict, attrs: dict) -> None:
+    slots = event["sessionState"]["intent"].get("slots") or {}
+    known = {n: slot_value(slots, n) for n in TRADE_SLOTS if slot_value(slots, n) is not None}
+    if known:
+        attrs["pendingTrade"] = json.dumps({**known, "ts": int(time.time())}, ensure_ascii=False)
+    else:
+        attrs.pop("pendingTrade", None)
+
+
+def known_context(event: dict) -> str:
+    """되물을 때 앞에 붙일 '지금까지 받은 주문 내용'. 종목이나 수량을 알 때만 만든다. 예: [한화오션(042660) 1주 매수] """
+    slots = event["sessionState"]["intent"].get("slots") or {}
+    parts: list[str] = []
+    code = slot_value(slots, "Ticker")
+    if code and code in tickers():
+        parts.append(f"{ticker_name(code)}({code})")
+    qty = slot_value(slots, "Quantity")
+    try:
+        if qty and int(float(qty)) >= 1:
+            parts.append(f"{int(float(qty)):,}주")
+    except ValueError:
+        pass
+    if not parts:
+        return ""
+    side = {"BUY": "매수", "SELL": "매도"}.get((slot_value(slots, "Side") or "").upper())
+    how = {"MARKET": "시장가", "LIMIT": "지정가"}.get((slot_value(slots, "OrderType") or "").upper())
+    parts += [p for p in (how, side) if p]
+    return f"[{' '.join(parts)}] "
+
+
+def cash_blocker(intent: dict) -> tuple[str | None, str | None]:
+    """매수 확인 전에 예수금을 보고 거절이 확실하면 (되물을 슬롯 또는 None, 안내문). 조회 실패는 막지 않는다."""
+    if intent["side"] != "BUY":
+        return None, None
+    try:
+        cash = int(float(get_balance().get("cashBalance") or 0))
+    except (GatewayError, TypeError, ValueError):
+        return None, None
+    if cash < 0:
+        return None, (f"현재 KIS 모의계좌 예수금이 {won(cash)}(음수)이라 매수 주문은 거절됩니다. 보유 종목 매도 대금이 결제되는 D+2 영업일 이후 "
+                      "예수금이 양수가 되면 다시 매수할 수 있습니다. 매도·잔고 조회·주문 확인은 지금도 됩니다.")
+    if intent["orderType"] == "LIMIT" and intent["price"] * intent["quantity"] > cash:
+        return "Quantity", f"예상 주문금액 {won(intent['price'] * intent['quantity'])}이 주문 가능 예수금 {won(cash)}을 넘습니다. 수량을 줄여 주세요."
+    return None, None
+
+
+def reject_message(exc: GatewayError) -> str:
+    d = exc.details or {}
+    if exc.code == "INSUFFICIENT_BALANCE":
+        cash, need = d.get("availableCash"), d.get("requiredAmount")
+        text = "주문 가능 예수금이 부족해 매수 주문이 거절됐습니다."
+        if cash is not None:
+            text += f" 예수금 {won(cash)}" + (f", 필요 금액 {won(need)}" if need is not None else "") + "."
+            try:
+                if float(cash) < 0:
+                    text += " 예수금이 음수이면 보유 종목 매도 대금이 결제되는 D+2 영업일 이후 양수가 되어야 매수할 수 있습니다."
+            except (TypeError, ValueError):
+                pass
+        return text
+    hint = REJECT_HINTS.get(exc.code)
+    return f"주문이 거절됐습니다. {hint + '.' if hint else exc} (사유 코드 {exc.code})"
+
+
 # ── TradeStock ────────────────────────────────────────────────────────────────
 def _trade_intent(event: dict) -> tuple[dict | None, str | None, str | None]:
     """슬롯 → 주문 의도. (intent, 다시 물을 슬롯, 안내문) — 슬롯이 모자라거나 틀리면 intent 는 None."""
@@ -204,19 +313,31 @@ def _trade_intent(event: dict) -> tuple[dict | None, str | None, str | None]:
 
 def trade_dialog(event: dict) -> dict:
     attrs = dict(event["sessionState"].get("sessionAttributes") or {})
+    restore_pending(event, attrs)                      # 끊겼던 주문 대화의 슬롯 이어받기
     intent, slot, text = _trade_intent(event)
     if intent is None:
-        # 값이 아예 없는 필수 슬롯은 Lex 의 기본 프롬프트에 맡기고(Delegate), 값이 있는데 틀린 경우만 직접 되묻는다.
+        remember_pending(event, attrs)
+        # 값이 있는데 틀린 경우와 종목·수량을 이미 아는 경우(맥락을 붙여 묻는다)는 직접 되묻고, 아무것도 모르는 필수 슬롯은 Lex 기본 프롬프트에 맡긴다(Delegate).
         slots = event["sessionState"]["intent"].get("slots") or {}
         has_value = slot_value(slots, slot) is not None
-        if slot == "Price" or has_value:
-            return elicit_slot(event, slot, text, attrs)
+        ctx = known_context(event)
+        if slot == "Price" or has_value or ctx:
+            return elicit_slot(event, slot, ctx + text, attrs)
         return delegate(event, attrs)
     confirmation = event["sessionState"]["intent"].get("confirmationState") or "None"
     if confirmation == "Denied":
+        attrs.pop("pendingTrade", None)
         return close(event, "주문을 취소했습니다. 다른 주문이 필요하면 말씀해 주세요.", fulfilled=False, attrs=attrs)
     if confirmation == "Confirmed":
         return delegate(event, attrs)
+    blocker_slot, blocker = cash_blocker(intent)       # 예수금 음수·부족이면 확인 단계 전에 알려 헛주문을 막는다
+    if blocker and blocker_slot:
+        remember_pending(event, attrs)
+        return elicit_slot(event, blocker_slot, blocker, attrs)
+    if blocker:
+        attrs.pop("pendingTrade", None)
+        return close(event, blocker, fulfilled=False, attrs=attrs)
+    remember_pending(event, attrs)
     if intent["side"] == "SELL":
         try:
             held = next((int(h.get("quantity") or 0) for h in (get_balance().get("holdings") or []) if str(h.get("symbol")) == intent["symbol"]), 0)
@@ -240,14 +361,15 @@ def trade_fulfill(event: dict) -> dict:
         return close(event, f"주문 정보가 부족해 보내지 않았습니다. {text}", fulfilled=False, attrs=attrs)
     if not market_open():
         return close(event, "지금은 장 시간(평일 09:00~15:30)이 아니라 주문을 보내지 않았습니다. 장중에 다시 말씀해 주세요.", fulfilled=False, attrs=attrs)
+    attrs.pop("pendingTrade", None)
     try:
         result = place_order(intent)
     except GatewayError as exc:
-        hint = {"INSUFFICIENT_BALANCE": "주문 가능 예수금이 부족합니다.", "INSUFFICIENT_HOLDINGS": "보유수량이 부족합니다.",
-                "LIMIT_EXCEEDED": "회당 주문 한도를 넘었습니다.", "MARKET_CLOSED": "장 시간이 아닙니다."}.get(exc.code, "")
-        return close(event, f"주문이 거절됐습니다. {hint or exc} [{exc.code}]", fulfilled=False, attrs=attrs)
+        attrs["lastRejectCode"] = exc.code
+        return close(event, reject_message(exc), fulfilled=False, attrs=attrs)
     order = result.get("order") or {}
     name = ticker_name(intent["symbol"])
+    attrs.pop("lastRejectCode", None)
     attrs.update({"lastOrderNo": str(order.get("orderNo") or ""), "lastTicker": intent["symbol"], "lastTickerName": name})
     status = order.get("status") or "ACCEPTED"
     what = "매수" if intent["side"] == "BUY" else "매도"
@@ -266,7 +388,32 @@ def balance_fulfill(event: dict) -> dict:
     lines = [f"KIS 모의계좌 — 예수금 {won(b.get('cashBalance'))}, 총평가 {won(b.get('totalEvalAmount'))}, 평가손익 {won(b.get('totalProfitLoss'))}, 보유 {len(holdings)}종목."]
     if top:
         lines.append("상위 보유: " + ", ".join(f"{h.get('name') or ticker_name(str(h.get('symbol')))} {int(h.get('quantity') or 0):,}주({won(h.get('evalAmount'))})" for h in top))
+    try:
+        if float(b.get("cashBalance") or 0) < 0:
+            lines.append("예수금이 음수라 매수 주문은 거절됩니다. 보유 종목 매도 대금이 결제되는 D+2 영업일 이후 양수가 되면 매수할 수 있습니다.")
+    except (TypeError, ValueError):
+        pass
     return close(event, " ".join(lines))
+
+
+def account_faq_fulfill(event: dict) -> dict:
+    """AccountFaq: '예수금이 마이너스인데 가능해?', '모의계좌로 주문돼?', '왜 거절됐어?' — 실제 잔고와 직전 거절 사유로 답한다."""
+    attrs = dict(event["sessionState"].get("sessionAttributes") or {})
+    try:
+        cash = int(float(get_balance().get("cashBalance") or 0))
+    except (GatewayError, TypeError, ValueError) as exc:
+        return close(event, f"잔고를 확인하지 못해 답하기 어렵습니다. ({exc})", fulfilled=False, attrs=attrs)
+    lines = []
+    if attrs.get("lastRejectCode"):
+        code = attrs["lastRejectCode"]
+        lines.append(f"직전 주문 거절 사유: {REJECT_HINTS.get(code, code)}.")
+    if cash < 0:
+        lines.append(f"KIS 모의계좌 예수금이 {won(cash)}으로 음수입니다. 모의계좌라도 예수금이 음수면 매수 주문은 거절되고(INSUFFICIENT_BALANCE), "
+                     "보유 종목 매도 대금이 결제되는 D+2 영업일 이후 예수금이 양수가 되면 매수할 수 있습니다. 매도·잔고 조회·주문 확인은 지금도 됩니다.")
+    else:
+        lines.append(f"KIS 모의계좌 예수금 {won(cash)} 범위에서 매수할 수 있습니다. 챗봇 주문은 회당 {MAX_ORDER_QTY:,}주·{won(MAX_ORDER_AMOUNT)}까지, "
+                     "장중(평일 09:00~15:30)에만 보냅니다. 예: '삼성전자 1주 시장가 매수'")
+    return close(event, " ".join(lines), attrs=attrs)
 
 
 def order_fulfill(event: dict) -> dict:
@@ -296,6 +443,8 @@ def handler(event: dict, context: Any = None) -> dict:
             return delegate(event) if source == "DialogCodeHook" else balance_fulfill(event)
         if name == "CheckOrder":
             return delegate(event) if source == "DialogCodeHook" else order_fulfill(event)
+        if name == "AccountFaq":
+            return delegate(event) if source == "DialogCodeHook" else account_faq_fulfill(event)
         return delegate(event)
     except Exception as exc:                       # 훅 예외는 Lex 에 500 으로 가 대화가 깨진다 → 메시지로 돌려준다
         logger.exception("lex hook failed")

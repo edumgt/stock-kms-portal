@@ -7,7 +7,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 export LEX_REGION="${LEX_REGION:-ap-northeast-2}" LEX_BOT_ID="${LEX_BOT_ID:-ZMCZPNJA6U}"
 export GATEWAY_API_KEY="${GATEWAY_API_KEY:-$(cat secrets/lex-gateway-api-key)}"
-export PUBLISH_ONLY="${PUBLISH_ONLY:-1}"     # DRAFT 가 이미 Built 라 재빌드 생략. 인텐트·슬롯을 고쳤으면 PUBLISH_ONLY= 로 비워 재빌드(약 25분)
+export PUBLISH_ONLY="${PUBLISH_ONLY-1}"      # 기본 1: DRAFT 그대로 발행(재빌드 생략). 인텐트·슬롯을 고쳤으면 `PUBLISH_ONLY= bash lex/scripts/finish.sh` 로 비워 재빌드(약 25분)
 
 echo "### ② Lambda + 버전 발행 + 별칭 + 스모크"
 OUT=$(bash lex/scripts/deploy.sh | tee /dev/stderr)

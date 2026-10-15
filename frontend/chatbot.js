@@ -19,7 +19,7 @@
           <button type="button" id="floating-chatbot-close" aria-label="대화창 닫기"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="sr-only">닫기</span></button>
         </header>
         <div class="floating-chatbot-messages" id="floating-chatbot-messages" aria-live="polite">
-          <p class="floating-chatbot-welcome">투자 기초 질문이나 "삼성전자 1주 시장가 매수" 같은 모의투자 주문을 입력해 보세요.</p>
+          <p class="floating-chatbot-welcome">할 수 있는 것 — 주문: "삼성전자 1주 시장가 매수" · 잔고: "잔고 알려줘" · 체결: "주문 확인" · 계좌 질문: "예수금이 마이너스인데 가능해?" · 투자 기초(포트폴리오·금리·환율). KIS 모의계좌로만 주문합니다.</p>
         </div>
         <div id="floating-chatbot-quick" class="floating-chatbot-quick" hidden>
           <button type="button" data-say="네">네</button><button type="button" data-say="아니요">아니요</button>
