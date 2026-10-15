@@ -1,0 +1,2 @@
+{"Version": "2012-10-17", "Statement": [{"Sid": "InvestmentAssistantLexRecognizeText", "Effect": "Allow", "Action": ["lex:RecognizeText"],
+  "Resource": "arn:aws:lex:ap-northeast-2:086015456585:bot-alias/ZMCZPNJA6U/OQEXZVJE57"}]}

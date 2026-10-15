@@ -126,7 +126,7 @@ def intent_defs(slot_type_ids: dict[str, str]) -> list[dict]:
              "{Ticker} {Quantity}주 {Side}", "{Ticker} {Quantity}주 {OrderType} {Side}", "{Ticker} {Side}", "{Side} 주문", "주식 {Side}",
              "{Ticker} {Quantity}주 {Price}원에 {Side}", "{Ticker} 사고 싶어", "{Ticker} 팔고 싶어", "{Quantity}주 {Side}해줘", "주문할래", "매매하고 싶어")],
          "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True},
-         "intentConfirmationSetting": {"promptSpecification": msg("이 주문을 KIS 모의계좌로 보낼까요? (네/아니오)")["promptSpecification"],
+         "intentConfirmationSetting": {"promptSpecification": msg("이 주문을 KIS 모의계좌로 보낼까요? (네/아니요)")["promptSpecification"],
                                        "declinationResponse": plain("주문을 취소했습니다."), "active": True},
          "slots": [
              ("Side", slot_type_ids["OrderSide"], "Required", "매수할까요, 매도할까요?"),
@@ -241,10 +241,14 @@ def main() -> int:
 def publish(lex, bot_id: str, alias_id: str, args) -> int:
     """4) 버전 발행 + 별칭 생성/갱신 (코드 훅 연결)"""
     ver = lex.create_bot_version(botId=bot_id, botVersionLocaleSpecification={LOCALE: {"sourceBotVersion": "DRAFT"}})["botVersion"]
+    print(f"version {ver} 발행 요청, Available 대기")
     for _ in range(60):
-        if lex.describe_bot_version(botId=bot_id, botVersion=ver)["botStatus"] == "Available":
-            break
-        time.sleep(5)
+        time.sleep(5)   # 생성 직후 DescribeBotVersion 이 ResourceNotFound 를 돌려주는 반영 지연이 있어 먼저 기다린다
+        try:
+            if lex.describe_bot_version(botId=bot_id, botVersion=ver)["botStatus"] == "Available":
+                break
+        except lex.exceptions.ResourceNotFoundException:
+            continue
     locale_settings = {LOCALE: {"enabled": True, "codeHookSpecification": {"lambdaCodeHook": {"lambdaARN": args.lambda_arn, "codeHookInterfaceVersion": "1.0"}}}}
     if not alias_id:
         aliases = {a["botAliasName"]: a["botAliasId"] for a in lex.list_bot_aliases(botId=bot_id, maxResults=100).get("botAliasSummaries", [])}

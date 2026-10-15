@@ -230,7 +230,7 @@ def trade_dialog(event: dict) -> dict:
     what = "매수" if intent["side"] == "BUY" else "매도"
     amount = f" · 예상 {won(intent['price'] * intent['quantity'])}" if intent["orderType"] == "LIMIT" else ""
     attrs.update({"lastTicker": intent["symbol"], "lastTickerName": name})
-    return confirm_intent(event, f"KIS 모의계좌로 {name}({intent['symbol']}) {intent['quantity']:,}주 {how} {what} 주문을 보낼까요?{amount} (네/아니오)", attrs)
+    return confirm_intent(event, f"KIS 모의계좌로 {name}({intent['symbol']}) {intent['quantity']:,}주 {how} {what} 주문을 보낼까요?{amount} (네/아니요)", attrs)
 
 
 def trade_fulfill(event: dict) -> dict:

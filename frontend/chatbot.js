@@ -2,7 +2,7 @@
    investment-native/js/sidebarUI.js 의 ensureSidebarChatbot 를 포털용으로 옮긴 것 — 그 파일은 사이드바 DOM 을 전제해 그대로 못 쓴다.
    스타일은 이미 로드되는 /static/investment-native/styles.css 의 .floating-chatbot* 를 쓴다.
    서버 /api/lex/chat(app/api/routes/lex.py) 이 Lex 대화 상태(dialog_action·slot_to_elicit·session_attributes)를 돌려주므로
-   슬롯을 묻는 중이면 입력창 힌트를 바꾸고, 확인 단계면 네/아니오 버튼을 보여 준다. */
+   슬롯을 묻는 중이면 입력창 힌트를 바꾸고, 확인 단계면 네/아니요 버튼을 보여 준다(Lex ko_KR 은 '아니오' 를 부정으로 인식하지 못한다). */
 (function () {
   if (document.getElementById('floating-chatbot')) return;
   const SESSION_KEY = 'investment_analysis_lex_session_id';
@@ -22,7 +22,7 @@
           <p class="floating-chatbot-welcome">투자 기초 질문이나 "삼성전자 1주 시장가 매수" 같은 모의투자 주문을 입력해 보세요.</p>
         </div>
         <div id="floating-chatbot-quick" class="floating-chatbot-quick" hidden>
-          <button type="button" data-say="네">네</button><button type="button" data-say="아니오">아니오</button>
+          <button type="button" data-say="네">네</button><button type="button" data-say="아니요">아니요</button>
         </div>
         <form class="floating-chatbot-form" id="floating-chatbot-form">
           <input id="floating-chatbot-input" type="text" maxlength="300" placeholder="질문을 입력하세요" aria-label="챗봇 질문" autocomplete="off" />

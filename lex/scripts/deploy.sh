@@ -65,14 +65,15 @@ ARN=$(aws lambda get-function --region $REGION --function-name $FN --query 'Conf
 OUT=$($PY -u lex/scripts/build_bot.py --lambda-arn "$ARN" ${LEX_BOT_ALIAS_ID:+--alias-id "$LEX_BOT_ALIAS_ID"} ${PUBLISH_ONLY:+--publish-only} | tee /dev/stderr)
 eval "$(echo "$OUT" | grep '^export LEX_')"; export LEX_BOT_ID LEX_BOT_ALIAS_ID
 echo "bot: $LEX_REGION $LEX_BOT_ID alias $LEX_BOT_ALIAS_ID"
+echo "export LEX_REGION=$LEX_REGION LEX_BOT_ID=$LEX_BOT_ID LEX_BOT_ALIAS_ID=$LEX_BOT_ALIAS_ID"   # stdout 으로도 (finish.sh 가 받는다; 위 tee 는 stderr 로만 갔다)
 
 # ④ 이 봇 별칭만 Lambda 를 부를 수 있게 (별칭이 생긴 뒤에 걸어야 source-arn 이 맞는다)
 aws lambda add-permission --region $REGION --function-name $FN --statement-id "lex-alias-$LEX_BOT_ALIAS_ID" --action lambda:InvokeFunction \
   --principal lexv2.amazonaws.com --source-arn "arn:aws:lex:$REGION:$ACCOUNT:bot-alias/$LEX_BOT_ID/$LEX_BOT_ALIAS_ID" >/dev/null 2>&1 || echo "(lex invoke permission already present)"
 
-# ⑤ 스모크: 기본 인텐트 1회 + 슬롯 필링 → 확인 프롬프트까지 (주문은 보내지 않는다: '아니오')
+# ⑤ 스모크: 기본 인텐트 1회 + 슬롯 필링 → 확인 프롬프트 → 거절(Denied, Close) (주문은 보내지 않는다. Lex ko_KR 은 '아니오' 를 못 알아듣고 '아니요'/'아니' 만 부정으로 본다)
 S="deploy-smoke-$(date +%s)"
-for t in "포트폴리오를 어떻게 구성해" "삼성전자 1주 시장가 매수" "아니오"; do
+for t in "포트폴리오를 어떻게 구성해" "삼성전자 1주 시장가 매수" "아니요"; do
   echo "> $t"; aws lexv2-runtime recognize-text --region $REGION --bot-id $LEX_BOT_ID --bot-alias-id $LEX_BOT_ALIAS_ID --locale-id ko_KR --session-id "$S" --text "$t" \
     --query '{intent:sessionState.intent.name,action:sessionState.dialogAction.type,slot:sessionState.dialogAction.slotToElicit,msg:messages[0].content}' --output json; done
 cat <<MSG
