@@ -26,3 +26,9 @@ PY
 echo "== live check"; curl -s -m 15 "https://iv.edumgt.co.kr/api/rag/status"; echo
 curl -s -m 20 "https://iv.edumgt.co.kr/api/rag/search?q=$(python3 -c 'import urllib.parse;print(urllib.parse.quote("매도 대금 언제 들어와"))')&limit=2" | head -c 600; echo
 echo "검색 API 가 404 면 먼저 bash deploy/st-iv/deploy-rag.sh (api 이미지 재빌드) 를 실행"
+
+# 완료 알림(2026-10-16 사용자 요청 "EC2 Qdrant 인덱스 이관할 때 noti"): 터미널 벨 + Windows 토스트(WSL 에서 powershell 가능할 때)
+printf '\a'; echo "### EC2 Qdrant 이관 완료: $COL ← $NAME ($(date +%H:%M))"
+if command -v powershell.exe >/dev/null 2>&1; then
+  powershell.exe -NoProfile -Command "[void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); \$n=New-Object System.Windows.Forms.NotifyIcon; \$n.Icon=[System.Drawing.SystemIcons]::Information; \$n.Visible=\$true; \$n.ShowBalloonTip(10000,'EC2 Qdrant 이관 완료','$COL ← $NAME','Info'); Start-Sleep -s 2; \$n.Dispose()" >/dev/null 2>&1 || true
+fi

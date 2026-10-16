@@ -456,6 +456,16 @@ Fallback 문구·chatbot.js 환영문에 랭킹 예시와 "입력 중 '취소'" 
 **배포 순서(사용자)**: ① Anthropic 콘솔에서 API 키 발급 → `secrets/anthropic-api-key` 에 저장(chmod 600) ② 6-14 서버 반영이 먼저여야 search_docs 가 동작: `bash deploy/st-iv/deploy-rag.sh` → `bash deploy/st-iv/restore-rag-snapshot.sh rag/snapshots/chatbot_docs-*.snapshot` ③ `cd /home/ubuntu/stock-kms-portal && PUBLISH_ONLY= bash lex/scripts/finish.sh`(6-13 인텐트·별칭·Fallback 비활성 + Lambda SDK 패키징 → 재빌드 ~25분 → 버전 6 → 포털 chatbot.js 환영문) ④ 위 3개 질문 스모크 + Lambda CloudWatch 로그에서 지연(`llm budget exceeded` 경고 여부) 확인. 비용 감각: 턴당 입력 ~3K(캐시)·출력 ~300 토큰 → Opus 5.5 기준 1~2센트.
 **남은 것**: 로그 축적 루프(6-12 제안: Lex 대화 로그 → Fallback 발화 → 발화/문서 보강 → 회귀 검증), 검색 API 공개 접근 제한 여부, 데이터 소재(Anthropic 인프라) 확인은 사용자 판단.
 
+### 6-16. 2026-10-16 PC 자원 극대화 — WSL 상한 해제 + 로컬 LLM(Docker Ollama)로 발화·질의 데이터 생성 (사용자 지시 "PC 자원 극대화, CPU 95%·메모리 90%")
+
+**PC 실측**: i7-11700 16스레드, 호스트 16GB, GPU 없음(Intel UHD 750). WSL 은 기본 50% 라 7.8GB·16스레드만 보였음.
+**WSL 상한**: `C:\Users\Administrator\.wslconfig` 신설 — `memory=15GB processors=16 swap=16GB`, `[experimental] autoMemoryReclaim=gradual sparseVhd=true`(WSL 2.7.11). **적용은 사용자**: PowerShell `wsl --shutdown` 후 WSL 재시작(실행 중인 Claude Code 세션 끊김). 적용 전까지는 7.8GB 상한.
+**로컬 LLM**: `rag/compose.yml` 에 `ollama` 서비스(profile `llm`, 127.0.0.1:11434, 볼륨 kms_rag_ollama, CPU 전 스레드). 모델 qwen2.5:7b(4.7GB)·3b 수신. .wslconfig 적용 뒤 `qwen2.5:14b`(9GB) 권장 — `rag/run_augment.sh` 가 가용 메모리로 모델을 고른다(≥11GB→14b, ≥6GB→7b, 그 외 3b).
+**데이터 생성(학습 단계)**: `rag/augment.py`(lex/.venv) — ① Lex 인텐트 9개의 기존 발화를 보여 주고 새 발화 후보 15개씩 생성 → `rag/out/utterances_<날짜>.json`(**사용자 검토 후** build_bot.py 에 반영, 슬롯 표기는 기존 슬롯명만 허용) ② 문서 40청크마다 사용자 질문 3개 생성 → `rag/eval/generated_queries.jsonl` → `rag/eval/run_eval.py --queries rag/eval/generated_queries.jsonl` 로 검색 회귀 평가(기대 문서 = 출처 청크). 실행 `bash rag/run_augment.sh`(백그라운드, 로그 rag/out/augment.log). 생성 중 CPU 16스레드 ~100%, 7b 는 메모리 ~5.5GB(현재 상한에서 90% 근접), 14b 로 바꾸면 ~10GB.
+**색인·평가 스레드**: `rag/common.py` fastembed·리랭커에 `threads=os.cpu_count()`(`RAG_THREADS`).
+**EC2 이관 알림(사용자 요청)**: `deploy/st-iv/restore-rag-snapshot.sh` 끝에 터미널 벨 + Windows 토스트("EC2 Qdrant 이관 완료"). 에이전트는 새 스냅샷이 생겨 이관이 필요할 때마다 메시지에 **「EC2 Qdrant 이관 필요」** 로 명시한다. 현재 이관 대기 스냅샷: `rag/snapshots/chatbot_docs-1252415075711493-2026-10-16-03-53-58.snapshot`(6-14, 미복원).
+**주의**: 운영 서버(fd/st)에는 아무 부하도 주지 않는다. 로컬 Ollama 는 `docker compose -p kms-rag -f rag/compose.yml --profile llm stop ollama` 로 끌 수 있다.
+
 ---
 
 지금까지 논의한 **AWS Lex 기반 주식 투자/매매 챗봇 설계 및 슬롯 필링 관점의 주요 내용**을 한눈에 보실 수 있도록 Markdown(MD) 형식으로 정리해 두었습니다.

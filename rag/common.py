@@ -24,6 +24,7 @@ DENSE, LEX = "dense", "lex"                     # Qdrant named vectors
 RERANK_MODEL = os.environ.get("RAG_RERANK_MODEL", "jinaai/jina-reranker-v2-base-multilingual")   # 1.1GB, 다국어 cross-encoder
 RERANK_MIN = float(os.environ.get("RAG_RERANK_MIN", "-1.0"))
 DENSE_K = int(os.environ.get("RAG_DENSE_K", "4")); LEX_K = int(os.environ.get("RAG_LEX_K", "6"))
+THREADS = int(os.environ.get("RAG_THREADS", str(os.cpu_count() or 4)))   # PC 색인·평가는 전 스레드(6-16)
 
 # 서버와 같은 어휘 코드(app/services/lexical.py)를 app 패키지 의존성 없이 파일로 읽어 쓴다
 _spec = importlib.util.spec_from_file_location("kms_lexical", Path(__file__).resolve().parents[1] / "app" / "services" / "lexical.py")
@@ -119,7 +120,7 @@ def embedder():
     global _model
     if _model is None:
         from fastembed import TextEmbedding
-        _model = TextEmbedding(model_name=EMBED_MODEL, cache_dir=CACHE_DIR)
+        _model = TextEmbedding(model_name=EMBED_MODEL, cache_dir=CACHE_DIR, threads=THREADS)
     return _model
 
 
@@ -134,7 +135,7 @@ def reranker():
     global _reranker
     if _reranker is None:
         from fastembed.rerank.cross_encoder import TextCrossEncoder
-        _reranker = TextCrossEncoder(model_name=RERANK_MODEL, cache_dir=CACHE_DIR)
+        _reranker = TextCrossEncoder(model_name=RERANK_MODEL, cache_dir=CACHE_DIR, threads=THREADS)
     return _reranker
 
 

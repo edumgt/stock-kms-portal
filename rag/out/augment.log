@@ -1,0 +1,5 @@
+available=1030MB model=qwen2.5:7b threads=16 what=all
+ollama=http://127.0.0.1:11434 model=qwen2.5:7b threads=16
+  TradeStock: 후보 15개 (66s)
+  CheckBalance: 후보 14개 (45s)
+  AccountFaq: 후보 15개 (51s)

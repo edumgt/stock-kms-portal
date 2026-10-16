@@ -2,6 +2,7 @@
 #   docker compose -p kms-rag -f rag/compose.yml up -d
 #   rag/.venv/bin/python rag/indexer.py            # 문서 → 임베딩 → 로컬 Qdrant
 #   bash rag/export_snapshot.sh                     # 스냅샷 파일 → rag/snapshots/
+#   docker compose -p kms-rag -f rag/compose.yml --profile llm up -d ollama   # 로컬 LLM(발화·질의 생성, 6-16) — CPU 16스레드 전부 사용
 services:
   qdrant:
     image: qdrant/qdrant:v1.15.1
@@ -15,6 +16,20 @@ services:
       interval: 5s
       timeout: 3s
       retries: 12
+  # 로컬 LLM(6-16): PC 자원으로 Lex 발화 후보·RAG 평가 질의를 생성한다(API 비용 0). GPU 없음 → CPU 전 스레드. .wslconfig 14GB 적용 후 qwen2.5:14b 권장.
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["llm"]
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - kms_rag_ollama:/root/.ollama
+    environment:
+      OLLAMA_KEEP_ALIVE: "30m"
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+    restart: unless-stopped
 volumes:
   kms_rag_qdrant:
   kms_rag_snapshots:
+  kms_rag_ollama:

@@ -17,8 +17,9 @@ from search import search  # noqa: E402
 
 def main() -> int:
     ap = argparse.ArgumentParser(); ap.add_argument("--min-score", type=float, default=-1.0); ap.add_argument("--k", type=int, default=3)
+    ap.add_argument("--queries", default=str(HERE / "queries.jsonl"), help="평가 질의 파일(기본 queries.jsonl; augment.py 가 만든 generated_queries.jsonl 도 가능)")
     a = ap.parse_args()
-    rows = [json.loads(l) for l in (HERE / "queries.jsonl").read_text(encoding="utf-8").splitlines() if l.strip()]
+    rows = [json.loads(l) for l in Path(a.queries).read_text(encoding="utf-8").splitlines() if l.strip()]
     hits = rejected = 0; rel_top, irr_top = [], []
     for r in rows:
         res = search(r["query"], limit=a.k, min_score=None)
@@ -35,7 +36,7 @@ def main() -> int:
         print(f"{mark} {top['score'] if top else 0:.3f}  {r['query'][:28]:30s} → {top['doc_id'] if top else '-'} / {top['section'] if top else '-'}")
     n_rel = sum(1 for r in rows if r["expect_doc"]); n_irr = len(rows) - n_rel
     print(f"\n관련 질의 히트 {hits}/{n_rel} · 무관 질의 거절 {rejected}/{n_irr} · 임계값 {a.min_score}")
-    if rel_top and irr_top:
+    if rel_top and irr_top and n_irr:
         print(f"관련 1위 점수 최저 {min(rel_top):.3f} / 무관 1위 점수 최고 {max(irr_top):.3f} → 임계값은 이 사이가 안전")
     return 0 if hits == n_rel and rejected == n_irr else 1
 

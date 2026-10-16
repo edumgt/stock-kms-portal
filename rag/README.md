@@ -14,7 +14,8 @@ st 서버(`stock-kms-portal-qdrant-1`)에 복원한다. 서버는 질의 임베�
 | `search.py` | 로컬 검색 확인. 서버 `app/api/routes/rag_search.py` 와 같은 알고리즘 |
 | `eval/queries.jsonl` · `eval/run_eval.py` | 관련 질의(기대 문서)·무관 질의 세트와 평가. 문서를 고치면 반드시 다시 돌린다 |
 | `eval/experiment*.py` | 모델·텍스트 구성·채널 조합 비교 실험(2026-10-16 결과는 아래) |
-| `compose.yml` | 로컬 Qdrant v1.15.1(서버와 같은 버전 — 스냅샷 호환) |
+| `compose.yml` | 로컬 Qdrant v1.15.1(서버와 같은 버전 — 스냅샷 호환) + `--profile llm` 로컬 Ollama(발화·질의 생성용, CPU 전 스레드) |
+| `augment.py` · `run_augment.sh` | 로컬 LLM 으로 Lex 발화 후보(`out/utterances_*.json`, 사용자 검토 후 반영)와 RAG 평가 질의(`eval/generated_queries.jsonl`) 생성. 가용 메모리로 14b/7b/3b 자동 선택 |
 | `export_snapshot.sh` | 로컬 컬렉션 스냅샷 → `snapshots/` (gitignore) |
 | `../deploy/st-iv/deploy-rag.sh` | 서버 api 이미지 재빌드(검색 라우트·fastembed·모델 베이크) — 사용자 실행 |
 | `../deploy/st-iv/restore-rag-snapshot.sh <snapshot>` | 스냅샷을 st Qdrant 에 복원 — 사용자 실행 |
