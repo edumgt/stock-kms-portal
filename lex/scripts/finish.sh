@@ -3,6 +3,7 @@
 # stock-kms-portal 루트에서:  bash lex/scripts/finish.sh                  # ②+③
 #                            DELETE_OLD_BOT=1 bash lex/scripts/finish.sh   # iv 화면 확인이 끝났으면 ④ 까지
 # 전제: secrets/lex-gateway-api-key(issue-gateway-key.sh 로 발급) · 관리자 AWS 자격증명 · ../stock-coin-trade/pr-test.pem
+#       (선택) secrets/anthropic-api-key — 있으면 FallbackIntent 를 Claude 도구 호출로 답한다(6-15). 없으면 명령 안내문.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 export LEX_REGION="${LEX_REGION:-ap-northeast-2}" LEX_BOT_ID="${LEX_BOT_ID:-ZMCZPNJA6U}"

@@ -37,24 +37,38 @@ if [ -z "${LEX_BOT_ID:-}" ]; then
 fi
 echo "bot: $LEX_REGION $LEX_BOT_ID"
 
-# ② Lambda
-ZIP=$(mktemp -d)/trade_hook.zip
-$PY - "$ZIP" <<'PYZIP'    # zip 명령 없이 파이썬으로 패키징 (handler.py + tickers.json + aliases.json, 최상위에 배치)
-import sys, zipfile
-with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as z:
-    for name in ("handler.py", "tickers.json", "aliases.json"):
-        z.write(f"lex/lambda/trade_hook/{name}", name)
+# ② Lambda — 코드 4개 + anthropic SDK(6-15, Lambda x86_64·python3.12 용 휠을 PC 에서 받아 함께 묶는다)
+WORK=$(mktemp -d); PKG=$WORK/pkg; ZIP=$WORK/trade_hook.zip; mkdir -p "$PKG"
+ANTHROPIC_SDK_VERSION="${ANTHROPIC_SDK_VERSION:-1.15.0}"
+if command -v uv >/dev/null 2>&1; then
+  uv pip install -q --python "$PY" --target "$PKG" --python-platform x86_64-manylinux_2_17 --python-version 3.12 --only-binary :all: "anthropic==$ANTHROPIC_SDK_VERSION"
+else
+  $PY -m pip install -q --target "$PKG" --platform manylinux2014_x86_64 --implementation cp --python-version 3.12 --only-binary=:all: "anthropic==$ANTHROPIC_SDK_VERSION"
+fi
+cp lex/lambda/trade_hook/{handler.py,assistant.py,tickers.json,aliases.json} "$PKG/"
+$PY - "$ZIP" "$PKG" <<'PYZIP'    # zip 명령 없이 파이썬으로 패키징(최상위에 handler.py)
+import os, sys, zipfile
+zip_path, root = sys.argv[1], sys.argv[2]
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
+    for base, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if d != "__pycache__"]
+        for f in files:
+            p = os.path.join(base, f); z.write(p, os.path.relpath(p, root))
 PYZIP
 echo "packaged: $ZIP ($(stat -c %s "$ZIP") bytes)"
-ENV="Variables={GATEWAY_BASE=$GATEWAY_BASE,GATEWAY_API_KEY=$GATEWAY_API_KEY,MAX_ORDER_QTY=$MAX_ORDER_QTY,MAX_ORDER_AMOUNT=$MAX_ORDER_AMOUNT}"
+# Claude 폴백(6-15): 키 파일이 있으면 켠다(없으면 LLM 폴백 비활성 → 명령 안내문). 키는 secrets/anthropic-api-key(600, gitignore) 에 한 줄로.
+ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-$(cat secrets/anthropic-api-key 2>/dev/null | tr -d '[:space:]' || true)}"
+LLM_MODEL="${LLM_MODEL:-claude-opus-5-5}"; RAG_SEARCH_URL="${RAG_SEARCH_URL:-https://iv.edumgt.co.kr/api/rag/search}"
+[ -n "$ANTHROPIC_API_KEY" ] && echo "llm fallback: ON ($LLM_MODEL)" || echo "llm fallback: OFF (secrets/anthropic-api-key 없음 → 명령 안내문)"
+ENV="Variables={GATEWAY_BASE=$GATEWAY_BASE,GATEWAY_API_KEY=$GATEWAY_API_KEY,MAX_ORDER_QTY=$MAX_ORDER_QTY,MAX_ORDER_AMOUNT=$MAX_ORDER_AMOUNT,ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY,LLM_MODEL=$LLM_MODEL,RAG_SEARCH_URL=$RAG_SEARCH_URL}"
 if aws lambda get-function --region $REGION --function-name $FN >/dev/null 2>&1; then
   aws lambda update-function-code --region $REGION --function-name $FN --zip-file "fileb://$ZIP" >/dev/null
   aws lambda wait function-updated --region $REGION --function-name $FN
-  aws lambda update-function-configuration --region $REGION --function-name $FN --environment "$ENV" --timeout 30 >/dev/null
+  aws lambda update-function-configuration --region $REGION --function-name $FN --environment "$ENV" --timeout 30 --memory-size 512 >/dev/null   # SDK import 속도 위해 512MB
   echo "lambda updated: $FN ($REGION)"
 else
   aws lambda create-function --region $REGION --function-name $FN --runtime python3.12 --handler handler.handler --role "$ROLE_ARN" \
-    --zip-file "fileb://$ZIP" --timeout 30 --memory-size 256 --environment "$ENV" --description "iv.edumgt.co.kr Lex 코드 훅: 주식 대화 → KIS 모의 주문(stock-coin-trade 게이트웨이)" >/dev/null
+    --zip-file "fileb://$ZIP" --timeout 30 --memory-size 512 --environment "$ENV" --description "iv.edumgt.co.kr Lex 코드 훅: 주식 대화 → KIS 모의 주문(stock-coin-trade 게이트웨이)" >/dev/null
   echo "lambda created: $FN ($REGION)"
 fi
 aws lambda wait function-updated --region $REGION --function-name $FN

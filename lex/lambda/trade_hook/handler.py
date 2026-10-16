@@ -18,6 +18,7 @@ Lex 가 DialogCodeHook(매 턴 검증·확인) 과 FulfillmentCodeHook(이행) �
   CheckRanking: 슬롯 없음 → st 사이트 모의투자 공개 수익 랭킹 상위 5(RANKING_URL, 인증 없음) + KIS 계좌는 공용 1개라 개인 랭킹 없음 안내
   CheckFxRate : Currency(FxCurrency: USD/JPY/EUR/CNY, 선택) → 오늘 원화 환율(FX_URL exchangerate-api, 실패 시 frankfurter ECB)
 종목 별칭: aliases.json(현대자동차→현대차, 하이닉스→SK하이닉스 …)을 슬롯 동의어와 ticker_matches 양쪽에서 쓴다(2026-10-16 실사용 '현대자동차' 미인식).
+FallbackIntent: 인텐트에 안 잡힌 질문은 assistant.py 가 Claude 도구 호출(읽기 전용: 잔고·시세·종목 검색·주문 조회·환율·장 시간·랭킹·문서 검색)로 답한다(6-15). ANTHROPIC_API_KEY 없으면 명령 안내문.
 공통: 슬롯 되묻기 중 "아니요/취소/그만" 은 훅이 취소(CANCEL_RE) · 종목 해석은 입력 원문과 대조(ticker_matches: '000000'→경방 같은 근사 해석 거부) · 주문유형에 "알아서" 는 시장가
 세션 속성: pendingTrade(끊긴 주문 대화의 슬롯, PENDING_TTL 초) · lastTicker/lastTickerName · lastOrderNo · lastRejectCode
 """
@@ -27,6 +28,7 @@ import json
 import logging
 import os
 import re
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -36,6 +38,7 @@ from typing import Any
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+sys.path.insert(0, str(Path(__file__).resolve().parent))      # Lambda 루트가 아닌 곳(테스트)에서 로드돼도 assistant 를 찾는다
 
 KST = timezone(timedelta(hours=9))
 GATEWAY_BASE = os.environ.get("GATEWAY_BASE", "https://st.edumgt.co.kr").rstrip("/")
@@ -689,6 +692,24 @@ def order_fulfill(event: dict) -> dict:
                  + (f" · 체결 {filled:,}주 @ {won(o.get('avgFilledPrice'))}" if filled else "") + ".", attrs=attrs)
 
 
+# ── FallbackIntent → Claude 도구 호출 (6-15) ──────────────────────────────────
+def fallback_answer(event: dict) -> dict:
+    import assistant
+    attrs = dict(event["sessionState"].get("sessionAttributes") or {})
+    question = transcript(event)
+    if not question:
+        return close(event, assistant.HELP_TEXT, fulfilled=False, attrs=attrs)
+    try:
+        text = assistant.answer(question, attrs, ctx=sys.modules[__name__])
+    except Exception as exc:                       # 모델·네트워크 오류 → 안내문으로 대체(대화는 끊기지 않는다)
+        logger.exception("llm fallback failed")
+        text = None
+        attrs["llmError"] = exc.__class__.__name__
+    if not text:
+        return close(event, assistant.HELP_TEXT, fulfilled=False, attrs=attrs)
+    return close(event, text, attrs=attrs)
+
+
 # ── 진입점 ────────────────────────────────────────────────────────────────────
 def handler(event: dict, context: Any = None) -> dict:
     name = (event.get("sessionState") or {}).get("intent", {}).get("name")
@@ -713,6 +734,8 @@ def handler(event: dict, context: Any = None) -> dict:
             return delegate(event) if source == "DialogCodeHook" else ranking_fulfill(event)
         if name == "CheckFxRate":
             return delegate(event) if source == "DialogCodeHook" else fx_fulfill(event)
+        if name == "FallbackIntent":
+            return fallback_answer(event)
         return delegate(event)
     except Exception as exc:                       # 훅 예외는 Lex 에 500 으로 가 대화가 깨진다 → 메시지로 돌려준다
         logger.exception("lex hook failed")

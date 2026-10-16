@@ -138,7 +138,7 @@
     ],
     "allowInterrupt": true
    },
-   "active": true,
+   "active": false,
    "nextStep": {
     "dialogAction": {
      "type": "EndConversation"
@@ -172,6 +172,7 @@
      }
     }
    }
-  }
+  },
+  "_note": "2026-10-16 6-15: closingResponse.active=false — FallbackIntent 는 코드 훅(assistant.py, Claude 도구 호출)이 답한다. 훅이 실패하면 훅 자체가 HELP_TEXT 를 돌려준다."
  }
 }
