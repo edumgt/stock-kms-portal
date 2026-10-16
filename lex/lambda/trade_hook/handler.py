@@ -16,6 +16,8 @@ Lex 가 DialogCodeHook(매 턴 검증·확인) 과 FulfillmentCodeHook(이행) �
   MarketHours : 슬롯 없음 → 한국·미국 정규장 시간(KST, 서머타임 반영)과 지금 장중 여부
   MarketHolidays: 슬롯 없음 → 올해 남은 KRX 휴장일(KRX_HOLIDAYS 상수)
   CheckRanking: 슬롯 없음 → st 사이트 모의투자 공개 수익 랭킹 상위 5(RANKING_URL, 인증 없음) + KIS 계좌는 공용 1개라 개인 랭킹 없음 안내
+  CheckFxRate : Currency(FxCurrency: USD/JPY/EUR/CNY, 선택) → 오늘 원화 환율(FX_URL exchangerate-api, 실패 시 frankfurter ECB)
+종목 별칭: aliases.json(현대자동차→현대차, 하이닉스→SK하이닉스 …)을 슬롯 동의어와 ticker_matches 양쪽에서 쓴다(2026-10-16 실사용 '현대자동차' 미인식).
 공통: 슬롯 되묻기 중 "아니요/취소/그만" 은 훅이 취소(CANCEL_RE) · 종목 해석은 입력 원문과 대조(ticker_matches: '000000'→경방 같은 근사 해석 거부) · 주문유형에 "알아서" 는 시장가
 세션 속성: pendingTrade(끊긴 주문 대화의 슬롯, PENDING_TTL 초) · lastTicker/lastTickerName · lastOrderNo · lastRejectCode
 """
@@ -43,6 +45,10 @@ MAX_ORDER_QTY = int(os.environ.get("MAX_ORDER_QTY", "100"))
 MAX_ORDER_AMOUNT = int(os.environ.get("MAX_ORDER_AMOUNT", "5000000"))
 HTTP_TIMEOUT = float(os.environ.get("HTTP_TIMEOUT", "12"))
 RANKING_URL = os.environ.get("RANKING_URL", "https://st.edumgt.co.kr/api/member/investor-rankings")   # st 모의투자 공개 수익 랭킹(인증 없음)
+# 환율(2026-10-16 실사용 "오늘의 환율은?" → Fallback): 키 없는 공개 API. 1차 exchangerate-api(하루 1회 갱신), 실패 시 frankfurter(ECB 고시, 평일 16:00 CET).
+FX_URL = os.environ.get("FX_URL", "https://open.er-api.com/v6/latest/USD")
+FX_FALLBACK_URL = os.environ.get("FX_FALLBACK_URL", "https://api.frankfurter.dev/v1/latest?base=USD&symbols=KRW,JPY,EUR,CNY")
+FX_UNITS = {"USD": (1, "달러"), "JPY": (100, "엔"), "EUR": (1, "유로"), "CNY": (1, "위안")}      # 통화 → (표시 단위, 한글명). 엔은 관행대로 100엔당
 # 슬롯을 묻는 중에 사용자가 그만두려는 말(Lex 는 확인 단계에서만 '아니요' 를 알아듣고, 슬롯 되묻기 중에는 같은 질문을 반복한다 → 훅이 직접 취소)
 CANCEL_RE = re.compile(r"^\W*(아+\s*니+\s*(요+|오+|야+)?|취소(요|해|해줘|할래|하자)?|그만(요|해|할래|하자)?|됐어(요)?|안\s*(해|할래|할게|살래|팔래)(요)?|중단|스톱|멈춰|나가기|닫아|no|cancel|stop|quit)\W*$", re.I)
 # 주문 유형을 묻는데 "알아서 해줘" 류로 답하면 시장가로 간다
@@ -56,11 +62,19 @@ def tickers() -> dict[str, dict]:
     if _TICKERS is None:
         path = Path(__file__).with_name("tickers.json")
         _TICKERS = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+        alias_path = Path(__file__).with_name("aliases.json")          # 종목코드 → 통칭·구칭 목록(슬롯 동의어와 동일 출처)
+        for code, names in (json.loads(alias_path.read_text(encoding="utf-8")) if alias_path.exists() else {}).items():
+            if code in _TICKERS:
+                _TICKERS[code]["aliases"] = list(names)
     return _TICKERS
 
 
 def ticker_name(code: str) -> str:
     return (tickers().get(code) or {}).get("name") or code
+
+
+def ticker_aliases(code: str) -> list[str]:
+    return list((tickers().get(code) or {}).get("aliases") or [])
 
 
 # KRX 휴장일(주말 제외, 날짜 → 이름). 2026년 17일: 2026-01-29 공휴일법 개정(제헌절 재지정)·6-3 지방선거 반영. 해가 바뀌면 거래소 발표대로 여기만 갱신한다.
@@ -205,7 +219,9 @@ def ticker_matches(original: str, code: str) -> bool:
     if o.isdigit():
         return o == code
     name = ticker_name(code).replace(" ", "")
-    return o.lower() == code.lower() or o in name or name in o
+    if o.lower() == code.lower() or o in name or name in o:
+        return True
+    return any(o.lower() == a.replace(" ", "").lower() or a.replace(" ", "") in o for a in ticker_aliases(code))   # 별칭(현대자동차 등)
 
 
 def _msg(text: str) -> dict:
@@ -572,7 +588,63 @@ def quote_fulfill(event: dict) -> dict:
             f"저가 {won(q.get('low'))} · 거래량 {int(q.get('volume') or 0):,}주.")
     if not market_open():
         text += " 지금은 장 시간이 아니라 마지막 체결가 기준입니다."
+    said = re.sub(r"[\s은는이가요?!.]+$", "", transcript(event)).replace(" ", "")
+    if said and said.lower() in {n.replace(" ", "").lower() for n in (name, code, *ticker_aliases(code))}:   # 종목명만 말한 경우(2026-10-16 "현대자동차") → 다음 행동 안내
+        text += f" 주문하려면 '{name} 1주 시장가 매수' 처럼 말씀해 주세요."
     attrs.update({"lastTicker": code, "lastTickerName": name})
+    return close(event, text, attrs=attrs)
+
+
+def get_fx_rates() -> tuple[dict[str, float], str]:
+    """USD 기준 환율표(통화 → 1달러당 수량)와 출처·기준 시각 문구. 1차 FX_URL, 실패하면 FX_FALLBACK_URL(ECB)."""
+    try:
+        d = fetch_json(FX_URL)
+        rates = d.get("rates") or {}
+        if rates.get("KRW") and d.get("result", "success") == "success":
+            ts = d.get("time_last_update_unix")
+            when = f"{datetime.fromtimestamp(int(ts), KST):%m/%d %H:%M} KST 갱신" if ts else "오늘"
+            return rates, f"{when}, exchangerate-api"
+    except (GatewayError, TypeError, ValueError) as exc:
+        logger.warning("fx primary failed: %s", exc)
+    d = fetch_json(FX_FALLBACK_URL)
+    rates = d.get("rates") or {}
+    if not rates.get("KRW"):
+        raise GatewayError("FX_UNAVAILABLE", "환율 자료가 비어 있습니다")
+    return rates, f"{d.get('date') or ''} ECB 고시(frankfurter)".strip()
+
+
+def fx_krw(rates: dict, cur: str) -> float | None:
+    """표시 단위(FX_UNITS: 달러·유로·위안 1, 엔 100)당 원화."""
+    try:
+        krw = float(rates["KRW"])
+        per_usd = 1.0 if cur == "USD" else float(rates[cur])
+    except (KeyError, TypeError, ValueError):
+        return None
+    return krw / per_usd * FX_UNITS[cur][0] if per_usd else None
+
+
+def fx_fulfill(event: dict) -> dict:
+    """CheckFxRate: '오늘의 환율은?', '엔 환율 알려줘' — 원/달러를 기본으로 4개 통화를 답한다. 통화를 말했으면 그 통화를 앞에."""
+    attrs = dict(event["sessionState"].get("sessionAttributes") or {})
+    slots = event["sessionState"]["intent"].get("slots") or {}
+    cur = (slot_value(slots, "Currency") or "USD").upper()
+    if cur not in FX_UNITS:
+        cur = "USD"
+    try:
+        rates, src = get_fx_rates()
+    except GatewayError as exc:
+        return close(event, f"환율을 조회하지 못했습니다. ({exc})", fulfilled=False, attrs=attrs)
+    def line(c: str) -> str | None:
+        v = fx_krw(rates, c)
+        unit, ko = FX_UNITS[c]
+        return f"{unit:,}{ko} = {v:,.1f}원" if v else None
+    main = line(cur)
+    if not main:
+        return close(event, "환율 자료에 해당 통화가 없습니다.", fulfilled=False, attrs=attrs)
+    others = [t for c in FX_UNITS if c != cur and (t := line(c))]
+    unit, ko = FX_UNITS[cur]
+    text = (f"오늘 원/{ko} 환율은 {main}입니다({src}). " + (f"참고: {' · '.join(others)}. " if others else "")
+            + "참고용 중간 환율이라 은행 환전·KIS 적용 환율과 다를 수 있습니다.")
     return close(event, text, attrs=attrs)
 
 
@@ -639,6 +711,8 @@ def handler(event: dict, context: Any = None) -> dict:
             return delegate(event) if source == "DialogCodeHook" else holidays_fulfill(event)
         if name == "CheckRanking":
             return delegate(event) if source == "DialogCodeHook" else ranking_fulfill(event)
+        if name == "CheckFxRate":
+            return delegate(event) if source == "DialogCodeHook" else fx_fulfill(event)
         return delegate(event)
     except Exception as exc:                       # 훅 예외는 Lex 에 500 으로 가 대화가 깨진다 → 메시지로 돌려준다
         logger.exception("lex hook failed")

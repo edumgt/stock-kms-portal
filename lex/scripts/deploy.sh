@@ -39,10 +39,10 @@ echo "bot: $LEX_REGION $LEX_BOT_ID"
 
 # ② Lambda
 ZIP=$(mktemp -d)/trade_hook.zip
-$PY - "$ZIP" <<'PYZIP'    # zip 명령 없이 파이썬으로 패키징 (handler.py + tickers.json, 최상위에 배치)
+$PY - "$ZIP" <<'PYZIP'    # zip 명령 없이 파이썬으로 패키징 (handler.py + tickers.json + aliases.json, 최상위에 배치)
 import sys, zipfile
 with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as z:
-    for name in ("handler.py", "tickers.json"):
+    for name in ("handler.py", "tickers.json", "aliases.json"):
         z.write(f"lex/lambda/trade_hook/{name}", name)
 PYZIP
 echo "packaged: $ZIP ($(stat -c %s "$ZIP") bytes)"

@@ -270,3 +270,43 @@ def test_account_faq_tailors_to_question_and_ranking(monkeypatch):
     assert "상위 2명: 1위 system02 +23.86%(123,864,557원), 2위 system08 +22.46%" in t and "개인 랭킹은 없고" in t
     with patch.object(hook, "fetch_json", side_effect=hook.GatewayError("UNREACHABLE", "x")):
         assert "랭킹을 조회하지 못했습니다" in hook.handler(ev(intent="CheckRanking", source="FulfillmentCodeHook"))["messages"][0]["content"]
+
+
+def test_fx_rate_answers_per_unit_with_fallback_source():
+    # 4차(2026-10-16): "오늘의 환율은?" → Fallback. exchangerate-api(USD 기준) → 원/달러·100엔·유로·위안
+    rates = {"result": "success", "time_last_update_unix": 1792108951, "rates": {"KRW": 1345.9, "JPY": 157.98, "EUR": 0.89222, "CNY": 6.691}}
+    with patch.object(hook, "fetch_json", lambda url: rates):
+        t = hook.handler(ev(intent="CheckFxRate", source="FulfillmentCodeHook"))["messages"][0]["content"]
+    assert t.startswith("오늘 원/달러 환율은 1달러 = 1,345.9원입니다(") and "exchangerate-api" in t
+    assert "100엔 = 851.9원" in t and "1유로 = 1,508.5원" in t and "1위안 = 201.2원" in t and "참고용 중간 환율" in t
+    with patch.object(hook, "fetch_json", lambda url: rates):                             # 통화를 말하면 그 통화부터
+        t = hook.handler(ev(intent="CheckFxRate", source="FulfillmentCodeHook", Currency="JPY"))["messages"][0]["content"]
+    assert t.startswith("오늘 원/엔 환율은 100엔 = 851.9원입니다(") and "1달러 = 1,345.9원" in t
+    calls = []
+    def fetch(url):                                                                       # 1차 실패 → ECB(frankfurter) 폴백
+        calls.append(url)
+        if "er-api" in url:
+            raise hook.GatewayError("UNREACHABLE", "x")
+        return {"date": "2026-10-15", "rates": {"KRW": 1345.9, "JPY": 157.98, "EUR": 0.89222, "CNY": 6.691}}
+    with patch.object(hook, "fetch_json", fetch):
+        t = hook.handler(ev(intent="CheckFxRate", source="FulfillmentCodeHook"))["messages"][0]["content"]
+    assert "2026-10-15 ECB 고시(frankfurter)" in t and len(calls) == 2
+    with patch.object(hook, "fetch_json", side_effect=hook.GatewayError("UNREACHABLE", "x")):
+        r = hook.handler(ev(intent="CheckFxRate", source="FulfillmentCodeHook"))
+    assert r["sessionState"]["intent"]["state"] == "Failed" and "환율을 조회하지 못했습니다" in r["messages"][0]["content"]
+    assert hook.handler(ev(intent="CheckFxRate"))["sessionState"]["dialogAction"] == {"type": "Delegate"}
+
+
+def test_ticker_aliases_resolve_and_bare_name_gets_order_hint():
+    # 4차(2026-10-16): "현대자동차" 는 종목 사전에 '현대차' 로만 있어 Fallback. 별칭(aliases.json)으로 해석·대조하고, 종목명만 말하면 주문 방법을 덧붙인다
+    assert "현대자동차" in hook.ticker_aliases("005380") and hook.ticker_matches("현대자동차", "005380") and hook.ticker_matches("하이닉스", "000660")
+    assert not hook.ticker_matches("현대자동차", "000720")                                   # 현대건설로 근사 해석되면 거부
+    quote = {"symbol": "005380", "price": 300000, "change": 1000, "changeRate": 0.33, "open": 299000, "high": 301000, "low": 298500, "volume": 100}
+    with patch.object(hook, "get_quote", lambda s: quote), patch.object(hook, "market_open", lambda now=None: True):
+        e = ev(intent="CheckQuote", source="FulfillmentCodeHook", Ticker="005380"); e["sessionState"]["intent"]["slots"]["Ticker"]["value"]["originalValue"] = "현대자동차"
+        bare = hook.handler(_say(e, "현대자동차"))["messages"][0]["content"]
+        asked = hook.handler(_say(ev(intent="CheckQuote", source="FulfillmentCodeHook", Ticker="005380"), "현대차 현재가 알려줘"))["messages"][0]["content"]
+    assert bare.startswith("현대차(005380) 현재가 300,000원") and bare.endswith("주문하려면 '현대차 1주 시장가 매수' 처럼 말씀해 주세요.")
+    assert "주문하려면" not in asked
+    e = ev(intent="CheckQuote", Ticker="005380"); e["sessionState"]["intent"]["slots"]["Ticker"]["value"]["originalValue"] = "현대자동차"
+    assert hook.handler(e)["sessionState"]["dialogAction"] == {"type": "Delegate"}         # 별칭 입력은 대조를 통과한다

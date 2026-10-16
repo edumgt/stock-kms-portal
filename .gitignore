@@ -27,3 +27,7 @@ data/lean-workflows/
 *.key
 secrets/
 lex/.venv/
+# 챗봇 RAG 로컬 파이프라인(6-14): venv·모델 캐시·스냅샷은 커밋하지 않는다
+rag/.venv/
+rag/.fastembed/
+rag/snapshots/

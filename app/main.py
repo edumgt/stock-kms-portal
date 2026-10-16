@@ -16,6 +16,7 @@ from app.api.routes.ingest import router as ingest_router
 from app.api.routes.market import router as market_router
 from app.api.routes.home_dashboard import router as home_dashboard_router
 from app.api.routes.lex import router as lex_router
+from app.api.routes.rag_search import router as rag_search_router
 from app.api.routes.backtest import router as backtest_router
 from app.api.routes.simulation import router as simulation_router
 from app.api.routes.auth import router as auth_router
@@ -95,6 +96,8 @@ app.include_router(market_router)
 app.include_router(home_dashboard_router)
 # 우측 AI 투자 도우미(Amazon Lex V2): 역시 프록시보다 먼저 등록해 포털이 직접 응답한다 (6-3)
 app.include_router(lex_router)
+# 챗봇 RAG 검색(6-14): Lambda 폴백이 부르는 읽기 전용 검색. 프록시보다 먼저
+app.include_router(rag_search_router)
 app.include_router(backtest_router)
 app.include_router(simulation_router)
 app.include_router(auth_router)

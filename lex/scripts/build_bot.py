@@ -104,7 +104,9 @@ def plain(text: str) -> dict:
 
 def slot_type_defs() -> list[dict]:
     tickers = json.loads((ROOT / "lambda" / "trade_hook" / "tickers.json").read_text(encoding="utf-8"))
-    values = [{"sampleValue": {"value": code}, "synonyms": [{"value": v["name"]}] + ([{"value": v["name"].replace(" ", "")}] if " " in v["name"] else [])}
+    aliases = json.loads((ROOT / "lambda" / "trade_hook" / "aliases.json").read_text(encoding="utf-8"))   # 통칭·구칭(현대자동차→현대차). 훅 ticker_matches 와 같은 파일
+    values = [{"sampleValue": {"value": code}, "synonyms": [{"value": v["name"]}] + ([{"value": v["name"].replace(" ", "")}] if " " in v["name"] else [])
+                                                              + [{"value": a} for a in aliases.get(code, [])]}
               for code, v in sorted(tickers.items())][:10000]
     return [
         {"slotTypeName": "OrderSide", "description": "매수/매도", "valueSelectionSetting": {"resolutionStrategy": "TopResolution"},
@@ -119,6 +121,12 @@ def slot_type_defs() -> list[dict]:
                             {"sampleValue": {"value": "LIMIT"}, "synonyms": [{"value": s} for s in ("지정가", "지정가로", "가격 지정")]}]},
         {"slotTypeName": "StockTicker", "description": "KRX 종목 (값=종목코드, 동의어=종목명)", "valueSelectionSetting": {"resolutionStrategy": "TopResolution"},
          "slotTypeValues": values},
+        # 4차(2026-10-16): "오늘의 환율은?" → Fallback. 통화는 선택 슬롯(없으면 원/달러)
+        {"slotTypeName": "FxCurrency", "description": "환율 통화", "valueSelectionSetting": {"resolutionStrategy": "TopResolution"},
+         "slotTypeValues": [{"sampleValue": {"value": "USD"}, "synonyms": [{"value": s} for s in ("달러", "미국 달러", "미 달러", "원달러", "원 달러", "달러화", "USD", "dollar")]},
+                            {"sampleValue": {"value": "JPY"}, "synonyms": [{"value": s} for s in ("엔", "엔화", "일본 엔", "원엔", "100엔", "JPY", "yen")]},
+                            {"sampleValue": {"value": "EUR"}, "synonyms": [{"value": s} for s in ("유로", "유로화", "EUR", "euro")]},
+                            {"sampleValue": {"value": "CNY"}, "synonyms": [{"value": s} for s in ("위안", "위안화", "위엔", "인민폐", "중국 위안", "CNY", "yuan")]}]},
     ]
 
 
@@ -176,9 +184,19 @@ def intent_defs(slot_type_ids: dict[str, str]) -> list[dict]:
              "{Ticker} 얼마야", "{Ticker} 지금 얼마야", "{Ticker} 가격 알려줘", "{Ticker} 오늘 어때", "{Ticker} 얼마에 거래돼", "시세 알려줘", "현재가 알려줘", "주가 알려줘",
              # 3차(2026-10-15): "삼성전자 현재 주가는?", "SK하이닉스 주가는?"(TradeStock 으로 오분류), "주가는?"
              "{Ticker} 현재 주가는", "{Ticker} 주가는", "{Ticker} 현재 주가", "{Ticker} 지금 주가", "{Ticker} 주가 얼마", "{Ticker} 가격은", "{Ticker} 시세는", "{Ticker} 현재가는",
-             "주가는", "현재 주가는", "시세는", "{Ticker} 주가 어때")],
+             "주가는", "현재 주가는", "시세는", "{Ticker} 주가 어때",
+             # 4차(2026-10-16): "현대자동차" 종목명만 입력 → Fallback(CheckQuote 0.33). 종목명만 말해도 시세로 받고 훅이 주문 방법을 덧붙인다
+             "{Ticker}", "{Ticker}는", "{Ticker} 어때", "{Ticker} 알려줘", "{Ticker} 정보", "{Ticker} 보여줘", "{Ticker} 종목", "{Ticker} 종목 알려줘")],
          "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True},
          "slots": [("Ticker", slot_type_ids["StockTicker"], "Required", "어느 종목의 시세를 볼까요? 종목명이나 6자리 종목코드로 알려 주세요.")]},
+        {"intentName": "CheckFxRate", "description": "오늘 원화 환율 (코드 훅이 공개 환율 API 로 답한다)",
+         # 4차(2026-10-16): "오늘의 환율은?" → Fallback(MarketBasics 0.57). MarketBasics 는 "환율이 오르면 어떻게 돼" 류 개념 설명만 맡는다
+         "sampleUtterances": [{"utterance": u} for u in (
+             "오늘의 환율은", "오늘 환율", "오늘 환율은", "환율 알려줘", "환율은", "환율", "지금 환율", "현재 환율", "오늘 환율 얼마야", "환율 얼마야", "환율 조회", "환율 보여줘",
+             "원달러 환율", "달러 환율", "오늘 달러 얼마야", "{Currency} 환율", "{Currency} 환율 알려줘", "{Currency} 환율은", "오늘 {Currency} 환율", "오늘의 {Currency} 환율은",
+             "{Currency} 얼마야", "지금 {Currency} 얼마야", "원 {Currency} 환율", "{Currency} 시세", "{Currency} 환율 얼마야", "오늘 {Currency} 환율 얼마야")],
+         "dialogCodeHook": hook_on, "fulfillmentCodeHook": {**hook_on, "active": True},
+         "slots": [("Currency", slot_type_ids["FxCurrency"], "Optional", "어느 통화 환율인가요? (달러/엔/유로/위안)")]},
         {"intentName": "MarketHours", "description": "한국·미국 장 시간, 지금 장중 여부",
          # 실사용(2026-10-15 2차): "미국장의 휴장 시간대는?" → Fallback
          "sampleUtterances": [{"utterance": u} for u in (
@@ -229,8 +247,8 @@ def main() -> int:
             print("--publish-only 는 --lambda-arn 과 함께 씁니다."); return 1
         print("publish-only: DRAFT(Built) 그대로 버전 발행")
         return publish(lex, bot_id, alias_id, args)
-    if args.create_bot or not BOT_ID:
-        seed_base_intents(lex, base)
+    # 멱등이라 기존 봇에도 매번 적용한다. 2026-10-16: 새 봇일 때만 돌려 라이브 Fallback 문구가 10-14 옛 문구("현재는 투자 기초 학습용…")인 채 남아 있었다.
+    seed_base_intents(lex, base)
 
     # 1) 슬롯 타입
     existing = {s["slotTypeName"]: s["slotTypeId"] for s in lex.list_slot_types(**base, maxResults=100).get("slotTypeSummaries", [])}

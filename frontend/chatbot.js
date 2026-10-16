@@ -19,7 +19,7 @@
           <button type="button" id="floating-chatbot-close" aria-label="대화창 닫기"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="sr-only">닫기</span></button>
         </header>
         <div class="floating-chatbot-messages" id="floating-chatbot-messages" aria-live="polite">
-          <p class="floating-chatbot-welcome">할 수 있는 것 — 주문: "삼성전자 1주 시장가 매수" · 시세: "한화오션 현재가" · 잔고: "잔고 알려줘" · 체결: "주문 확인" · 계좌: "예수금이 마이너스인데 가능해?" · 장 시간: "미국장 시간" · 휴장일: "올해 휴장일" · 랭킹: "랭킹 알려줘" · 투자 기초(포트폴리오·금리·환율). 주문 입력 중 "취소"라고 하면 멈춥니다. KIS 모의계좌(공용 1개)로만 주문합니다.</p>
+          <p class="floating-chatbot-welcome">할 수 있는 것 — 주문: "삼성전자 1주 시장가 매수" · 시세: "한화오션 현재가" · 잔고: "잔고 알려줘" · 체결: "주문 확인" · 계좌: "예수금이 마이너스인데 가능해?" · 장 시간: "미국장 시간" · 휴장일: "올해 휴장일" · 랭킹: "랭킹 알려줘" · 환율: "오늘 환율" · 투자 기초(포트폴리오·금리). 종목명만 입력해도 시세를 보여줍니다. 주문 입력 중 "취소"라고 하면 멈춥니다. KIS 모의계좌(공용 1개)로만 주문합니다.</p>
         </div>
         <div id="floating-chatbot-quick" class="floating-chatbot-quick" hidden>
           <button type="button" data-say="네">네</button><button type="button" data-say="아니요">아니요</button>
@@ -43,7 +43,7 @@
   const messages = document.getElementById('floating-chatbot-messages');
   const quick = document.getElementById('floating-chatbot-quick');
   const PLACEHOLDER = '질문을 입력하세요';
-  const SLOT_HINT = { Side: '매수 / 매도', Ticker: '종목명 또는 6자리 종목코드', Quantity: '수량(주)', OrderType: '시장가 / 지정가', Price: '지정가 1주 가격(원)', OrderNo: '주문번호' };
+  const SLOT_HINT = { Side: '매수 / 매도', Ticker: '종목명 또는 6자리 종목코드', Quantity: '수량(주)', OrderType: '시장가 / 지정가', Price: '지정가 1주 가격(원)', OrderNo: '주문번호', Currency: '통화(달러/엔/유로/위안)' };
 
   const appendMessage = (text, className) => {
     const p = document.createElement('p');

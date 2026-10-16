@@ -1,0 +1,25 @@
+{"query": "매도 대금은 언제 입금돼?", "expect_doc": ["faq/account", "market/settlement"]}
+{"query": "예수금이 마이너스인데 매수 가능해?", "expect_doc": ["faq/account", "market/settlement"]}
+{"query": "다른 모의투자 계좌로도 주문 돼?", "expect_doc": ["faq/account"]}
+{"query": "주문은 어떻게 해?", "expect_doc": ["faq/order"]}
+{"query": "주문 취소하려면?", "expect_doc": ["faq/order"]}
+{"query": "회당 주문 한도가 얼마야", "expect_doc": ["faq/order", "faq/account", "service/st-openapi"]}
+{"query": "시장가랑 지정가 차이가 뭐야", "expect_doc": ["market/order-basics", "faq/order"]}
+{"query": "호가 단위 알려줘", "expect_doc": ["market/order-basics"]}
+{"query": "한국 장은 몇 시에 열어?", "expect_doc": ["market/hours"]}
+{"query": "동시호가 시간", "expect_doc": ["market/hours"]}
+{"query": "미국장 거래 시간 한국시간으로", "expect_doc": ["market/hours"]}
+{"query": "올해 남은 휴장일", "expect_doc": ["market/holidays-2026"]}
+{"query": "12월 31일 장 열어?", "expect_doc": ["market/holidays-2026", "market/hours"]}
+{"query": "PER 이 뭐야", "expect_doc": ["market/indicators"]}
+{"query": "RSI 70이면 어떤 뜻이야", "expect_doc": ["market/indicators"]}
+{"query": "챗봇으로 뭘 할 수 있어", "expect_doc": ["faq/chatbot"]}
+{"query": "현대자동차라고 하면 못 알아들어?", "expect_doc": ["faq/chatbot"]}
+{"query": "API 키는 어떻게 발급받아", "expect_doc": ["service/st-openapi"]}
+{"query": "캡처하기 버튼 어디 있어", "expect_doc": ["service/iv-portal"]}
+{"query": "랭킹은 어디서 봐", "expect_doc": ["faq/account", "faq/chatbot"]}
+{"query": "오늘 점심 뭐 먹지", "expect_doc": []}
+{"query": "비트코인 채굴 난이도", "expect_doc": []}
+{"query": "파이썬 리스트 정렬하는 법", "expect_doc": []}
+{"query": "내가 보유한 주식에 아모레퍼시픽 있어?", "expect_doc": []}
+{"query": "삼성전자 현재가 얼마야", "expect_doc": ["faq/chatbot"], "note": "실시간 시세는 도구 영역이지만 '시세 명령' 안내 문서가 맞는 답이라 관련으로 분류(2026-10-16)"}

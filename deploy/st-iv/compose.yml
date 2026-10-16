@@ -63,6 +63,14 @@ services:
       REDIS_PORT: 6379
       QDRANT_HOST: kms-qdrant
       QDRANT_PORT: 6333
+      # 챗봇 RAG(2026-10-16): .env.prod 의 hashing-384 를 덮어 PC 인덱서(rag/common.py)와 같은 모델을 쓴다
+      EMBEDDING_MODEL: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+      EMBEDDING_DIM: 384
+      RAG_COLLECTION: chatbot_docs
+      RAG_RERANK_MODEL: jinaai/jina-reranker-v2-base-multilingual
+      RAG_RERANK_MIN: -1.0
+      RAG_DENSE_K: 4
+      RAG_LEX_K: 6
       VLLM_MODEL: qwen2.5:3b
       QWEN_MODEL: qwen2.5:3b
       LLM_TRANSPORT: ssh
