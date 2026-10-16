@@ -1,1 +1,117 @@
-
+{"query": "챗봇이 사용하는 모의계좌는 하나밖에 없나요?", "expect_doc": ["faq/account"], "chunk": "faq/account#0", "generated_by": "qwen2.5:14b"}
+{"query": "공용 모의계좌는 개인 계좌와 연결되나요?", "expect_doc": ["faq/account"], "chunk": "faq/account#0", "generated_by": "qwen2.5:14b"}
+{"query": "주문한 거는 공용 모의계좌에서 나가요 맞나요?", "expect_doc": ["faq/account"], "chunk": "faq/account#0", "generated_by": "qwen2.5:14b"}
+{"query": "예수금이 마이너스면 주식 살 수 있어?", "expect_doc": ["faq/account"], "chunk": "faq/account#1", "generated_by": "qwen2.5:14b"}
+{"query": "예수금 음수일 때 매수 주문 어떻게 돼?", "expect_doc": ["faq/account"], "chunk": "faq/account#1", "generated_by": "qwen2.5:14b"}
+{"query": "마이너스 돼도 주식 팔 수 있어?", "expect_doc": ["faq/account"], "chunk": "faq/account#1", "generated_by": "qwen2.5:14b"}
+{"query": "주식 매도하고 대금 언제 받아요?", "expect_doc": ["faq/account"], "chunk": "faq/account#2", "generated_by": "qwen2.5:14b"}
+{"query": "매도한 돈은 언제 계좌에 들어와?", "expect_doc": ["faq/account"], "chunk": "faq/account#2", "generated_by": "qwen2.5:14b"}
+{"query": "매도 판돈 언제 들어오는거야?", "expect_doc": ["faq/account"], "chunk": "faq/account#2", "generated_by": "qwen2.5:14b"}
+{"query": "주문이 거절되는 이유는 무엇인가요?", "expect_doc": ["faq/account"], "chunk": "faq/account#3", "generated_by": "qwen2.5:14b"}
+{"query": "주식을 팔려는데 주문이 안 되네요, 왜這麼說的話，下面一句符合這個場景的韓語問題是：", "expect_doc": ["faq/account"], "chunk": "faq/account#3", "generated_by": "qwen2.5:14b"}
+{"query": "장시간에 주문할 수 있나요?", "expect_doc": ["faq/account"], "chunk": "faq/account#3", "generated_by": "qwen2.5:14b"}
+{"query": "모의투자 계좌는 따로 있나요?", "expect_doc": ["faq/account"], "chunk": "faq/account#4", "generated_by": "qwen2.5:14b"}
+{"query": "랭킹 정보 어떻게 확인해요?", "expect_doc": ["faq/account"], "chunk": "faq/account#4", "generated_by": "qwen2.5:14b"}
+{"query": "사이트에서 모의투자 시작할 수 있어요?", "expect_doc": ["faq/account"], "chunk": "faq/account#4", "generated_by": "qwen2.5:14b"}
+{"query": "삼성전자 주식 지금 얼마인가요?", "expect_doc": ["faq/chatbot"], "chunk": "faq/chatbot#0", "generated_by": "qwen2.5:14b"}
+{"query": "예수금 남았나요, 확인해줘", "expect_doc": ["faq/chatbot"], "chunk": "faq/chatbot#0", "generated_by": "qwen2.5:14b"}
+{"query": "미국 주식 시장은 지금 장이 열려 있어요?", "expect_doc": ["faq/chatbot"], "chunk": "faq/chatbot#0", "generated_by": "qwen2.5:14b"}
+{"query": "종목 이름이 안 뜨면 종목 코드로 적어줘야 하나요?", "expect_doc": ["faq/chatbot"], "chunk": "faq/chatbot#1", "generated_by": "qwen2.5:14b"}
+{"query": "통俗称とは一致しない韓国語的表述：企業の名前を完全には思い出せない時、略称で答えても大丈夫ですか？", "expect_doc": ["faq/chatbot"], "chunk": "faq/chatbot#1", "generated_by": "qwen2.5:14b"}
+{"query": "通俗称とは一致しない韓国語的表述：似ている名前の会社を間違って指摘したら、botが確認するのですね？", "expect_doc": ["faq/chatbot"], "chunk": "faq/chatbot#1", "generated_by": "qwen2.5:14b"}
+{"query": "실제 주식을 사고팔 수 있어?", "expect_doc": ["faq/chatbot"], "chunk": "faq/chatbot#2", "generated_by": "qwen2.5:14b"}
+{"query": "다른 회사 계좌랑 연결 가능한가요?", "expect_doc": ["faq/chatbot"], "chunk": "faq/chatbot#2", "generated_by": "qwen2.5:14b"}
+{"query": "특정 주식 추천해 줄 수 있어?", "expect_doc": ["faq/chatbot"], "chunk": "faq/chatbot#2", "generated_by": "qwen2.5:14b"}
+{"query": "주식 주문 하는 방법은?", "expect_doc": ["faq/order"], "chunk": "faq/order#0", "generated_by": "qwen2.5:14b"}
+{"query": "시장가로 삼성전자 주식 몇 주 사려고 해", "expect_doc": ["faq/order"], "chunk": "faq/order#0", "generated_by": "qwen2.5:14b"}
+{"query": "매수하고 싶은 주식과 수량 어떻게 말해야 하는지 알려줘", "expect_doc": ["faq/order"], "chunk": "faq/order#0", "generated_by": "qwen2.5:14b"}
+{"query": "챗봇에서 주문 보내려면 어떻게 해야 하나요?", "expect_doc": ["faq/order"], "chunk": "faq/order#1", "generated_by": "qwen2.5:14b"}
+{"query": "주문 확인 질문에 \"네\"가 아닌 다른 대답은 뭐든 취소인가요?", "expect_doc": ["faq/order"], "chunk": "faq/order#1", "generated_by": "qwen2.5:14b"}
+{"query": "주문 중에 끝내고 싶으면 어떻게 얘기해야 하나요?", "expect_doc": ["faq/order"], "chunk": "faq/order#1", "generated_by": "qwen2.5:14b"}
+{"query": "시장가 주문 어떻게 하는지 알려줘", "expect_doc": ["faq/order"], "chunk": "faq/order#2", "generated_by": "qwen2.5:14b"}
+{"query": "지정가 주문이 뭐야", "expect_doc": ["faq/order"], "chunk": "faq/order#2", "generated_by": "qwen2.5:14b"}
+{"query": "매수나 매도할 때 원하는 가격으로 주문할 수 있나요", "expect_doc": ["faq/order"], "chunk": "faq/order#2", "generated_by": "qwen2.5:14b"}
+{"query": "챗봇 주식 주문 제한은 어떻게 되나요?", "expect_doc": ["faq/order"], "chunk": "faq/order#3", "generated_by": "qwen2.5:14b"}
+{"query": "회당 주문 가능한 주식 수와 금액 한도는 뭐가 있나요?", "expect_doc": ["faq/order"], "chunk": "faq/order#3", "generated_by": "qwen2.5:14b"}
+{"query": "큰 양의 주식은 어떻게 주문해야 하나요?", "expect_doc": ["faq/order"], "chunk": "faq/order#3", "generated_by": "qwen2.5:14b"}
+{"query": "주문 상태 어떻게 확인해요?", "expect_doc": ["faq/order"], "chunk": "faq/order#4", "generated_by": "qwen2.5:14b"}
+{"query": "최근 주문 확인해 줄 수 있어요?", "expect_doc": ["faq/order"], "chunk": "faq/order#4", "generated_by": "qwen2.5:14b"}
+{"query": "特定订单怎么查？", "expect_doc": ["faq/order"], "chunk": "faq/order#4", "generated_by": "qwen2.5:14b"}
+{"query": "보유하고 있는 주식만 팔 수 있어요?", "expect_doc": ["faq/order"], "chunk": "faq/order#5", "generated_by": "qwen2.5:14b"}
+{"query": "多余的部分已经移除，以下是用户的指令摘要：", "expect_doc": ["faq/order"], "chunk": "faq/order#5", "generated_by": "qwen2.5:14b"}
+{"query": "根据这个摘要，以下是符合要求的三个问题：", "expect_doc": ["faq/order"], "chunk": "faq/order#5", "generated_by": "qwen2.5:14b"}
+{"query": "2026년 한국 증시 휴일은 언제인가요?", "expect_doc": ["market/holidays-2026"], "chunk": "market/holidays-2026#0", "generated_by": "qwen2.5:14b"}
+{"query": "2026년 설날 증시 휴장은 몇월 몇일인가요?", "expect_doc": ["market/holidays-2026"], "chunk": "market/holidays-2026#0", "generated_by": "qwen2.5:14b"}
+{"query": "2026년 추석 연휴 증시 휴장은 몇일간인가요?", "expect_doc": ["market/holidays-2026"], "chunk": "market/holidays-2026#0", "generated_by": "qwen2.5:14b"}
+{"query": "2026년 마지막 주식 장은 언제까지?", "expect_doc": ["market/holidays-2026"], "chunk": "market/holidays-2026#1", "generated_by": "qwen2.5:14b"}
+{"query": "2026년 연말 주식 휴장은 언제부터 언제까지야?", "expect_doc": ["market/holidays-2026"], "chunk": "market/holidays-2026#1", "generated_by": "qwen2.5:14b"}
+{"query": "새해 첫 주식 장은 언제 열리는 거야?", "expect_doc": ["market/holidays-2026"], "chunk": "market/holidays-2026#1", "generated_by": "qwen2.5:14b"}
+{"query": "휴장일이 몇갠데 남았어?", "expect_doc": ["market/holidays-2026"], "chunk": "market/holidays-2026#2", "generated_by": "qwen2.5:14b"}
+{"query": "D+2가 늦어질 수 있나요?", "expect_doc": ["market/holidays-2026"], "chunk": "market/holidays-2026#2", "generated_by": "qwen2.5:14b"}
+{"query": "올해 휴장일 언제까지 있어?", "expect_doc": ["market/holidays-2026"], "chunk": "market/holidays-2026#2", "generated_by": "qwen2.5:14b"}
+{"query": "주식 거래 가능한 시간은 언제인가요?", "expect_doc": ["market/hours"], "chunk": "market/hours#0", "generated_by": "qwen2.5:14b"}
+{"query": "평일 주식 거래는 몇 시까지 가능한가요?", "expect_doc": ["market/hours"], "chunk": "market/hours#0", "generated_by": "qwen2.5:14b"}
+{"query": "주말에는 주식 거래할 수 있나요?", "expect_doc": ["market/hours"], "chunk": "market/hours#0", "generated_by": "qwen2.5:14b"}
+{"query": "동시호가는 언제 시작하고 끝나나요?", "expect_doc": ["market/hours"], "chunk": "market/hours#1", "generated_by": "qwen2.5:14b"}
+{"query": "장 마감 동시호가 후 얼마 뒤에 시간외 거래가 시작되나요?", "expect_doc": ["market/hours"], "chunk": "market/hours#1", "generated_by": "qwen2.5:14b"}
+{"query": "시간외 단일가 매매는 정확히 몇 시부터 몇 시까지 할 수 있어요?", "expect_doc": ["market/hours"], "chunk": "market/hours#1", "generated_by": "qwen2.5:14b"}
+{"query": "미국 주식 거래 시간은 언제인가요?", "expect_doc": ["market/hours"], "chunk": "market/hours#2", "generated_by": "qwen2.5:14b"}
+{"query": "뉴욕 증시가 휴장하는 날은 어떻게 알 수 있나요?", "expect_doc": ["market/hours"], "chunk": "market/hours#2", "generated_by": "qwen2.5:14b"}
+{"query": "미국 동부시간으로 한국 시간에 맞춰 얼마나 거래할 수 있나요?", "expect_doc": ["market/hours"], "chunk": "market/hours#2", "generated_by": "qwen2.5:14b"}
+{"query": "상한가와 하한가는 몇 퍼센트까지인가요?", "expect_doc": ["market/hours"], "chunk": "market/hours#3", "generated_by": "qwen2.5:14b"}
+{"query": "하한가와 상한가는 어떻게 정해지는 거죠?", "expect_doc": ["market/hours"], "chunk": "market/hours#3", "generated_by": "qwen2.5:14b"}
+{"query": "주식 가격은 하루에 최대 몇 퍼센트까지 오르내릴 수 있나요?", "expect_doc": ["market/hours"], "chunk": "market/hours#3", "generated_by": "qwen2.5:14b"}
+{"query": "PER이 뭐야?", "expect_doc": ["market/indicators"], "chunk": "market/indicators#0", "generated_by": "qwen2.5:14b"}
+{"query": "PER은 주식이 비싸다느니 싸다느니 하는 기준이 되나요?", "expect_doc": ["market/indicators"], "chunk": "market/indicators#0", "generated_by": "qwen2.5:14b"}
+{"query": "PER을 쓸 때 주의할 점은 뭐 있어?", "expect_doc": ["market/indicators"], "chunk": "market/indicators#0", "generated_by": "qwen2.5:14b"}
+{"query": "PBR이 뭐야?", "expect_doc": ["market/indicators"], "chunk": "market/indicators#1", "generated_by": "qwen2.5:14b"}
+{"query": "PBR이 1보다 낮은 주식은 어떤 의미가 있어?", "expect_doc": ["market/indicators"], "chunk": "market/indicators#1", "generated_by": "qwen2.5:14b"}
+{"query": "PBR을 봐야 할 이유는 뭐야?", "expect_doc": ["market/indicators"], "chunk": "market/indicators#1", "generated_by": "qwen2.5:14b"}
+{"query": "RSI 지표는 어떻게 작동하나요?", "expect_doc": ["market/indicators"], "chunk": "market/indicators#2", "generated_by": "qwen2.5:14b"}
+{"query": "70 이상이 되면 과매수라고 할 수 있나요?", "expect_doc": ["market/indicators"], "chunk": "market/indicators#2", "generated_by": "qwen2.5:14b"}
+{"query": "강세장에서는 RSI가 오래 70 위에 있을 수 있나요?", "expect_doc": ["market/indicators"], "chunk": "market/indicators#2", "generated_by": "qwen2.5:14b"}
+{"query": "이동 평균선이 뭐야?", "expect_doc": ["market/indicators"], "chunk": "market/indicators#4", "generated_by": "qwen2.5:14b"}
+{"query": "골든 크로스와 데드 크로스는 어떤 거래 신호야?", "expect_doc": ["market/indicators"], "chunk": "market/indicators#4", "generated_by": "qwen2.5:14b"}
+{"query": "이동 평균선만으로 주식을 사고파는 건 안 좋쟎아?", "expect_doc": ["market/indicators"], "chunk": "market/indicators#4", "generated_by": "qwen2.5:14b"}
+{"query": "시장가 주문이란 무엇인가요?", "expect_doc": ["market/order-basics"], "chunk": "market/order-basics#0", "generated_by": "qwen2.5:14b"}
+{"query": "시장가 주문으로 주식을 사면 언제 체결되나요?", "expect_doc": ["market/order-basics"], "chunk": "market/order-basics#0", "generated_by": "qwen2.5:14b"}
+{"query": "거래량이 적은 종목의 시장가 주문은 어떤 문제점이 있나요?", "expect_doc": ["market/order-basics"], "chunk": "market/order-basics#0", "generated_by": "qwen2.5:14b"}
+{"query": "지정가 주문이란 무엇인가요?", "expect_doc": ["market/order-basics"], "chunk": "market/order-basics#1", "generated_by": "qwen2.5:14b"}
+{"query": "지정가 주문은 언제 취소되나요?", "expect_doc": ["market/order-basics"], "chunk": "market/order-basics#1", "generated_by": "qwen2.5:14b"}
+{"query": "지정한 가격에서만 주문이 체결되나요?", "expect_doc": ["market/order-basics"], "chunk": "market/order-basics#1", "generated_by": "qwen2.5:14b"}
+{"query": "주문 가격 정수 몇원 단위로 해야 하나요?", "expect_doc": ["market/order-basics"], "chunk": "market/order-basics#2", "generated_by": "qwen2.5:14b"}
+{"query": "주식 가격 주문할 때 단위는 어떻게 정해지나요?", "expect_doc": ["market/order-basics"], "chunk": "market/order-basics#2", "generated_by": "qwen2.5:14b"}
+{"query": "호가 단위가 주식 가격 주문에 어떻게 적용되나요?", "expect_doc": ["market/order-basics"], "chunk": "market/order-basics#2", "generated_by": "qwen2.5:14b"}
+{"query": "주식 주문은 몇 주 단위로 해야 하나요?", "expect_doc": ["market/order-basics"], "chunk": "market/order-basics#3", "generated_by": "qwen2.5:14b"}
+{"query": "실거래할 때 수수료 얼마나 드나요?", "expect_doc": ["market/order-basics"], "chunk": "market/order-basics#3", "generated_by": "qwen2.5:14b"}
+{"query": "주식 팔고 나면 세금은 어떻게 되는 거야?", "expect_doc": ["market/order-basics"], "chunk": "market/order-basics#3", "generated_by": "qwen2.5:14b"}
+{"query": "주식 결제는 D+2까지요?", "expect_doc": ["market/settlement"], "chunk": "market/settlement#0", "generated_by": "qwen2.5:14b"}
+{"query": "D+2에 돈은 빠져나가고 들어오는 거죠?", "expect_doc": ["market/settlement"], "chunk": "market/settlement#0", "generated_by": "qwen2.5:14b"}
+{"query": "매수한 주식은 언제 돈 빠지지?", "expect_doc": ["market/settlement"], "chunk": "market/settlement#0", "generated_by": "qwen2.5:14b"}
+{"query": "주문 가능 금액은 뭐야?", "expect_doc": ["market/settlement"], "chunk": "market/settlement#1", "generated_by": "qwen2.5:14b"}
+{"query": "예수금이 음수인 건 왜 그래?", "expect_doc": ["market/settlement"], "chunk": "market/settlement#1", "generated_by": "qwen2.5:14b"}
+{"query": "매도한 돈 언제 계좌에 들어와?", "expect_doc": ["market/settlement"], "chunk": "market/settlement#1", "generated_by": "qwen2.5:14b"}
+{"query": "주식 매매 금액은 언제 입금되나요?", "expect_doc": ["market/settlement"], "chunk": "market/settlement#2", "generated_by": "qwen2.5:14b"}
+{"query": "매매를 한 후 결제는 몇 번째 날 이루어지는 건가요?", "expect_doc": ["market/settlement"], "chunk": "market/settlement#2", "generated_by": "qwen2.5:14b"}
+{"query": "토요일과 일요일은 영업일로 안 들어가는 거예요?", "expect_doc": ["market/settlement"], "chunk": "market/settlement#2", "generated_by": "qwen2.5:14b"}
+{"query": "투자 챗봇 어떻게 사용해요?", "expect_doc": ["service/iv-portal"], "chunk": "service/iv-portal#0", "generated_by": "qwen2.5:14b"}
+{"query": "AI 투자 도우미는 어디 있어요?", "expect_doc": ["service/iv-portal"], "chunk": "service/iv-portal#0", "generated_by": "qwen2.5:14b"}
+{"query": "화면 저장 방법 알려주실래요?", "expect_doc": ["service/iv-portal"], "chunk": "service/iv-portal#0", "generated_by": "qwen2.5:14b"}
+{"query": "LEAN 투자 실습에서 저장된 리포트 어떻게 볼 수 있어?", "expect_doc": ["service/iv-portal"], "chunk": "service/iv-portal#1", "generated_by": "qwen2.5:14b"}
+{"query": "직접 검증 기능은 어떤 거야?", "expect_doc": ["service/iv-portal"], "chunk": "service/iv-portal#1", "generated_by": "qwen2.5:14b"}
+{"query": "백테스트 조건 어떻게 수정해?", "expect_doc": ["service/iv-portal"], "chunk": "service/iv-portal#1", "generated_by": "qwen2.5:14b"}
+{"query": "챗봇 어떻게 사용해요?", "expect_doc": ["service/iv-portal"], "chunk": "service/iv-portal#2", "generated_by": "qwen2.5:14b"}
+{"query": "주식 주문은 어떤 계좌로 돼요?", "expect_doc": ["service/iv-portal"], "chunk": "service/iv-portal#2", "generated_by": "qwen2.5:14b"}
+{"query": "챗봇 다시 열면 대화 계속되나요?", "expect_doc": ["service/iv-portal"], "chunk": "service/iv-portal#2", "generated_by": "qwen2.5:14b"}
+{"query": "KIS 모의투자 API는 어떤 역할을 하나요?", "expect_doc": ["service/st-openapi"], "chunk": "service/st-openapi#0", "generated_by": "qwen2.5:14b"}
+{"query": "챗봇이 주식 주문을 자동으로 처리하나요?", "expect_doc": ["service/st-openapi"], "chunk": "service/st-openapi#0", "generated_by": "qwen2.5:14b"}
+{"query": "모의 투자 주문할 때 environment 값을 어떻게 설정해야 하나요?", "expect_doc": ["service/st-openapi"], "chunk": "service/st-openapi#0", "generated_by": "qwen2.5:14b"}
+{"query": "주문 승인 어떻게 받아요?", "expect_doc": ["service/st-openapi"], "chunk": "service/st-openapi#1", "generated_by": "qwen2.5:14b"}
+{"query": "매수한 주식 목록 봐요.", "expect_doc": ["service/st-openapi"], "chunk": "service/st-openapi#1", "generated_by": "qwen2.5:14b"}
+{"query": "어제 매도한 주식 취소할 수 있어요?", "expect_doc": ["service/st-openapi"], "chunk": "service/st-openapi#1", "generated_by": "qwen2.5:14b"}
+{"query": "KIS 주문 API 키는 어떻게 받아요?", "expect_doc": ["service/st-openapi"], "chunk": "service/st-openapi#2", "generated_by": "qwen2.5:14b"}
+{"query": "주문 권한은 어떻게 얻나요?", "expect_doc": ["service/st-openapi"], "chunk": "service/st-openapi#2", "generated_by": "qwen2.5:14b"}
+{"query": "챗봇이 사용하는 API 키는 다른 거랑 다른가요?", "expect_doc": ["service/st-openapi"], "chunk": "service/st-openapi#2", "generated_by": "qwen2.5:14b"}
+{"query": "주문할 때 한도가 있나요?", "expect_doc": ["service/st-openapi"], "chunk": "service/st-openapi#3", "generated_by": "qwen2.5:14b"}
+{"query": "비상시에 어떻게 대응하나요?", "expect_doc": ["service/st-openapi"], "chunk": "service/st-openapi#3", "generated_by": "qwen2.5:14b"}
+{"query": "모의 서버 조회할 때 주의점은 뭔가요?", "expect_doc": ["service/st-openapi"], "chunk": "service/st-openapi#3", "generated_by": "qwen2.5:14b"}
