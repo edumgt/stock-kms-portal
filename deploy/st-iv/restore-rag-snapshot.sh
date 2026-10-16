@@ -20,7 +20,8 @@ req = urllib.request.Request(b + '/collections/$COL/snapshots/recover', method='
                              data=json.dumps({'location': 'file:///qdrant/snapshots/$COL/$NAME', 'priority': 'snapshot'}).encode())
 print('recover:', urllib.request.urlopen(req, timeout=120).read().decode()[:200])
 info = json.loads(urllib.request.urlopen(b + '/collections/$COL', timeout=10).read())['result']
-print('points:', info['points_count'], 'dim:', info['config']['params']['vectors']['size'], 'status:', info['status'])
+vec = info['config']['params']['vectors']; dense = vec.get('dense', vec) if isinstance(vec, dict) else vec   # named vectors(dense+lex) 또는 단일 벡터
+print('points:', info['points_count'], 'dim:', dense.get('size'), 'sparse:', list((info['config']['params'].get('sparse_vectors') or {}).keys()), 'status:', info['status'])
 PY
 "
 echo "== live check"; curl -s -m 15 "https://iv.edumgt.co.kr/api/rag/status"; echo

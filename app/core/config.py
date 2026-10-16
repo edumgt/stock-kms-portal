@@ -25,8 +25,8 @@ class Settings(BaseSettings):
     # 챗봇 RAG(2026-10-16): PC 에서 색인한 컬렉션(rag/indexer.py). 유사도 임계값 미만이면 "자료 없음" — 환각 방지
     rag_collection: str = "chatbot_docs"
     # 검색 = dense top-k ∪ 어휘(bigram BM25) top-k 후보 → 다국어 리랭커 점수(로짓)로 정렬 → rag_rerank_min 미만 제거
-    rag_dense_k: int = 4
-    rag_lex_k: int = 6
+    rag_dense_k: int = 3          # 2026-10-16 EC2 실측: 후보 10개 리랭크 7초(2 vCPU) → 3+4(≤7개)로 축소. 평가는 그대로 21/21·거절 4/4
+    rag_lex_k: int = 4
     rag_rerank_model: str = "jinaai/jina-reranker-v2-base-multilingual"   # 빈 문자열이면 리랭크 없이 dense 점수·rag_min_score 사용
     rag_rerank_min: float = -1.0
     rag_min_score: float = 0.45          # 리랭커를 끈 경우에만 쓰는 dense 코사인 임계값

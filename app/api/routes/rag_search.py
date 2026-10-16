@@ -9,6 +9,8 @@ PC 에서 `rag/indexer.py` 로 색인해 스냅샷으로 올린 컬렉션(`chatb
 """
 from __future__ import annotations
 
+import logging
+import threading
 import time
 from functools import lru_cache
 
@@ -20,6 +22,7 @@ from app.services.embedder import EmbeddingService
 
 router = APIRouter(prefix="/api/rag", tags=["rag-search"])
 DENSE, LEX = "dense", "lex"
+logger = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
@@ -38,6 +41,20 @@ def _reranker():
     import os
     from fastembed.rerank.cross_encoder import TextCrossEncoder
     return TextCrossEncoder(model_name=settings.rag_rerank_model, cache_dir=os.environ.get("FASTEMBED_CACHE_PATH") or None)
+
+
+@router.on_event("startup")
+def _warm_up() -> None:
+    """임베더·리랭커를 기동 직후 백그라운드로 올려 첫 질의의 콜드 지연(EC2 실측 12초)을 없앤다."""
+    def run():
+        try:
+            _embedder().embed_query("워밍업")
+            if settings.rag_rerank_model:
+                list(_reranker().rerank("워밍업", ["워밍업 문서"]))
+            logger.info("rag models warmed up")
+        except Exception as exc:                          # 모델이 없어도 서비스는 떠야 한다(hashing 모드 등)
+            logger.warning("rag warm-up skipped: %s", exc)
+    threading.Thread(target=run, name="rag-warmup", daemon=True).start()
 
 
 def _collection_info() -> dict | None:

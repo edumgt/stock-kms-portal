@@ -23,7 +23,7 @@ NAMESPACE = uuid.UUID("3f2d6a1e-7c4b-4a4e-9d5e-2b1c0f8a9e11")
 DENSE, LEX = "dense", "lex"                     # Qdrant named vectors
 RERANK_MODEL = os.environ.get("RAG_RERANK_MODEL", "jinaai/jina-reranker-v2-base-multilingual")   # 1.1GB, 다국어 cross-encoder
 RERANK_MIN = float(os.environ.get("RAG_RERANK_MIN", "-1.0"))
-DENSE_K = int(os.environ.get("RAG_DENSE_K", "4")); LEX_K = int(os.environ.get("RAG_LEX_K", "6"))
+DENSE_K = int(os.environ.get("RAG_DENSE_K", "3")); LEX_K = int(os.environ.get("RAG_LEX_K", "4"))
 THREADS = int(os.environ.get("RAG_THREADS", str(os.cpu_count() or 4)))   # PC 색인·평가는 전 스레드(6-16)
 
 # 서버와 같은 어휘 코드(app/services/lexical.py)를 app 패키지 의존성 없이 파일로 읽어 쓴다

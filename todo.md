@@ -464,7 +464,21 @@ Fallback 문구·chatbot.js 환영문에 랭킹 예시와 "입력 중 '취소'" 
 **데이터 생성(학습 단계)**: `rag/augment.py`(lex/.venv) — ① Lex 인텐트 9개의 기존 발화를 보여 주고 새 발화 후보 15개씩 생성 → `rag/out/utterances_<날짜>.json`(**사용자 검토 후** build_bot.py 에 반영, 슬롯 표기는 기존 슬롯명만 허용) ② 문서 40청크마다 사용자 질문 3개 생성 → `rag/eval/generated_queries.jsonl` → `rag/eval/run_eval.py --queries rag/eval/generated_queries.jsonl` 로 검색 회귀 평가(기대 문서 = 출처 청크). 실행 `bash rag/run_augment.sh`(백그라운드, 로그 rag/out/augment.log). 생성 중 CPU 16스레드 ~100%, 7b 는 메모리 ~5.5GB(현재 상한에서 90% 근접), 14b 로 바꾸면 ~10GB.
 **색인·평가 스레드**: `rag/common.py` fastembed·리랭커에 `threads=os.cpu_count()`(`RAG_THREADS`).
 **EC2 이관 알림(사용자 요청)**: `deploy/st-iv/restore-rag-snapshot.sh` 끝에 터미널 벨 + Windows 토스트("EC2 Qdrant 이관 완료"). 에이전트는 새 스냅샷이 생겨 이관이 필요할 때마다 메시지에 **「EC2 Qdrant 이관 필요」** 로 명시한다. 현재 이관 대기 스냅샷: `rag/snapshots/chatbot_docs-1252415075711493-2026-10-16-03-53-58.snapshot`(6-14, 미복원).
+**WSL 재기동 후(10-16 14:1x)**: 메모리 14.6GB·16스레드·swap 16GB 적용. 재기동으로 1차 생성(7b) 중단 → 발화 후보 3개 인텐트만 남음. 14b(9GB) 수신 뒤 첫 요청들이 "Connection reset by peer" — 컨테이너 재시작으로 해결(원인 미확인, 포트 포워딩은 정상이었음). **14b 실측**: 로딩 321초(디스크 9GB), 생성 0.8 tok/s, 메모리 11.7GB/15GB(78%), CPU 16스레드 100% → 발화 9인텐트×15 + 질의 40청크×3 생성에 약 2시간 예상(백그라운드, `rag/out/augment.log`). 7b 는 3.5 tok/s 로 4배 빠르고 후보 품질도 쓸 만해 시간이 중요하면 `LLM_LOCAL_MODEL=qwen2.5:7b bash rag/run_augment.sh`.
 **주의**: 운영 서버(fd/st)에는 아무 부하도 주지 않는다. 로컬 Ollama 는 `docker compose -p kms-rag -f rag/compose.yml --profile llm stop ollama` 로 끌 수 있다.
+
+### 6-17. 2026-10-16 전체 워크플로 점검 (사용자 요청) — PC RAG → Qdrant 색인 → EC2 이관 → RAG 챗봇 → Lex 인텐트 → 대화 품질
+
+| 단계 | 상태 | 근거·위치 | 남은 일 |
+|---|---|---|---|
+| ① PC 자원 RAG(문서·임베딩·리랭크 평가·로컬 LLM) | **동작** | WSL 재기동 후 14GB·16스레드·swap 16GB 확인. `rag/docs` 10문서 40청크, 평가 21/21·무관 거절 4/4(후보 3+4 에서도 동일). Ollama 7b 3.5tok/s, 14b 수신 중 → 끝나면 발화·질의 생성 자동 실행(`rag/.wait-14b-then-augment.sh`, 로그 rag/out/augment.log) | 생성물 검토(utterances_*.json), generated_queries 로 회귀 평가 |
+| ② Qdrant 색인 | **동작** | 로컬 `kms-rag-qdrant-1` chatbot_docs 40건(dense+lex), 스냅샷 601KB | 문서 바뀔 때 `indexer.py --prune` → `export_snapshot.sh` |
+| ③ EC2 이관 | **완료(사용자 실행 10-16 14:xx)** | 라이브 `/api/rag/status` points 40·lex_index true. 검색 확인: "호가 단위"→order-basics/호가 단위, "매도 대금"→account/입금, "오늘 점심"→no_match | 지연 2.7~12초(콜드 12초, 후보 10개 7초) → **후보 3+4·기동 시 워밍업으로 수정(미배포, deploy-rag.sh 재실행 필요)**. 복원 스크립트 확인 코드 KeyError('size') 수정(named vector) |
+| ④ RAG 챗봇(폴백이 RAG 사용) | **코드 완료, 미배포** | assistant.py `search_docs` → 라이브 검색 API. Lambda SDK 패키징·Fallback 비활성 준비 | `secrets/anthropic-api-key` → `PUBLISH_ONLY= bash lex/scripts/finish.sh`(재빌드 25분) → 스모크 3문항. "학습"은 모델 가중치가 아니라 문서·발화 데이터 축적으로 정의(6-12·6-16 결정) |
+| ⑤ Lex 인텐트 적용 | **반복 가능, 수동 검토 단계 포함** | 6-13 별칭·CheckFxRate·CheckQuote 발화 + 생성 발화 후보 → build_bot.py → finish.sh → 버전 N | 별칭 전환 전 자동 회귀(recognize-text 대화 세트) 스크립트 **미작성** |
+| ⑥ 대화 품질 개선 루프 | **데이터 소스 없음(핵심 공백)** | 운영 별칭 `conversationLogSettings` = null → Fallback 비율·오분류를 볼 로그가 없다. 지금까지는 사용자가 붙여 준 대화로만 분석 | **Lex 대화 텍스트 로그(CloudWatch) 켜기** → 일일 Fallback/저신뢰 발화 추출 → 발화·문서 후보 생성(PC 로컬 LLM) → 사용자 검토 → 반영 → 회귀 평가 → 별칭 전환 |
+
+**결론**: ①②③ 은 돌고 있고 ④ 는 배포만 남았다. 루프가 "꾸준히" 돌려면 ⑥의 로그 수집과 ⑤의 자동 회귀가 필요하다 — 다음 작업 1순위. 그 외 미결: 버지니아 봇 삭제(사용자), 검색 API 공개 접근, cd.yml(7절 K1).
 
 ---
 
@@ -612,3 +626,57 @@ AWS Lex는 **사용한 질의응답 건수(Turn)** 기반의 Pay-as-you-go 요�
   ├─ [키워드/엔티티 매칭] ─────> [ Amazon DynamoDB / Kendra ] (정확한 Q&A 답변 반환)
   │                                                        │
   └─ [기본 의도 매칭] ─────────> [ Lex 기본 응답 ]
+
+
+  ---
+
+  네, Jina AI 모델들을 기반으로 데이터를 추가하여 모델을 빌드업(파인튜닝 및 커스텀 고도화)하는 것은 **충분히 가능하며, 실제 실무에서도 많이 활용**되고 있습니다.
+
+다만, 챗봇을 구축할 때 Jina AI 모델들의 특성을 이해하고 알맞은 역할에 배치하는 것이 중요합니다. Jina AI 모델들은 직접 대화를 생성하는 대형 언어 모델(LLM, 예: Llama, Mistral 등) 자체가 아니라, 주로 **검색(Retrieval), 임베딩, 리랭킹**에 특화되어 있기 때문입니다.
+
+챗봇 성능을 극대화하기 위해 Jina AI 모델들을 어떻게 빌드업하고 연동할 수 있는지 핵심 내용을 정리해 드립니다.
+
+---
+
+### 1. Jina AI 모델을 활용한 챗봇 빌드업 방식
+
+#### ① 임베딩 및 리랭커 모델 파인튜닝 (도메인 특화 검색 강화)
+
+사내 문서, 고객센터 FAQ, 전문 지식 등으로 챗봇이 정확하게 답변하게 하려면 **RAG(검색 증강 생성)** 시스템이 필수적입니다. 이때 Jina AI의 모델들을 커스텀 데이터로 학습(Fine-tuning)시킬 수 있습니다.
+
+* **임베딩 모델 학습**: Jina Embeddings v3/v5 모델은 **Task LoRA** 구조 등을 지원하므로, 우리 회사나 도메인의 특수한 용어, 질문-문서 쌍 데이터를 활용해 파인튜닝하면 도메인 검색 정확도를 극대화할 수 있습니다.
+* **리랭커 모델 학습**: Jina Reranker를 커스텀 데이터로 추가 학습시켜, 사용자의 질문에 가장 알맞은 사내 문서를 정확하게 최상단으로 끌어올리도록 튜닝할 수 있습니다.
+
+#### ② 파인튜닝 지원 도구 활용
+
+* Jina AI는 개발자들이 쉽게 모델을 커스텀할 수 있도록 **Auto Fine-Tune API** 및 전용 학습 라이브러리(`finetuner`) 등을 제공합니다. 이를 통해 적은 양의 도메인 데이터로도 효율적으로 모델 성능을 끌어올릴 수 있습니다.
+
+---
+
+### 2. 전체 챗봇 아키텍처 관점에서의 빌드업 구조
+
+실제 챗봇 서비스 빌드업 시 Jina AI 모델들은 다음과 같은 파이프라인의 핵심 두뇌로 작동합니다.
+
+```text
+[사용자 질문] 
+      ↓
+1. [Jina Embeddings]을 통해 질문을 벡터화
+      ↓
+2. [벡터 DB]에서 관련 사내 문서 후보군 추출
+      ↓
+3. [Jina Reranker]를 통해 후보 문서들의 연관성을 정밀 재정렬 (Top-K 선정)
+      ↓
+4. [LLM (예: GPT, Llama 등)]에 질문 + 정밀 선별된 문서를 함께 전달
+      ↓
+[최종 맞춤형 답변 생성 및 사용자에게 전달]
+
+```
+
+---
+
+### 3. 요약 및 제안
+
+* **생성 능력(말투, 대화 흐름 등)을 키우고 싶다면**: Llama, Mistral, Qwen 같은 **오픈소스 LLM**을 대상으로 SFT(지도 학습 Fine-tuning)나 RLHF를 진행하셔야 합니다.
+* **검색 정확도, 전문 문서 이해도, 사내 데이터 기반 응답률을 높이고 싶다면**: **Jina AI의 임베딩/리랭커 모델**을 사내 데이터로 파인튜닝하고 RAG 파이프라인에 결합하는 것이 가장 효과적이고 비용 효율적인 빌드업 방법입니다.
+
+혹시 구체적으로 구상 중이신 챗봇의 도메인이나 목적(예: 사내 매뉴얼 챗봇, 코딩 도우미 등)이 있으신가요? 목적에 맞는 구체적인 아키텍처나 학습 방향을 더 자세히 안내해 드릴 수 있습니다.
