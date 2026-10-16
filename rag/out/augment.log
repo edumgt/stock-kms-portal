@@ -1,3 +1,22 @@
 available=3268MB model=qwen2.5:14b threads=16 what=all
 ollama=http://127.0.0.1:11434 model=qwen2.5:14b threads=16
   TradeStock: 후보 15개 (157s)
+  CheckBalance: 후보 15개 (124s)
+  AccountFaq: 후보 15개 (101s)
+  CheckRanking: 후보 15개 (89s)
+  CheckQuote: 후보 15개 (96s)
+  CheckFxRate: 후보 15개 (133s)
+  MarketHours: 후보 14개 (106s)
+  MarketHolidays: 후보 15개 (132s)
+  CheckOrder: 후보 15개 (107s)
+→ /home/ubuntu/stock-kms-portal/rag/out/utterances_20261016.json
+  faq/account#0: 3개 (35s)
+  faq/account#1: 3개 (31s)
+  faq/account#2: 3개 (24s)
+  faq/account#3: 3개 (39s)
+  faq/account#4: 3개 (26s)
+  faq/chatbot#0: 3개 (41s)
+  faq/chatbot#1: 3개 (59s)
+  faq/chatbot#2: 3개 (25s)
+  faq/order#0: 3개 (31s)
+  faq/order#1: 3개 (51s)
