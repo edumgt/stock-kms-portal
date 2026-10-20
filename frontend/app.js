@@ -767,7 +767,6 @@ KOSDAQ|웹젠|게임`,
     if (view === 'home') renderHome();
     if (view === 'minute-chart') renderMinuteChart();
     if (view === 'chart-drawing') renderHome();
-    if (view === 'quiz') renderQuiz();
     if (view === 'data-visualization') renderDataVisualization();
     if (view === 'stocks') renderStocksView();
     if (view === 'learn') {
@@ -1456,24 +1455,6 @@ KOSDAQ|웹젠|게임`,
         if (state.activeView === 'home' || state.activeView === 'chart-drawing') homeView(mount);
       })
       .catch(() => { if (mount) mount.innerHTML = '<div class="backtest-error">차트 대시보드를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>'; });
-  }
-
-  // 8000 quiz source is mounted here, inside the 80 content area.  Navigation
-  // between its five quiz days stays local to this view rather than linking out.
-  function renderQuiz() {
-    $messages.innerHTML = '<article class="content-page investment-native-module-page"><div id="investmentNativeQuiz"><div class="backtest-empty"><i class="fa-solid fa-spinner fa-spin"></i><p>퀴즈를 준비하고 있습니다.</p></div></div></article>';
-    const mount = document.getElementById('investmentNativeQuiz');
-    import('/static/investment-native/js/views/quiz.js')
-      .then(({ quizHomeView, quizDayView }) => {
-        if (state.activeView !== 'quiz') return;
-        const navigate = (route) => {
-          const match = /^quiz-day-(\d+)$/.exec(route);
-          if (match) quizDayView(mount, Number(match[1]), navigate);
-          else quizHomeView(mount, navigate);
-        };
-        quizHomeView(mount, navigate);
-      })
-      .catch(() => { if (mount) mount.innerHTML = '<div class="backtest-error">퀴즈를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>'; });
   }
 
   // Data visualization uses the original 8000 world-market module and its

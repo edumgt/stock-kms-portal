@@ -170,6 +170,8 @@ def read_learning_document(path: str):
 @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 async def proxy_investment_api(path: str, request: Request):
     """Expose the migrated investment API through the single port-80 origin."""
+    if path.split("/", 1)[0] in {"quiz", "vocabulary-exam"}:
+        raise HTTPException(status_code=410, detail="종료된 기능입니다.")
     upstream_url = f"{settings.investment_api_base.rstrip('/')}/api/{path}"
     forwarded_headers = {
         key: value for key, value in request.headers.items()

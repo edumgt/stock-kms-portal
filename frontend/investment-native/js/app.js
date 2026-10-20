@@ -41,8 +41,6 @@ import { valuationView }        from './views/valuation.js';
 import { technicalChartView }  from './views/technicalChart.js';
 import { financialKnowledgeView } from './views/financialKnowledge.js';
 import { investmentTreeView }   from './views/investmentTree.js';
-import { quizHomeView, quizDayView } from './views/quiz.js';
-import { vocabularyExamView } from './views/vocabularyExam.js';
 import { ragChatView } from './views/ragChat.js';
 import { llmBenchView } from './views/llmBenchView.js';
 import { companyFinancialView } from './views/companyFinancial.js';
@@ -181,13 +179,6 @@ const learnRoutes = Object.fromEntries(
   ]),
 );
 
-const quizDayRoutes = Object.fromEntries(
-  Array.from({ length: 5 }, (_, i) => i + 1).map(d => [
-    `quiz-day-${d}`,
-    { label: `주식 ${d} 퀴즈`, render: () => quizDayView(app, d, navigate) },
-  ])
-);
-
 const routes = {
   'home':              { label: '대시보드',               render: () => homeView(app, navigate) },
   'server-resources':  { label: '서버 리소스',             render: () => serverResourcesView(app) },
@@ -235,11 +226,8 @@ const routes = {
   'investment-tree':     { label: '투자 성향 분석',              render: () => investmentTreeView(app) },
   'tax-accounting':              { label: '세무·회계 시뮬레이션',         render: () => taxAccountingView(app) },
   'dart-financial-analysis':    { label: 'DART 재무 AI 분석',             render: () => dartFinancialAnalysisView(app) },
-  'quiz-home':           { label: '퀴즈 · 통합 모의고사',        render: () => quizHomeView(app, navigate) },
-  'vocabulary-exam':     { label: '퀴즈 · 단어장 30문제 시험',   render: () => vocabularyExamView(app, navigate) },
   'rag-chat':            { label: '문서 검색 채팅',              render: () => ragChatView(app) },
   'llm-bench':           { label: 'LLM 서빙 방식 비교(AWS)',     render: () => llmBenchView(app) },
-  ...quizDayRoutes,
   ...learnRoutes,
 };
 
@@ -364,18 +352,8 @@ let currentView = null;
 let navigationVersion = 0;
 const MOBILE_BREAKPOINT = 1024;
 
-function updateQuizSidebarLock() {
-  for (let d = 2; d <= 15; d++) {
-    const el = document.querySelector(`.nav-item[data-view="quiz-day-${d}"]`);
-    if (!el) continue;
-    const prevDone = (() => {
-      try { const p = JSON.parse(localStorage.getItem(`quiz_progress_day${d - 1}`)); return p?.finished === true; } catch { return false; }
-    })();
-    el.classList.toggle('locked', !prevDone);
-  }
-}
-
 function navigate(view) {
+  if (!routes[view]) view = "home";
   const route = routes[view] || routes['home'];
   const version = ++navigationVersion;
   currentView = view;
@@ -408,14 +386,12 @@ function navigate(view) {
   const activeSections = [];
   if (['learn-10-1', 'learn-10-2', 'learn-10-3', 'learn-11'].includes(view)) activeSections.push('review');
   else if (view?.startsWith('learn-')) activeSections.push('learn');
-  if (view?.startsWith('quiz-') || view === 'vocabulary-exam') activeSections.push('quiz');
   if (['server-resources', 'world-markets', 'asset-classes', 'today-gainers', 'today-sobujang', 'volume-cloud', 'sector-cloud', 'global-capital-map'].includes(view)) activeSections.push('visualization');
   if (_portfolioViews.includes(view)) activeSections.push('portfolio');
   if (_practiceViews.includes(view)) activeSections.push('practice');
   if (_aiViews.includes(view)) activeSections.push('aitools');
   if (typeof window._setActiveNavSections === 'function') window._setActiveNavSections(activeSections);
 
-  if (view?.startsWith('quiz-') || view === 'vocabulary-exam') updateQuizSidebarLock();
 
   // Clear the previous screen before a view starts asynchronous work.  Without
   // this, the former menu can remain visible until its replacement is ready.

@@ -1,8 +1,8 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>학습 10 | 투자 분석 포털</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"><link rel="stylesheet" href="lesson-page.css?v=7"><script>if(new URLSearchParams(location.search).get("embedded")==="1")document.documentElement.classList.add("embedded");</script><link rel="stylesheet" href="https://www.edumgt.co.kr/css/common.css?v=20261012-common-3" /></head><body><div class="lesson-layout"><aside class="lesson-lnb"><div class="lesson-lnb-head"><b>EDUMGT Finance</b><span>투자 분석 · 금융 학습 · RAG 실습</span></div><nav><p>통합 학습 과정 · 10개</p><a href="01.html"><b>01</b>법인과 회사 구조 1</a><a href="02.html"><b>02</b>법인과 회사 구조 2</a><a href="03.html"><b>03</b>법인과 회사 구조 3</a><a href="04.html"><b>04</b>거시경제와 주식시장</a><a href="05.html"><b>05</b>주식 기초</a><a href="06.html"><b>06</b>주식 분석</a><a href="07.html"><b>07</b>가치와 재무</a><a href="08.html"><b>08</b>거래 전략 · LEAN</a><a href="09.html"><b>09</b>펀드 · ETF · 채권</a><a href="10.html" aria-current="page"><b>10</b>자산배분 · 퀀트</a></nav></aside><main class="lesson-main"><header class="lesson-gnb"><a class="lesson-brand" href="/?view=home">투자 분석 포털</a><nav><a href="/?view=home">대시보드</a><a href="/?view=minute-chart">시장정보</a><a href="/?view=chart-drawing">드로잉 차트</a><a href="/?view=quiz">퀴즈</a><a href="/?view=data-visualization">데이터 시각화</a><a href="/?view=learn">RAG</a><a href="/?view=investment-practice">투자 실습</a></nav></header><div class="lesson-content"><header class="lesson-title"><b>학습 10 · 자산배분 · 퀀트</b><span>위험 관리와 포트폴리오 구성</span></header><article class="lesson-doc"><h2>자산배분</h2><p>자산배분은 주식·채권·현금·대체자산의 비중을 목표와 위험 감내 수준에 맞추는 과정입니다. 수익률만이 아니라 변동성, 상관관계, 유동성, 투자 기간을 함께 봅니다.</p><h2>리밸런싱</h2><p>리밸런싱은 목표 비중에서 벗어난 자산을 조정하는 규칙입니다. 시간 기준·허용 이탈률 기준 등 방법이 있으며 세금과 거래비용도 고려합니다.</p><h2>성과 지표</h2><table><tr><th>지표</th><th>뜻</th></tr><tr><td>MDD</td><td>고점에서 저점까지의 최대 하락폭</td></tr><tr><td>샤프 비율</td><td>위험 한 단위당 초과성과를 보는 지표</td></tr><tr><td>변동성</td><td>수익률의 흔들림 정도</td></tr></table></article><section class="lesson-supplement" aria-labelledby="supplement-title"><header class="lesson-supplement-head"><p class="lesson-kicker">금융 이론 보충 · 자산배분 · 퀀트</p><h2 id="supplement-title">이 단원과 관련된 금융 이론</h2><p>자산배분·퀀트 이론 전체를 이 단원에 실었습니다. 시뮬레이터와 대화형 요소는 제외하고 본문만 담았습니다.</p></header><nav class="lesson-toc" aria-label="보충 학습 목차"><b>보충 학습 목차 · 32개 절</b><ol><li><a href="#theory-10-1">나만의 로보 어드바이저 개발 및 성과 검증 프로젝트</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-2">나만의 투자 인디케이터 개발 및 성과 검증 프로젝트</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-3">XAI(Explainable AI, 설명 가능한 인구지능)</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-4">Cash Cow와 Cash Flow: 돈을 버는 원천과 돈의 흐름</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-5">변동성 매매: 방향보다 움직임의 크기를 보는 거래</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-6">HTS에서 외국인 KOSPI 200 선물·옵션 수급 보기</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-7">선물·옵션은 시장의 “기상청”일까요?</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-8">헤지는 큰 손실을 줄이는 안전장치</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-9">시장 급락에 대비하는 두 가지 헤지</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-10">선물포인트와 거래승수로 손익 계산하기</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-11">증거금은 “계약 보증금”입니다</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-12">마진콜은 어떻게 발생할까요?</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-13">반대매매를 피하기 위한 초보자 원칙</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-14">증거금·만기·강제청산을 먼저 이해하세요</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-15">금리와 성장잠재력: 할인율이 기업 가치에 미치는 영향</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-16">자산 가치평가: 지금 가격은 무엇을 반영할까요?</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-17">랜덤워크와 효율적 시장 가설: 가격에는 정보가 어떻게 반영될까?</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-18">퀀트는 주식과 코인에 어떻게 쓰일까요?</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-19">QuantConnect LEAN: 오픈소스 퀀트 엔진을 이해하고 사용하기</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-20">위험자산과 무위험자산: 자산배분의 출발점</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-21">위험을 읽는 네 가지 숫자</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-22">블랙 스완: 평소 모형 밖의 큰 충격에 대비하기</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-23">올웨더 포트폴리오: 여러 경제 날씨에 대비하는 자산배분</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-24">자산배분과 마켓 타이밍은 다릅니다: 달러통장 사례</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-25">젠포트·퀀터스 같은 노코드 퀀트 플랫폼: 전략을 만들고 검증하는 흐름</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-26">벰버거의 페어 트레이딩: 함께 움직이던 두 가격의 간격 보기</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-27">시장 분위기 알아보기: 잔잔한지 불안한지 추정하는 HMM</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-28">퀀트 역사를 만든 인물·회사·매매기법</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-29">초단타 주문은 어떻게 공정하게 관리할까: 해외 사례와 한국 규제</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-30">단기 매매와 허수성 주문: 빠른 거래와 시세조종의 차이</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-31">시장 심리: 남을 따라가는 판단과 처음 본 숫자</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-32">선택과 경쟁: 기회비용·메기 효과·피그말리온 효과</a> <small>자산배분 · 퀀트</small></li></ol></nav><article class="lesson-doc lesson-theory"><section class="lesson-block">
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>학습 10 | 투자 분석 포털</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"><link rel="stylesheet" href="lesson-page.css?v=7"><script>if(new URLSearchParams(location.search).get("embedded")==="1")document.documentElement.classList.add("embedded");</script><link rel="stylesheet" href="https://www.edumgt.co.kr/css/common.css?v=20261012-common-3" /></head><body><div class="lesson-layout"><aside class="lesson-lnb"><div class="lesson-lnb-head"><b>EDUMGT Finance</b><span>투자 분석 · 금융 학습 · RAG 실습</span></div><nav><p>통합 학습 과정 · 10개</p><a href="01.html"><b>01</b>법인과 회사 구조 1</a><a href="02.html"><b>02</b>법인과 회사 구조 2</a><a href="03.html"><b>03</b>법인과 회사 구조 3</a><a href="04.html"><b>04</b>거시경제와 주식시장</a><a href="05.html"><b>05</b>주식 기초</a><a href="06.html"><b>06</b>주식 분석</a><a href="07.html"><b>07</b>가치와 재무</a><a href="08.html"><b>08</b>거래 전략 · LEAN</a><a href="09.html"><b>09</b>펀드 · ETF · 채권</a><a href="10.html" aria-current="page"><b>10</b>자산배분 · 퀀트</a></nav></aside><main class="lesson-main"><header class="lesson-gnb"><a class="lesson-brand" href="/?view=home">투자 분석 포털</a><nav><a href="/?view=home">대시보드</a><a href="/?view=minute-chart">시장정보</a><a href="/?view=chart-drawing">드로잉 차트</a><a href="/?view=data-visualization">데이터 시각화</a><a href="/?view=learn">RAG</a><a href="/?view=investment-practice">투자 실습</a></nav></header><div class="lesson-content"><header class="lesson-title"><b>학습 10 · 자산배분 · 퀀트</b><span>위험 관리와 포트폴리오 구성</span></header><article class="lesson-doc"><h2>자산배분</h2><p>자산배분은 주식·채권·현금·대체자산의 비중을 목표와 위험 감내 수준에 맞추는 과정입니다. 수익률만이 아니라 변동성, 상관관계, 유동성, 투자 기간을 함께 봅니다.</p><h2>리밸런싱</h2><p>리밸런싱은 목표 비중에서 벗어난 자산을 조정하는 규칙입니다. 시간 기준·허용 이탈률 기준 등 방법이 있으며 세금과 거래비용도 고려합니다.</p><h2>성과 지표</h2><table><tr><th>지표</th><th>뜻</th></tr><tr><td>MDD</td><td>고점에서 저점까지의 최대 하락폭</td></tr><tr><td>샤프 비율</td><td>위험 한 단위당 초과성과를 보는 지표</td></tr><tr><td>변동성</td><td>수익률의 흔들림 정도</td></tr></table></article><section class="lesson-supplement" aria-labelledby="supplement-title"><header class="lesson-supplement-head"><p class="lesson-kicker">금융 이론 보충 · 자산배분 · 퀀트</p><h2 id="supplement-title">이 단원과 관련된 금융 이론</h2><p>자산배분·퀀트 이론 전체를 이 단원에 실었습니다. 시뮬레이터와 대화형 요소는 제외하고 본문만 담았습니다.</p></header><nav class="lesson-toc" aria-label="보충 학습 목차"><b>보충 학습 목차 · 32개 절</b><ol><li><a href="#theory-10-1">나만의 로보 어드바이저 개발 및 성과 검증 프로젝트</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-2">나만의 투자 인디케이터 개발 및 성과 검증 프로젝트</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-3">XAI(Explainable AI, 설명 가능한 인구지능)</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-4">Cash Cow와 Cash Flow: 돈을 버는 원천과 돈의 흐름</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-5">변동성 매매: 방향보다 움직임의 크기를 보는 거래</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-6">HTS에서 외국인 KOSPI 200 선물·옵션 수급 보기</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-7">선물·옵션은 시장의 “기상청”일까요?</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-8">헤지는 큰 손실을 줄이는 안전장치</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-9">시장 급락에 대비하는 두 가지 헤지</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-10">선물포인트와 거래승수로 손익 계산하기</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-11">증거금은 “계약 보증금”입니다</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-12">마진콜은 어떻게 발생할까요?</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-13">반대매매를 피하기 위한 초보자 원칙</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-14">증거금·만기·강제청산을 먼저 이해하세요</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-15">금리와 성장잠재력: 할인율이 기업 가치에 미치는 영향</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-16">자산 가치평가: 지금 가격은 무엇을 반영할까요?</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-17">랜덤워크와 효율적 시장 가설: 가격에는 정보가 어떻게 반영될까?</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-18">퀀트는 주식과 코인에 어떻게 쓰일까요?</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-19">QuantConnect LEAN: 오픈소스 퀀트 엔진을 이해하고 사용하기</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-20">위험자산과 무위험자산: 자산배분의 출발점</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-21">위험을 읽는 네 가지 숫자</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-22">블랙 스완: 평소 모형 밖의 큰 충격에 대비하기</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-23">올웨더 포트폴리오: 여러 경제 날씨에 대비하는 자산배분</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-24">자산배분과 마켓 타이밍은 다릅니다: 달러통장 사례</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-25">젠포트·퀀터스 같은 노코드 퀀트 플랫폼: 전략을 만들고 검증하는 흐름</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-26">벰버거의 페어 트레이딩: 함께 움직이던 두 가격의 간격 보기</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-27">시장 분위기 알아보기: 잔잔한지 불안한지 추정하는 HMM</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-28">퀀트 역사를 만든 인물·회사·매매기법</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-29">초단타 주문은 어떻게 공정하게 관리할까: 해외 사례와 한국 규제</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-30">단기 매매와 허수성 주문: 빠른 거래와 시세조종의 차이</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-31">시장 심리: 남을 따라가는 판단과 처음 본 숫자</a> <small>자산배분 · 퀀트</small></li><li><a href="#theory-10-32">선택과 경쟁: 기회비용·메기 효과·피그말리온 효과</a> <small>자산배분 · 퀀트</small></li></ol></nav><article class="lesson-doc lesson-theory"><section class="lesson-block">
             <span>PROJECT 01</span>
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-1">나만의 로보 어드바이저 개발 및 성과 검증 프로젝트</h2>
-              
+
                 <p><strong>UI/UX 필요 요소:</strong> 투자성향진단 · 시각적 포트폴리오 · 시뮬레이션 · 목표 수익률 모의 · 리밸런싱</p>
                 <ul>
                   <li>
@@ -40,14 +40,14 @@
                     </ol>
                   </li>
                 </ul>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
             <span>PROJECT 02</span>
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-2">나만의 투자 인디케이터 개발 및 성과 검증 프로젝트</h2>
-              
+
                 <p><strong>UI/UX 필요 요소:</strong> 전략 설정 · 지표 차트 · 백테스트 · 성과 대시보드 · 자동매매 모니터링</p>
                 <ul>
                   <li><strong>목표 기능:</strong> 기본적인 인디케이터(MA, RSI 등)로 전략 설계
@@ -153,16 +153,16 @@
                       <li><b>9월 30일까지</b> 팀을 구성하는데, 잔여 인력은 <b>10월 1일</b> 인원수 모자른 팀에 자동 배치됩니다.</li>
                     </ol>
                   </aside>
-                  
+
                 </section>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
             <span>XAI</span>
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-3">XAI(Explainable AI, 설명 가능한 인구지능)</h2>
-              
+
                 <p>XAI(Explainable AI, 설명 가능한 인구지능)는 AI가 특정한 의사결정이나 예측을 내렸을 때, <strong>그 결론에 도달한 이유와 과정을 인간이 이해할 수 있도록 설명해 주는 기술 및 연구 분야</strong>를 말합니다.</p>
                 <h3>왜 XAI가 필요할까요?</h3>
                 <p>최근 유행하는 딥러닝과 대규모 언어 모델(LLM)은 성능이 뛰어난 반면, 내부 동작 원리를 알기 힘든 <strong>'블랙박스(Black Box)'</strong> 특성을 가지고 있습니다. 입력값을 넣으면 결과는 잘 나오지만, "왜 이런 결과가 나왔는지" 과정이 투명하지 않습니다.</p>
@@ -196,14 +196,14 @@
                   <p>💡 <strong>한 줄 요약</strong></p>
                   <p><strong>XAI는 AI에게 "너 왜 그런 결론을 내렸니?"라고 물었을 때, 사람이 납득할 수 있는 정당한 이유를 말해주는 기술입니다.</strong></p>
                 </blockquote>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
-            
+
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-4">Cash Cow와 Cash Flow: 돈을 버는 원천과 돈의 흐름</h2>
-              
+
                 <p><b>Cash Cow(캐시 카우)</b>와 <b>Cash Flow(현금흐름)</b>는 모두 현금과 관련 있지만 서로 다른 개념입니다. Cash Cow는 꾸준한 현금 창출이 기대되는 사업·제품·자산 같은 <b>원천</b>이고, Cash Flow는 일정 기간 실제 현금이 들어오고 나간 <b>흐름</b>입니다.</p>
                 <h3>두 개념의 핵심 차이</h3>
                 <ul>
@@ -243,13 +243,13 @@
                   </table>
                 </div>
                 <p><b>Cash and Carry</b>는 외상 대신 즉시 결제하고 물건을 직접 가져가는 유통 방식을, <b>Cash Grab</b>은 품질보다 돈벌이만 노린다는 비판적 표현을 뜻합니다. <b>Cold Hard Cash</b>는 카드·수표가 아닌 눈앞의 현금을 강조하는 관용 표현입니다. 이들은 공식 재무제표 항목이 아니라 맥락에 따라 쓰이는 비즈니스·일상 표현입니다.</p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-5">변동성 매매: 방향보다 움직임의 크기를 보는 거래</h2>
-              
+
                 <p>
                   변동성 매매는 주가가 오를지 내릴지보다, 앞으로 가격이 얼마나
                   크게 움직일지를 보는 방식입니다. 예를 들어 실적 발표를 앞둔
@@ -270,13 +270,13 @@
                   아닙니다. 만기, 프리미엄, 거래비용과 최악의 손실을 이해하지
                   못했다면 실거래보다 모의 학습으로 구조를 먼저 확인해야 합니다.
                 </p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-6">HTS에서 외국인 KOSPI 200 선물·옵션 수급 보기</h2>
-              
+
                 <p>
                   HTS 검색창에서 “투자자별 매매동향”, “투자자별 거래동향”,
                   “투자주체”, “수급”을 찾은 뒤 국내 파생상품 시장을 선택합니다.
@@ -305,13 +305,13 @@
                   확인합니다. 장 마감 뒤에는 KRX의 파생상품 투자자별
                   거래실적으로 교차검증하세요.
                 </p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-7">선물·옵션은 시장의 “기상청”일까요?</h2>
-              
+
                 <p>
                   선물·옵션 시장은 투자자들이 앞으로의 가격 변동을 어떻게
                   생각하는지 빠르게 모이는 곳이라서 가끔 주식시장의 “기상청”에
@@ -342,13 +342,13 @@
                   보고 매수·매도하면 잘못 해석할 수 있으므로, 데이터의 기준
                   시점·거래비용·최악의 손실 시나리오를 함께 확인해야 합니다.
                 </p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-8">헤지는 큰 손실을 줄이는 안전장치</h2>
-              
+
                 <p>
                   hedge는 원래 바람이나 외부의 위험을 막기 위해 두르는
                   울타리·생울타리라는 뜻입니다. 금융에서도 가격 변동이라는
@@ -381,13 +381,13 @@
                   줄이려는 계약인지, 최대 손실은 얼마인지”를 먼저 묻는 습관이
                   중요합니다.
                 </p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-9">시장 급락에 대비하는 두 가지 헤지</h2>
-              
+
                 <p>
                   주식이나 주식 ETF를 가진 사람이 시장 급락이 걱정될 때는
                   풋옵션을 사거나 지수선물을 매도하는 방식을 생각해 볼 수
@@ -409,13 +409,13 @@
                   계약 규모를 이해하지 못하면 헤지가 아니라 위험 확대가 될 수
                   있습니다.
                 </p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-10">선물포인트와 거래승수로 손익 계산하기</h2>
-              
+
                 <p>
                   선물포인트는 선물 가격 또는 지수가 움직인 크기입니다. 예를
                   들어 340.00에서 341.20으로 오르면 +1.20포인트입니다.
@@ -442,14 +442,14 @@
                   합니다.
                 </p>
                 <p class="lesson-note"><b>숫자 단위가 헷갈리나요?</b> bp·%p·포인트·틱 쉽게 읽기에서 한 번에 확인해 보세요.</p>
-                
-              
-            
-            
+
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-11">증거금은 “계약 보증금”입니다</h2>
-              
+
                 <p>
                   주식은 보통 사려는 금액 전체를 내지만, 선물·옵션은 계약 금액의
                   일부인 증거금으로 거래를 시작합니다. 적은 돈으로 큰 계약을
@@ -467,13 +467,13 @@
                   확인해야 하며, 기본예탁금과 실제 주문에 필요한 위탁증거금은
                   서로 다른 개념임을 구분해야 합니다.
                 </p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-12">마진콜은 어떻게 발생할까요?</h2>
-              
+
                 <p>
                   예를 들어 계좌에 1,600만 원이 있고 어떤 선물 1계약을 사는 데
                   위탁증거금 1,575만 원이 필요하다고 가정해 보세요. 거래는
@@ -491,13 +491,13 @@
                   기한, 청산 방식은 상품·증권사별로 다르므로 알림과 거래설명서를
                   반드시 확인해야 합니다.
                 </p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-13">반대매매를 피하기 위한 초보자 원칙</h2>
-              
+
                 <p>
                   필요 증거금에 딱 맞춰 최대 계약 수량을 거래하면 작은 가격
                   변동에도 위험해집니다. 처음에는 계약 수량을 아주 작게 잡고,
@@ -516,13 +516,13 @@
                   조심하고, 손실 한도·계약 수량·추가증거금 대응 가능 여부를 먼저
                   점검해야 합니다.
                 </p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-14">증거금·만기·강제청산을 먼저 이해하세요</h2>
-              
+
                 <p>
                   파생상품은 계약 금액 전부가 아니라 증거금으로 거래해
                   레버리지가 커집니다. 기본예탁금은 거래 자격을 위한 최소
@@ -542,14 +542,14 @@
                   확인하세요. 이해하지 못한 구조의 파생상품은 거래하지 않는 것이
                   원칙입니다.
                 </p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
             <span>00.1</span>
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-15">금리와 성장잠재력: 할인율이 기업 가치에 미치는 영향</h2>
-              
+
                 <p><strong>아주 간단한 예부터 보겠습니다.</strong> 어떤 회사가 1년 뒤 105만 원을 벌 것으로 예상된다고 해 보세요. 할인율이 5%라면 이 돈의 오늘 가치는 <b>105만 원 ÷ 1.05 = 100만 원</b>입니다. 여기서 <b>할인율</b>은 미래의 돈을 오늘 기준으로 얼마나 낮춰 볼지 정하는 비율입니다.</p>
                 <p>시장금리가 올라 할인율이 10%가 되면 계산은 <b>105만 원 ÷ 1.10 = 약 95만 5천 원</b>으로 바뀝니다. <strong>회사가 1년 뒤 벌 것으로 예상되는 돈은 105만 원으로 같지만, 오늘 평가한 가치는 약 4만 5천 원 줄어든 것입니다.</strong> 이처럼 금리 상승은 기업의 현재 가치와 주가에 부담이 될 수 있습니다.</p>
                 <p><strong>먼 미래의 이익에 많이 기대는 성장주는 할인율 변화의 영향을 더 크게 받을 수 있습니다.</strong> 지금 이익을 내는 회사보다 5년·10년 뒤 큰 이익을 낼 것으로 기대되는 회사가 미래의 돈을 더 많이 낮춰 계산해야 하기 때문입니다.</p>
@@ -571,14 +571,14 @@
                     </tbody>
                   </table>
                 </div>
-                
-              
-            
-            
+
+
+
+
           </section><section class="lesson-block"><span>12.04</span>
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-16">자산 가치평가: 지금 가격은 무엇을 반영할까요?</h2>
-              
+
                 <p><b>가치평가(Valuation)</b>는 자산이 앞으로 제공할 현금흐름·사용가치·희소성에 비춰 현재 가격이 어떤 가정을 담고 있는지 추정하는 과정입니다. 자산마다 현금흐름과 거래 구조가 다르므로 하나의 공식으로 모두 평가할 수는 없습니다.</p>
                 <h3>시간의 가치: 미래의 돈은 왜 현재 가치로 바꿀까요?</h3>
                 <p><b>시간의 가치(Time Value of Money, TVM)</b>란 <strong>같은 금액이라면 나중에 받는 돈보다 지금 받는 돈이 더 가치 있다는 뜻</strong>입니다. 예를 들어 오늘 받은 1만 원을 연 5% 예금에 넣으면 1년 뒤에는 1만 500원이 됩니다. 반면 1년 뒤에 1만 원을 받으면 그동안 이자를 얻을 기회를 놓칩니다. 그래서 오늘의 1만 원과 1년 뒤의 1만 원을 같은 가치로 보지 않습니다.</p>
@@ -656,13 +656,13 @@
                   <li><b>더 나은 조합 고르기:</b> 예상 수익이 같은 두 조합이라면 가격이 덜 흔들리는 조합을 고릅니다. 흔들림이 비슷하다면 예상 수익이 더 높은 조합을 고릅니다.</li>
                   <li><b>분산해도 막을 수 없는 위험:</b> 한 회사의 실적 악화는 여러 자산에 나누어 투자하면 충격을 줄일 수 있습니다. 하지만 금융위기처럼 시장 전체가 함께 하락하면 분산투자만으로 손실을 완전히 피할 수는 없습니다.</li>
                 </ul>
-              
-            
-            
+
+
+
           </section><section class="lesson-block"><span>12.05</span>
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-17">랜덤워크와 효율적 시장 가설: 가격에는 정보가 어떻게 반영될까?</h2>
-              
+
                 <h3>랜덤워크(Random Walk, 임의보행)란?</h3>
                 <p>랜덤워크는 다음 변화가 확률적으로 일어나며, <strong>가장 단순한 모형에서는 각 단계의 변화가 이전 변화와 독립</strong>이라고 가정하는 수학·통계 개념입니다. 금융에서는 가격 자체보다 가격의 변화율인 <strong>수익률</strong>을 확률 과정으로 단순화해 살펴봅니다.</p>
                 <ul>
@@ -811,13 +811,13 @@
                   <li><b>반복 가능한 증거를 요구합니다.</b> 특정 기간·시장에만 나타난 결과인지 다른 표본에서도 이어지는지 확인합니다.</li>
                   <li><b>효율성은 정도의 문제로 봅니다.</b> 시장·시기·자산에 따라 정보가 반영되는 속도와 거래 제약은 달라질 수 있습니다.</li>
                 </ol>
-              
-            
-            
+
+
+
           </section><section class="lesson-block"><span>12.1</span>
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-18">퀀트는 주식과 코인에 어떻게 쓰일까요?</h2>
-              
+
                 <p><b>퀀트(Quant)</b>는 투자 아이디어를 숫자와 규칙으로 바꾸고, 컴퓨터로 반복해서 확인하는 방식입니다. 예를 들어 “좋아 보이는 주식을 산다”가 아니라 <strong>“이익이 늘고 가격이 일정 기간 상승한 종목을 매주 같은 시간에 찾는다”</strong>처럼 조건을 분명하게 적습니다. 주식과 코인은 거래 방식이 다르지만, 데이터를 모으고 규칙을 시험한 뒤 주문하는 기본 흐름은 같습니다.</p>
 
                 <h3>주식에서는 이렇게 사용합니다</h3>
@@ -860,13 +860,13 @@
                   <p><strong>4. 비용 포함하기</strong><span>수수료·세금·가격 미끄러짐·주문 지연을 빼고도 결과가 남는지 확인한 뒤 모의 거래로 다시 점검합니다.</span></p>
                 </div>
                 <p><strong>자동화는 판단을 반복해 줄 뿐 수익을 보장하지 않습니다.</strong> 잘못된 데이터나 규칙도 컴퓨터는 그대로 빠르게 실행합니다. 실거래 전에는 기간을 바꿔 다시 시험하고, 모의 거래를 거치며, API 키의 출금 권한을 끄고, 한 번의 주문과 하루 손실 한도를 작게 정해야 합니다.</p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block"><span>LEAN</span>
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-19">QuantConnect LEAN: 오픈소스 퀀트 엔진을 이해하고 사용하기</h2>
-              
+
                 <p><a href="https://github.com/QuantConnect/Lean" target="_blank" rel="noopener">QuantConnect/Lean</a>은 Python과 C#으로 전략을 작성해 백테스트와 라이브 거래를 같은 엔진 구조에서 다룰 수 있게 만든 오픈소스 알고리즘 트레이딩 엔진입니다. 이벤트가 들어올 때 전략 코드가 실행되는 <b>이벤트 기반</b> 구조이며, 자산·데이터·주문·브로커 연결·수수료·슬리피지 모델을 조합할 수 있도록 모듈화되어 있습니다.</p>
                 <h3>Docker·Python 전략·이벤트는 누가 실행하나요?</h3>
                 <p>이 문장은 <b>사용자가 Python 함수를 직접 호출한다</b>는 뜻은 아닙니다. Docker 이미지는 LEAN 엔진, Python 실행환경, 데이터·주문·수수료·슬리피지 모델처럼 전략을 돌리는 데 필요한 구성요소를 한 실행 환경으로 묶어 둔 것입니다. 사용자가 작성한 <code>.py</code> 알고리즘 파일은 그 안에서 LEAN 엔진이 불러 실행합니다.</p>
@@ -877,7 +877,7 @@
                   <li><b>주문·정산:</b> 전략 코드는 ‘매수·매도하라’는 주문 요청을 내고, 백테스트에서는 엔진이 선택한 수수료·슬리피지·체결 모델로 결과를 계산합니다. 라이브에서는 지원되는 브로커 연결 모듈이 실제 주문 전달을 맡습니다.</li>
                 </ol>
                 <figure>
-                  
+
                   <figcaption><b>이미지 예시: 시장가 매수의 슬리피지</b> · 실제로는 여러 호가에서 나누어 체결될 수 있으며, 이 이미지는 원리를 단순화한 것입니다.</figcaption>
                 </figure>
                 <p>즉 <b>Docker는 실행 환경</b>, <b>LEAN은 흐름을 관리하고 이벤트를 전달하는 엔진</b>, <b>사용자 Python 코드는 엔진이 호출하는 전략 규칙</b>입니다. ‘이벤트 기반’은 가격 데이터 등이 들어올 때마다 엔진이 전략 코드를 깨워 실행하는 방식이라고 이해하면 됩니다.</p>
@@ -907,14 +907,14 @@
                 <p>설정을 하려면 서버에만 <code>LEAN_SSH_HOST</code>, <code>LEAN_SSH_USER</code>, <code>LEAN_SSH_KEY_PATH</code>, <code>LEAN_REMOTE_WORKDIR</code>를 둡니다. 개인키와 브로커 API 키는 저장소·브라우저·학습 노트에 넣지 말고 읽기 전용 비밀 파일 또는 비밀관리 도구로 전달해야 합니다. 설정이 비어 있으면 이 서비스의 백테스트 API는 실행을 안전하게 중단하도록 구성되어 있습니다.</p>
                 <p><b>학습 순서:</b> 데이터 확인 → 단순 전략 → 비용을 포함한 백테스트 → 기간을 나눈 검증 → 모의 거래 → 소액 실거래 순서가 적절합니다. LEAN의 백테스트 결과는 과거 조건에서의 시뮬레이션일 뿐이며 미래 수익이나 주문 체결을 보장하지 않습니다.</p>
                 <p><a href="https://github.com/QuantConnect/Lean" target="_blank" rel="noopener">LEAN GitHub 저장소</a> · <a href="https://www.lean.io/" target="_blank" rel="noopener">LEAN 공식 문서·CLI 안내</a> · <a href="https://hub.docker.com/r/quantconnect/lean" target="_blank" rel="noopener">공식 Docker 이미지</a></p>
-                
-              
-            
-            
+
+
+
+
           </section><section class="lesson-block"><span>12.3</span>
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-20">위험자산과 무위험자산: 자산배분의 출발점</h2>
-              
+
                 <p>포트폴리오 이론에서는 자산을 미래 수익률의 <b>불확실성</b>을 기준으로 위험자산과 무위험자산에 나누어 생각합니다. 위험자산은 높은 수익을 낼 가능성과 손실 가능성을 함께 가지며, 무위험자산은 특정 기간의 명목 수익률이 비교적 예측 가능한 기준점 역할을 합니다.</p>
                 <div class="lesson-table-wrap">
                   <table class="lesson-table">
@@ -941,13 +941,13 @@
                     </tbody>
                   </table>
                 </div>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-21">위험을 읽는 네 가지 숫자</h2>
-              
+
                 <h3>자산과 팩터: 음식과 영양소처럼 보기</h3>
                 <p>
                   자산(asset)은 주식·채권·부동산·원자재처럼 돈을 투자하는
@@ -1012,7 +1012,7 @@
                   모든 시장 국면에서 시장 평균을 이기거나 위험을 낮춰 주지는
                   않으므로, 장기 성과·비용·회전율·집중 위험을 함께 확인해야 합니다.
                 </p>
-                
+
                 <h3>252 연환산 수익률: 투자 속도를 1년 기준으로 보기</h3>
                 <p>
                   252 연환산 수익률은 며칠 또는 몇 달 동안의 수익률을 주식시장
@@ -1150,21 +1150,21 @@
                     <article><span>샤프 비율</span><strong>약 0.48</strong><small>(15% − 0%) ÷ 31.5%</small></article>
                   </div>
                   <p><b>읽는 법:</b> 이 투자는 31.5%만큼 흔들리면서 15%의 수익을 내 샤프 비율이 약 0.48입니다. 같은 기간에 다른 투자가 똑같이 31.5%만큼 흔들렸지만 수익률은 10%였다면 샤프 비율은 약 0.32입니다. 이 경우 0.48인 첫 번째 투자가 같은 흔들림으로 더 높은 수익을 냈다고 비교할 수 있습니다. 실제 계산에서는 수익률·무위험수익률·변동성의 기간을 반드시 같게 맞춰야 합니다.</p>
-                  
+
                 </section>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-22">블랙 스완: 평소 모형 밖의 큰 충격에 대비하기</h2>
               <p><strong>블랙 스완(Black Swan)</strong>은 평소의 경험과 통상적인 예측 모형이 놓치기 쉬운데, 발생하면 시장과 사회에 매우 큰 영향을 주는 사건을 가리키는 비유입니다. 나심 니콜라스 탈레브가 2007년 책 《블랙 스완》에서 널리 알렸고, 오스트레일리아에서 검은 백조가 발견되어 기존 상식이 깨진 일에서 이름을 가져왔습니다.</p><p>핵심은 <strong>① 기대 밖의 예외적 사건 ② 매우 큰 파급효과 ③ 사건 뒤의 사후 합리화</strong>입니다. 9·11 테러, 2008년 글로벌 금융위기, 2020년 코로나19 팬데믹은 큰 충격 사례로 자주 언급되지만, 엄밀히 블랙 스완인지에는 견해 차이가 있습니다.</p><p><strong>중요한 것은 사건을 정확히 맞히는 것이 아니라 견디는 힘을 만드는 것입니다.</strong> 손실 한도·분산·유동성 확보·과도한 레버리지 제한·스트레스 시나리오를 활용합니다. 회색 코뿔소는 눈앞의 위험을 무시하는 경우, 하얀 코끼리는 비용은 크지만 효용이 낮아 부담이 되는 자산·사업을 비유합니다.</p><p>블랙 스완은 ‘희귀한 충격’이라는 관점이고, <strong>레밍 효과</strong>는 평소에도 군중을 따라가며 위험을 키울 수 있는 행동이라는 점에서 다릅니다. 둘 다 한 사건의 방향을 예언하기보다, <strong>한 자산·한 시나리오에 과도하게 의존하지 않는지</strong> 점검하게 해 주는 경고로 활용할 수 있습니다.</p>
-            
-            
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-23">올웨더 포트폴리오: 여러 경제 날씨에 대비하는 자산배분</h2>
-              
+
                 <h3>올웨더라는 이름과 목표</h3>
                 <p>
                   올웨더 포트폴리오(All Weather Portfolio)는 레이 달리오와
@@ -1205,13 +1205,13 @@
                   벗어났는지 정기적으로 확인하고, 필요할 때만 원래 비율에 가깝게
                   다시 맞추는 방식으로 이해하면 됩니다.
                 </p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-24">자산배분과 마켓 타이밍은 다릅니다: 달러통장 사례</h2>
-              
+
                 <p>
                   달러통장(외화예금)은 실제로 존재하는 은행 상품입니다.
                   정식 명칭은 외화보통예금·외화정기예금 등이며, 원화를
@@ -1259,26 +1259,26 @@
                   과정이 필요하며, 그렇지 않으면 환율을 예측하는 개별 거래와
                   다르지 않습니다.
                 </p>
-                
-              
-            
-            
+
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-25">젠포트·퀀터스 같은 노코드 퀀트 플랫폼: 전략을 만들고 검증하는 흐름</h2>
               <p><strong>젠포트(뉴지스탁)와 퀀터스</strong>는 코드를 직접 작성하지 않고 조건·팩터·비중을 화면에서 조합해 전략을 만들고 백테스트할 수 있는 국내 퀀트 플랫폼의 예입니다. 두 서비스 모두 전략을 실전 계좌 운용에 연결하는 기능을 안내하지만, 이용 가능한 자산·증권사·거래소·주문 방식과 비용은 상품·계좌·시점에 따라 달라질 수 있습니다.</p><p>전략은 “재무 지표가 일정 기준을 충족하는 종목 중 최근 3개월 성과가 좋은 20종목을 고르고, 매월 한 번 다시 구성한다”처럼 간단한 규칙부터 시작합니다. 백테스트에서는 <strong>CAGR만 보지 말고 MDD, 거래 횟수·보유기간·회전율과 비용 차감 뒤 성과</strong>를 함께 확인합니다.</p><p>실전 연결 전에는 <strong>표본 밖 기간에서도 결과가 유지되는지</strong>, 작은 종목에서 실제 체결이 가능한지, 수수료·세금·슬리피지와 리밸런싱 비용을 넣었는지, 자동주문 대신 알림·수동 주문도 가능한지 확인하세요. 가입 전 계좌 연동 범위와 수수료·이용권 정책은 공식 화면에서 다시 확인해야 합니다.</p><p><strong>조건을 계속 늘려 과거 수익률만 높이는 과적합은 흔한 함정입니다.</strong> 자동 주문을 켜더라도 주문 결과·오류 알림을 확인하고, 예상 밖 손실이나 급변동 때 중단할 기준을 미리 정해야 합니다. <strong>플랫폼은 도구이지 수익을 보장하는 전략이 아닙니다.</strong></p>
-              
+
                 <h3>함께 활용할 기업 분석·금융 데이터 서비스</h3>
                 <p><a href="https://www.butler.works/ko/home" target="_blank" rel="noopener">버틀러</a>는 재무제표·실적·공시와 여러 증권 계좌의 보유 종목을 한곳에서 살펴보도록 돕는 기업 분석 플랫폼입니다.</p>
                 <p><a href="https://deepsearch.com/" target="_blank" rel="noopener">딥서치(DeepSearch)</a>는 기업 조사, 투자 분석과 가치평가에 활용할 수 있는 금융 데이터·AI 분석 도구를 제공합니다.</p>
                 <p><a href="https://comp.fnguide.com/" target="_blank" rel="noopener">FnGuide Company Guide</a>에서는 기업 개요, 재무제표, 실적 추이, 시장 예상치와 업종 비교를 한 화면에서 확인할 수 있습니다.</p>
                 <p><a href="https://www.antock.com/" target="_blank" rel="noopener">앤톡(Antock)</a>은 비상장기업·스타트업을 포함한 기업 데이터와 금융 AI 분석 사례를 살펴볼 수 있는 서비스입니다.</p>
                 <p><strong>활용 방법:</strong> 분석 서비스에서 종목 조건과 재무정보를 확인하고, 노코드 퀀트 플랫폼에서 전략으로 만든 뒤 백테스트 결과를 검증합니다. 중요한 숫자는 최신 공시 원문과 재무제표로 다시 확인해야 하며, 어떤 서비스도 매매 결과나 수익을 보장하지 않습니다.</p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-26">벰버거의 페어 트레이딩: 함께 움직이던 두 가격의 간격 보기</h2>
               <p><strong>페어 트레이딩(pair trading)</strong>은 비슷한 업종·사업 구조처럼 과거에 함께 움직이는 경향이 있었던 두 자산의 가격 간격이 일시적으로 벌어졌을 때, <strong>비싸진 쪽은 매도(숏)하고 싼 쪽은 매수</strong>해 간격이 다시 좁아지는지를 보는 통계적 차익거래 접근입니다. 1980년대 모건스탠리의 제리(제럴드) 벰버거가 개척한 방식으로 널리 알려져 있습니다.</p><h3>볼린저 밴드와 페어 트레이딩의 공통점</h3><p><b>볼린저 밴드</b>는 한 종목의 가격이 평소 움직이던 범위를 차트에 표시합니다. 예를 들어 최근 가격이 주로 9,500원에서 10,500원 사이였다가 오늘 10,800원이 되었다면, “평소보다 많이 올랐다”는 사실을 쉽게 알아볼 수 있습니다. 그렇다고 내일 반드시 떨어진다는 뜻은 아닙니다. <b>페어 트레이딩</b>은 한 종목의 가격 대신 두 종목 사이의 간격을 봅니다. 평소 두 주식의 가격 차이가 2,000원 정도였는데 갑자기 5,000원으로 벌어졌다면, 그 간격이 다시 줄어드는지를 살펴보는 방식입니다.</p>
                 <h3>20일 설정과 5일 설정은 무엇이 다를까요?</h3>
@@ -1312,11 +1312,11 @@
                     <li><b>네 요소를 비교하세요.</b> 주황색은 실제 가격, 파란색은 이동평균, 위·아래 보라색 점선은 밴드의 경계, 두 점선 사이의 연보라색 면은 밴드 영역입니다. 아래 결과 문장이 오늘 가격의 위치를 알려 줍니다.</li>
                   </ol>
                   <p><b>읽는 법:</b> 밴드 안이면 최근 범위 안, 위쪽 밖이면 평소보다 많이 오른 상태, 아래쪽 밖이면 평소보다 많이 내린 상태입니다. 밴드 밖에 있다는 이유만으로 바로 사고팔아야 한다는 뜻은 아닙니다.</p>
-                  
+
                   <div>낮은 가격 · 94평균 근처 · 100평균 위 · 102높은 가격 · 112</div>
-                  
+
                   <div><span><i></i>주황 실선 · 실제 가격</span><span><i></i>파랑 실선 · 이동평균</span><span><i></i>보라 점선 · 상단/하단 경계</span><span><i></i>연보라 면 · 밴드 전체</span></div>
-                  
+
                   <div>
                     <article><span>마지막 가격</span><strong id="bollingerPrice">101</strong></article><article><span id="bollingerMeanLabel">20일 평균</span><strong id="bollingerMean">—</strong></article><article><span>상단 밴드</span><strong id="bollingerUpper">—</strong></article><article><span>하단 밴드</span><strong id="bollingerLower">—</strong></article>
                   </div>
@@ -1324,11 +1324,11 @@
                   <div id="bollingerRealSimulator">
                     <h4 id="bollingerRealTitle">실제 KOSPI 200 차트에 볼린저 밴드 적용하기</h4>
                     <p>실제 일별 종가에 이동평균과 상단·하단 밴드를 겹쳐 봅니다. 기간과 표준편차 배수를 바꾸면 밴드의 시작점과 폭이 어떻게 달라지는지 확인할 수 있습니다.</p>
-                    
+
                     <p><b>두 기간은 역할이 다릅니다.</b> ‘최근 6개월’은 화면에 보여 줄 차트 범위이고, ‘20일’은 차트의 각 날짜에서 평균을 계산할 거래일 수입니다. 차트 시작일 이전의 종가도 계산에만 사용하므로 이동평균과 밴드는 차트 첫 표시일부터 날짜에 맞춰 나타납니다.</p>
                     <p id="bollingerMultiplierHelp"><b>표준편차 배수는 밴드의 폭입니다.</b> 이동평균을 도로의 중앙선, 표준편차 1개를 차선 한 칸이라고 생각해 보세요. ±2σ는 중앙선에서 위·아래로 두 칸 떨어진 곳에 경계를 긋는다는 뜻입니다.</p>
                     <div><span><i></i>주황 실선 · 종가</span><span><i></i>파랑 실선 · 이동평균</span><span><i></i>보라 점선 · 상단/하단 밴드</span><span><i></i>연보라 면 · 밴드 영역</span></div>
-                    
+
                     <div>
                       <article><span>최근 종가</span><strong id="bollingerRealClose">—</strong></article><article><span>이동평균</span><strong id="bollingerRealMiddle">—</strong></article><article><span>상단 밴드</span><strong id="bollingerRealUpper">—</strong></article><article><span>하단 밴드</span><strong id="bollingerRealLower">—</strong></article>
                     </div>
@@ -1342,9 +1342,9 @@
                       <article><b>한 종목 볼린저 밴드</b>한 종목 가격 ↔ 그 종목의 이동평균을 비교합니다. “A가 자기 평소 가격보다 많이 움직였나?”를 묻습니다.</article>
                       <article><b>두 종목 페어 트레이딩</b>A와 B의 가격 간격 ↔ 평소 간격을 비교합니다. “두 종목 사이가 평소보다 많이 벌어졌나?”를 묻습니다.</article>
                     </div>
-                    
+
                     <div><span><i></i>주황 · A 가격</span><span><i></i>초록 · B 가격</span><span><i></i>검정 · A−B 간격</span><span><i></i>보라 점선 · 간격 밴드</span></div>
-                    
+
                     <div>
                       <article><span>A 마지막 가격</span><strong id="bollingerPairAStat">108</strong></article><article><span>B 마지막 가격</span><strong id="bollingerPairBStat">100</strong></article><article><span>현재 A−B 간격</span><strong id="bollingerPairGap">8</strong></article><article><span>평소 5일 간격</span><strong id="bollingerPairMean">—</strong></article>
                     </div>
@@ -1353,12 +1353,12 @@
                   </div>
                 </section>
                 <p><b>숫자로 보면 간단합니다.</b> 평소 비슷하게 움직이던 A와 B가 모두 100원이었는데 A만 110원으로 올랐다고 가정합니다. A는 110원에 빌려서 팔고, 상대적으로 싼 B는 100원에 삽니다. 나중에 둘 다 105원이 되면 A는 5원, B도 5원의 이익이 생겨 합계 10원이 됩니다. 실제로는 여기서 수수료와 주식을 빌리는 비용 등을 빼야 합니다.</p><p><b>진행 순서는 네 단계입니다.</b> ① 같은 업종처럼 평소 함께 움직이는 두 종목을 고릅니다. ② 두 가격이 평소보다 크게 벌어졌는지 봅니다. ③ 비싸 보이는 종목은 팔고 싼 종목은 삽니다. ④ 가격 차이가 다시 줄면 두 거래를 모두 끝냅니다. 예상과 달리 차이가 계속 커지면 미리 정한 손실 금액에서 거래를 중단합니다.</p><p><b>두 가격이 반드시 다시 만나는 것은 아닙니다.</b> A가 110원에서 130원으로 더 오르고 B가 100원에서 90원으로 내리면, A에서 20원과 B에서 10원을 잃어 합계 30원의 손실이 생깁니다. 기업 실적이나 산업 환경이 달라지면 과거에 함께 움직이던 관계가 깨질 수 있습니다. 따라서 이 방법은 시장 전체의 상승·하락 영향을 줄이려는 방법일 뿐, 손실이 없는 투자는 아닙니다.</p>
-            
-            
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-27">시장 분위기 알아보기: 잔잔한지 불안한지 추정하는 HMM</h2>
-              
+
                 <p><strong>한마디로 HMM은 최근 가격 움직임을 보고 현재 시장 분위기를 짐작하는 계산법입니다.</strong> 화면에 ‘오늘은 불안한 시장’이라는 이름표가 붙지는 않지만, 가격이 얼마나 크게 오르내렸는지를 보면 어느 정도 추정할 수 있습니다.</p>
                 <p><b>날씨를 짐작하는 것과 비슷합니다.</b> 밖을 직접 보지 못해도 우산을 든 사람이 많고 바닥이 젖어 있으면 비가 왔다고 짐작할 수 있습니다. HMM도 최근 가격이 조금씩 움직이면 ‘잔잔한 시장’, 큰 폭으로 자주 움직이면 ‘불안한 시장’일 가능성이 높다고 계산합니다.</p>
                 <ol>
@@ -1367,13 +1367,13 @@
                   <li><b>확률로 보여 줍니다.</b> 예를 들어 ‘잔잔함 25%, 불안함 75%’처럼 어느 쪽에 가까운지 표시합니다.</li>
                 </ol>
                 <p><b>사용 예:</b> 불안함이 80%로 높게 나오면 새 투자를 잠시 미루거나 투자금액을 줄이는 안전 규칙에 활용할 수 있습니다. 다만 HMM은 내일 주가가 오를지 내릴지를 맞히는 기계가 아니며, 현재 시장이 얼마나 불안해 보이는지를 판단하도록 돕는 도구입니다.</p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-28">퀀트 역사를 만든 인물·회사·매매기법</h2>
-              
+
                 <p>
                   앞서 본 에드워드 소프·벰버거·제임스 사이먼스 외에도 퀀트
                   투자의 역사에는 이론을 만든 학자, 이를 실전 운용으로 옮긴
@@ -1432,14 +1432,14 @@
                     </tbody>
                   </table>
                 </div>
-                
-              
-            
-            
+
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-29">초단타 주문은 어떻게 공정하게 관리할까: 해외 사례와 한국 규제</h2>
-              
+
                 <p><b>초단타 거래</b>는 컴퓨터가 매우 짧은 시간에 주문을 내고 고치거나 취소하는 방식입니다. 빠르다는 이유만으로 불법인 것은 아닙니다. 중요한 것은 <b>고객에게 약속한 가격과 주문 경로를 지켰는지, 다른 투자자를 속이는 주문을 냈는지</b>입니다.</p>
                 <h3>10원 차이로 이해하는 주문 공정성</h3>
                 <p>내가 주식을 10,000원에 사려고 할 때 시장에 9,990원 매도 주문이 있다면 더 싼 가격을 먼저 확인하는 것이 유리합니다. 이를 놓치면 한 주당 10원이지만 1만 주에서는 10만 원의 차이가 납니다. 고객은 주문이 어디로 전달됐고 어떤 가격에 체결됐는지 알 수 있어야 합니다.</p>
@@ -1451,13 +1451,13 @@
                   <li><b>이상 주문 감시:</b> 거래소는 짧은 시간에 반복되는 주문·취소와 가격에 미친 영향을 분석합니다. 실제로 살 생각 없이 매수세가 큰 것처럼 보이게 하는 주문은 제재 대상이 될 수 있습니다.</li>
                 </ol>
                 <p><b>한 줄로 정리하면:</b> 빠른 주문 자체가 문제가 아니라, 고객과의 약속을 어기거나 시장을 속이는 방식으로 사용했는지가 핵심입니다. 자동 주문도 누가, 어디로, 어떤 가격에 보냈는지 기록하고 감독할 수 있어야 합니다.</p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block">
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-30">단기 매매와 허수성 주문: 빠른 거래와 시세조종의 차이</h2>
-              
+
                 <p><b>짧게 사고파는 것 자체는 허수성 주문이 아닙니다.</b> 실제로 주식을 사고팔 생각이 있는지, 아니면 체결할 생각 없이 큰 주문을 보여 줘 다른 사람을 속이려는지가 가장 중요한 차이입니다.</p>
                 <h3>얼마나 오래 보유하느냐에 따른 구분</h3>
                 <ul>
@@ -1470,13 +1470,13 @@
                 <p>누군가 실제로 살 생각은 없으면서 호가창에 10만 주의 큰 매수 주문을 올렸다고 가정해 보겠습니다. 다른 사람이 “매수세가 강하다”고 생각해 따라 사자 가격이 오르고, 주문이 체결될 것 같아지면 10만 주 주문을 취소한 뒤 자신이 가진 주식을 판다면 시장을 속이려는 주문으로 의심받을 수 있습니다.</p>
                 <p><b>정상적인 주문 취소와도 구분해야 합니다.</b> 가격이 갑자기 바뀌거나 입력 실수를 발견해 주문을 취소할 수 있습니다. 따라서 큰 주문 하나만 보고 판단하지 않고, 실제 체결 의사, 반복된 주문과 취소, 반대편 거래, 시장에 미친 영향을 함께 살펴봅니다.</p>
                 <p><b>한 줄로 정리하면:</b> 스캘핑·데이트레이딩·스윙은 보유 시간이 다른 거래 방식이고, 허수성 주문은 체결할 생각 없는 주문으로 다른 투자자의 판단을 속이려는 행위입니다. 거래가 빠르다는 사실만으로 두 가지가 같아지지는 않습니다.</p>
-              
-            
-            
+
+
+
           </section><section class="lesson-block"><span>27.1</span>
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-31">시장 심리: 남을 따라가는 판단과 처음 본 숫자</h2>
-              
+
                 <p><strong>레밍 효과(Lemming Effect)</strong>는 다른 사람이 한다는 이유만으로 판단을 따라가는 <strong>군집행동</strong>을 가리키는 비유입니다. 실제 레밍이 집단 자살한다는 이야기는 사실이 아니지만, 투자에서는 상승 종목을 뒤늦게 추격하거나 공포가 번질 때 함께 매도하는 현상을 설명하는 표현으로 쓰입니다. 거래량·커뮤니티 반응만으로 매수 근거가 충분한지, 내 손실 한도와 근거가 따로 있는지 확인해야 합니다.</p>
                 <p><strong>앵커링 효과(Anchoring Effect)</strong>는 처음 접한 숫자나 정보가 판단의 ‘닻’이 되는 현상입니다. 예를 들어 ‘최고가 100만 원, 지금 50만 원’이라는 표시를 보면 50만 원이 싸게 느껴질 수 있지만, 그 가격이 기업 가치나 내 투자 목표에 맞는지는 별개의 질문입니다. 퀀트 검증에서도 처음 본 백테스트 수익률 하나에 고정되지 말고, 기간·비용·벤치마크를 바꾼 결과를 함께 봐야 합니다.</p>
                 <p><strong>넛지(Nudge)</strong>의 원래 뜻은 팔꿈치 등으로 누군가를 살짝 툭 건드리는 것입니다. 여기서도 선택을 금지하거나 강요하지 않고, 더 나은 선택을 하도록 가볍게 방향을 알려 주는 환경 설계를 뜻합니다. 자동 저축 기본설정, 위험고지의 눈에 띄는 표시가 예입니다. 투자 앱의 인기순위·강조색·기본 선택도 행동에 영향을 줄 수 있으므로, 화면의 추천과 자신의 판단 기준을 구분해 보세요.</p>
@@ -1485,14 +1485,14 @@
                 <p><strong>가용성 휴리스틱(Availability Heuristic)</strong>에서 <em>heuristic</em>은 모든 정보를 따져 정답을 찾기보다, 빠르게 판단하기 위해 쓰는 간단한 생각의 지름길을 뜻합니다. 가용성 휴리스틱은 실제 발생 확률보다 기억에 쉽게 떠오르는 뉴스·사례·이미지에 판단이 끌리는 경향입니다. 최근의 급등 종목이나 성공담이 반복 노출되면 그것이 흔한 결과처럼 느껴질 수 있습니다. 자극적인 사례 대신 장기 수익률 분포, 실패 사례, 손실 가능성과 표본 수를 함께 확인하는 습관이 필요합니다.</p>
                 <p><strong>보유 효과(Endowment Effect)</strong>에서 <em>endowment</em>(엔다우먼트)는 원래 누군가에게 주어진 재산·기부금 또는 갖게 된 자산을 뜻합니다. 보유 효과는 어떤 자산을 내 것으로 가진 뒤 그 가치를 더 높게 평가하기 쉬운 경향입니다. 이미 산 주식·부동산의 악재를 과소평가하거나 희망 가격만 고집하는 모습으로 나타날 수 있습니다. ‘오늘 현금이 있다면 같은 가격에 다시 살 것인가?’라는 질문은 보유 여부와 별개로 판단하는 데 도움이 됩니다.</p>
                 <p><strong>확증 편향(Confirmation Bias, 컨퍼메이션 바이어스)</strong>은 기존의 믿음과 선택을 뒷받침하는 정보만 찾고 반대 증거는 가볍게 보는 경향입니다. 특정 종목을 산 뒤 긍정적 뉴스·영상만 소비하면 위험 신호를 놓치기 쉽습니다. 투자 근거와 반증 조건, 매도·재검토 기준을 매수 전에 함께 적어 두면 이를 줄이는 데 도움이 됩니다.</p>
-                
-              
-            
-            
+
+
+
+
           </section><section class="lesson-block"><span>27.2</span>
-            
+
               <p class="lesson-kicker">금융 이론 · 자산배분 · 퀀트</p><h2 id="theory-10-32">선택과 경쟁: 기회비용·메기 효과·피그말리온 효과</h2>
-              
+
                 <p><strong>기회비용(Opportunity Cost)</strong>은 하나를 선택하면서 포기한 대안 중 가장 큰 가치를 뜻합니다. 예금·채권·주식 중 하나를 고를 때는 선택한 상품의 기대수익만이 아니라, 포기한 대안의 수익·유동성·위험을 함께 비교해야 합니다. 이미 지출한 돈이나 과거 손실은 되돌릴 수 없는 매몰비용이므로 기회비용과 구분합니다.</p>
                 <p><strong>메기 효과(Catfish Effect)</strong>는 강한 경쟁자의 등장으로 기존 참여자가 더 효율적·혁신적으로 움직인다는 비유입니다. 새 플랫폼·기술·저가 경쟁자가 등장했을 때 기업의 비용 구조와 서비스가 개선될 수 있지만, 경쟁 심화가 모든 기업의 이익 증가를 보장하지는 않습니다. 투자 분석에서는 경쟁사가 늘어난 사실뿐 아니라 가격 경쟁, 점유율, 수익성 변화를 확인해야 합니다.</p>
                 <p><strong>피그말리온 효과(Pygmalion Effect)</strong>는 긍정적 기대와 지원이 행동·성과에 영향을 줄 수 있다는 심리학적 개념입니다. 시장에서는 투자자 기대가 자금 조달·인재 확보·주가에 영향을 주는 자기실현적 과정으로 비유되기도 합니다. 다만 기대만으로 기업 실적이 만들어지는 것은 아니므로, 매출·현금흐름·경쟁력 같은 확인 가능한 자료와 분리해서 판단해야 합니다.</p>
@@ -1505,8 +1505,8 @@
                 <p><strong>링겔만 효과(Ringelmann Effect)와 사회적 태만(Social Loafing)</strong>은 집단이 커질수록 개인의 노력·책임이 줄어들 수 있는 현상을 말합니다. 두 용어는 관련 있지만 완전히 같은 뜻은 아닙니다. 기업에서는 주주가 많고 책임이 분산될수록 개별 감시 유인이 약해질 수 있으므로, 이사회·공시·감사·의결권 구조 같은 거버넌스 장치를 함께 살펴야 합니다.</p>
                 <p><strong>호손 효과(Hawthorne Effect)</strong>는 관찰 또는 측정되고 있다는 인식 때문에 행동이 달라질 수 있는 현상입니다. 주주 행동주의, 언론 보도, 규제기관의 조사 뒤 기업 행동이 달라지는 과정을 비유적으로 이해하는 데 쓸 수 있습니다. 다만 원래 호손 연구의 해석은 논쟁이 많으므로, 관찰만으로 경영 효율이나 주가가 반드시 좋아진다고 단정해서는 안 됩니다.</p>
                 <p><strong>스티그마 효과(Stigma Effect, 낙인 효과)</strong>는 부정적 평판이나 분류가 신뢰·기회·자금조달 조건을 계속 악화시킬 수 있는 현상입니다. 피그말리온 효과의 엄밀한 ‘반대말’이라기보다, 부정적 기대가 자기실현적으로 작동할 수 있는 관련 개념으로 보는 편이 정확합니다. 분식회계·연체 같은 이력이 남은 기업은 낙인뿐 아니라 실제 재무 상태와 개선 조치도 함께 평가해야 합니다.</p>
-                
-              
-            
-            
+
+
+
+
           </section></article></section></div></main></div><script>document.querySelectorAll("img[data-port8000]").forEach(function(img){img.src=location.protocol+"//"+location.hostname+":8000"+img.dataset.port8000;});</script></body></html>

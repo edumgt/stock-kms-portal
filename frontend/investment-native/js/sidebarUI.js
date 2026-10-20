@@ -4,7 +4,7 @@
  */
 const DESKTOP_BREAKPOINT = 1024;
 let _sidebarOpen = window.innerWidth > DESKTOP_BREAKPOINT;
-const MENU_SECTION_ORDER = ['review', 'learn', 'quiz', 'visualization', 'portfolio', 'quant'];
+const MENU_SECTION_ORDER = ['review', 'learn', 'visualization', 'portfolio', 'quant'];
 
 // SPA와 정적 페이지가 같은 메뉴 순서를 유지하도록 실제 DOM 순서를 맞춘다.
 function orderSidebarSections() {
@@ -173,7 +173,7 @@ function toggleNav(id) {
   const open = el.classList.toggle('open');
   if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
 }
-// auto-open a section (e.g. quiz/learn while that view is active)
+// auto-open a section (e.g. learn while that view is active)
 window._openNavSection = function(id) {
   const el = document.getElementById('nav-' + id);
   const chev = document.getElementById('chev-' + id);
