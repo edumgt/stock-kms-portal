@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "Domain RAG MVP"
     app_env: str = "dev"
+    investment_test_api_base: str = "http://crypto-mock-python:8200"
     investment_api_base: str = "http://investment-backend:8000"
 
     qdrant_host: str = "localhost"

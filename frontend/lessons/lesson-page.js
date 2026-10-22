@@ -17,7 +17,7 @@ const app = document.querySelector('#lessonApp');
 const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
 function nav() {
-  return `<header class="portal-gnb"><a href="/?view=home" class="portal-brand">투자 분석 포털</a><nav aria-label="주요 메뉴"><a href="/?view=home">대시보드</a><a href="/?view=minute-chart">시장정보</a><a href="/?view=chart-drawing">드로잉 차트</a><a href="/?view=data-visualization">데이터 시각화</a><a href="/?view=learn">RAG</a><a href="/?view=investment-practice">투자 실습</a><a href="/?view=home">회원가입/로그인</a><a href="/?view=home">시스템</a></nav></header><aside class="portal-lnb" aria-label="학습 메뉴"><div class="portal-lnb-head"><b>EDUMGT Finance</b><span>투자 분석 · 금융 학습 · RAG 실습</span></div><nav><p>통합 학습 과정 · 10개</p>${LESSONS.map(([n,, label]) => `<a class="${n === number ? 'active' : ''}" href="${n}.html"><b>${n}</b><span>${escapeHtml(label)}</span></a>`).join('')}</nav></aside>`;
+  return `<header class="portal-gnb"><a href="/?view=home" class="portal-brand">투자 분석 포털</a><nav aria-label="주요 메뉴"><a href="/?view=home">대시보드</a><a href="/?view=minute-chart">시장정보</a><a href="/?view=chart-drawing">드로잉 차트</a><a href="/?view=data-visualization">데이터 시각화</a><a href="/?view=learn">RAG</a><a href="/?view=home">회원가입/로그인</a><a href="/?view=home">시스템</a></nav></header><aside class="portal-lnb" aria-label="학습 메뉴"><div class="portal-lnb-head"><b>EDUMGT Finance</b><span>투자 분석 · 금융 학습 · RAG 실습</span></div><nav><p>통합 학습 과정 · 10개</p>${LESSONS.map(([n,, label]) => `<a class="${n === number ? 'active' : ''}" href="${n}.html"><b>${n}</b><span>${escapeHtml(label)}</span></a>`).join('')}</nav></aside>`;
 }
 
 function addToc(root) {

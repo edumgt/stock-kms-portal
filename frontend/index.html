@@ -7,15 +7,16 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/style.css?v=20261015-capture-left" />
+  <link rel="stylesheet" href="/static/style.css?v=20261022-investment-test-1" />
   <link rel="stylesheet" href="/static/investment-native/styles.css?v=20261016-chat-tall" />
   <link rel="stylesheet" href="/static/assets/simulation-workbench.css?v=20260919-small-text110" />
 <link rel="stylesheet" href="https://www.edumgt.co.kr/css/common.css?v=20261012-common-3" />
+<script defer src="/static/assets/compact-typography.js?v=20261022-92"></script>
 </head>
 <body>
   <div class="offcanvas-backdrop" id="offcanvasBackdrop" aria-hidden="true"></div>
   <div class="app-layout">
-    <aside class="sidebar" id="learningPanel" aria-label="학습과 문서 등록">
+    <aside class="sidebar" id="learningPanel" aria-label="학습 과정">
       <div class="sidebar-header">
         <div class="panel-title-row">
           <h1 class="logo"><i class="fa-solid fa-chart-pie"></i> EDUMGT Finance</h1>
@@ -40,8 +41,8 @@
       </nav>
 
       <div class="sidebar-section rag-panel" id="ragPanel">
-        <p class="nav-label">RAG 자료 등록</p>
-        <p class="section-copy">예금·펀드·금·부동산·수집품·중고거래·보험·연금 등 생활 속 거래 교재를 TXT 또는 PDF로 등록하세요.</p>
+        <p class="nav-label">답변 근거 자료 첨부</p>
+        <p class="section-copy">질문과 관련된 보고서·공시·교재를 TXT/PDF로 첨부하거나, 아래에 제목과 원문을 직접 등록하세요.</p>
         <div class="upload-area" id="uploadArea">
           <input type="file" id="fileInput" accept=".txt,.pdf" hidden />
           <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
@@ -81,8 +82,8 @@
           <button class="brand-nav-btn nav-item" data-view="chart-drawing"><i class="fa-solid fa-pen-ruler"></i> 드로잉 차트</button>
 
           <button class="brand-nav-btn" data-view="data-visualization"><i class="fa-solid fa-chart-column"></i> 데이터 시각화</button>
+          <button class="brand-nav-btn" data-view="investment-test"><i class="fa-solid fa-vial"></i> 투자테스트</button>
           <button class="brand-nav-btn" data-view="learn"><i class="fa-solid fa-comments"></i> RAG</button>
-          <button class="brand-nav-btn" data-view="investment-practice"><i class="fa-solid fa-compass"></i> 투자 실습</button>
           <button class="brand-nav-btn account-nav-btn" id="authButton" type="button"><i class="fa-solid fa-user"></i> 회원가입/로그인</button>
           <button class="brand-nav-btn system-nav-btn" id="openRightPanel"><i class="fa-solid fa-sliders"></i> 시스템</button>
         </div>
@@ -115,7 +116,7 @@
       <footer class="site-footer-unified">© 2026 (주)에듀엠지티 All rights reserved.</footer>
     </main>
 
-    <aside class="ref-panel" id="referencePanel" aria-label="RAG 자료 등록과 참고 문서">
+    <aside class="ref-panel" id="referencePanel" aria-label="시스템 도구와 참고 문서">
       <div class="ref-header">
         <h3><i class="fa-solid fa-sliders"></i> 시스템 도구</h3>
         <button class="btn-ghost" id="closeRefBtn"><i class="fa-solid fa-xmark"></i></button>
@@ -234,7 +235,7 @@
   <script src="/static/assets/day4-project-schedule.js?v=20260919-100-120-hours"></script>
   <script src="/static/assets/vendor/lightweight-charts-5.0.9.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/apexcharts@7.1.0"></script>
-  <script src="/static/app.js?v=20261020-remove-quiz"></script>
+  <script src="/static/app.js?v=20261022-investment-test-1"></script>
   <script src="/static/auth.js?v=20260922-auth-fix"></script>
   <script src="/static/capture.js?v=20260922-capture-merge"></script>
   <script src="/static/assets/modal-fit.js?v=20260905-simulator-specific-hints"></script>

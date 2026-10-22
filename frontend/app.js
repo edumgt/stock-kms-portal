@@ -650,8 +650,37 @@ KOSDAQ|웹젠|게임`,
   const $tickGuideModal = document.getElementById('tickGuideModal');
   const $tickGuideBody = document.getElementById('tickGuideBody');
 
-  // 좌측은 학습 메뉴, 우측은 RAG 자료와 참고 문서에만 집중합니다.
-  $referencePanel.insertBefore($ragPanel, $refList);
+  // Document supplementation belongs to the RAG workflow, not system tools.
+  let lastRagQuestion = '';
+  let ragDocumentReady = false;
+  const ragTools = document.createElement('section');
+  ragTools.className = 'rag-document-tools hidden';
+  ragTools.setAttribute('aria-label', 'RAG 근거 보완');
+  ragTools.innerHTML = '<span>답변의 근거가 부족한가요?</span><button type="button" data-rag-document-open>근거 부족? 문서 첨부</button><button type="button" data-rag-retry hidden>이전 질문 다시 묻기</button>';
+  $messages.before(ragTools);
+  const ragDocumentDialog = document.createElement('dialog');
+  ragDocumentDialog.id = 'ragDocumentDialog';
+  ragDocumentDialog.setAttribute('aria-labelledby', 'ragDocumentDialogTitle');
+  ragDocumentDialog.innerHTML = '<header><h2 id="ragDocumentDialogTitle">RAG 근거 문서 보완</h2><button type="button" data-rag-document-close aria-label="문서 첨부 닫기">×</button></header><p class="rag-document-help">답변에 필요한 자료가 없거나 설명이 부족하면 관련 원문을 첨부하세요. 등록이 완료되면 이전 질문을 다시 물어 새 근거를 검색할 수 있습니다.</p><div id="ragDocumentMount"></div><div class="rag-document-actions"><button type="button" data-rag-retry hidden>이전 질문 다시 묻기</button><p>등록만으로 기존 답변이 바뀌지는 않습니다. 출처·기준일이 있는 자료를 사용하고 등록 권한과 개인정보 포함 여부를 확인하세요.</p></div>';
+  document.body.appendChild(ragDocumentDialog);
+  ragDocumentDialog.querySelector('#ragDocumentMount').appendChild($ragPanel);
+  function refreshRagRetry() {
+    document.querySelectorAll('[data-rag-retry]').forEach(button => {
+      button.hidden = !ragDocumentReady || !lastRagQuestion;
+      button.disabled = state.loading;
+    });
+  }
+  function openRagDocuments() {
+    if (state.activeView !== 'learn') setView('learn');
+    if (!ragDocumentDialog.open) ragDocumentDialog.showModal();
+  }
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-rag-document-open]')) openRagDocuments();
+    if (event.target.closest('[data-rag-document-close]')) ragDocumentDialog.close();
+    if (event.target.closest('[data-rag-retry]') && lastRagQuestion && !state.loading) {
+      ragDocumentDialog.close(); sendQuestion(lastRagQuestion);
+    }
+  });
 
   $theoryDayButtons.forEach(btn => {
     btn.addEventListener('click', () => openTheoryDay(Number(btn.dataset.theoryDay)));
@@ -672,6 +701,8 @@ KOSDAQ|웹젠|게임`,
   $closeLeftPanel.addEventListener('click', () => setPanel('left', false));
   $offcanvasBackdrop.addEventListener('click', () => closePanels());
   $messages.addEventListener('click', event => {
+    const lessonPractice = event.target.closest('[data-lesson-practice]');
+    if (lessonPractice) { openIntegratedLesson(state.activeLessonId, lessonPractice.dataset.lessonPractice); return; }
     const practiceLink = event.target.closest('[data-practice-view]');
     if (practiceLink) setView(practiceLink.dataset.practiceView);
     const term = event.target.closest('[data-glossary-term]');
@@ -754,9 +785,13 @@ KOSDAQ|웹젠|게임`,
   });
 
   function setView(view) {
+    const legacyPractice = { 'investment-practice': ['learn-10', 'theory'], 'portfolio-simulation': ['learn-10', 'portfolio-simulation'], simulation: ['learn-11', 'simulation'], backtest: ['learn-06', 'backtest'], basis: ['learn-06', 'basis'] }[view];
+    if (legacyPractice) { openIntegratedLesson(...legacyPractice); return; }
     stopTickDashboard();
     stopDashboardAssets();
     state.activeView = view;
+    ragTools.classList.toggle('hidden', view !== 'learn');
+    if (view !== 'learn') ragDocumentDialog.close();
     window.dispatchEvent(new CustomEvent('finance:view', { detail: view }));
     // 메뉴 전환 중 이전 화면이 한 프레임이라도 남지 않도록 먼저 비웁니다.
     $messages.replaceChildren();
@@ -768,6 +803,7 @@ KOSDAQ|웹젠|게임`,
     if (view === 'minute-chart') renderMinuteChart();
     if (view === 'chart-drawing') renderHome();
     if (view === 'data-visualization') renderDataVisualization();
+    if (view === 'investment-test') renderInvestmentTest();
     if (view === 'stocks') renderStocksView();
     if (view === 'learn') {
       state.activeLesson = null;
@@ -775,7 +811,7 @@ KOSDAQ|웹젠|게임`,
       showWelcome();
     }
     if (view === 'lessons') {
-      if (state.activeLesson) renderIntegratedLesson(state.activeLesson);
+      if (state.activeLesson) { const id = { '01':'learn-10-1','02':'learn-10-2','03':'learn-10-3','04':'learn-11','05':'learn-03','06':'learn-05','07':'learn-04','08':'learn-06','09':'learn-07','10':'learn-10' }[state.activeLesson]; openIntegratedLesson(id, queryParams.get('practice') || 'theory'); }
       else renderTheoryIndex();
     }
     if (view === 'theory') renderTheoryIndex();
@@ -784,7 +820,6 @@ KOSDAQ|웹젠|게임`,
       closePanels();
       requestAnimationFrame(() => $simulationPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     }
-    if (view === 'investment-practice') renderInvestmentPracticeHub();
     if (view === 'portfolio-simulation') renderPortfolioSimulation();
     if (view === 'basis') renderBasisWorkflow();
     if (view === 'backtest') renderBacktestWorkflow();
@@ -1459,6 +1494,12 @@ KOSDAQ|웹젠|게임`,
 
   // Data visualization uses the original 8000 world-market module and its
   // chart APIs; it is rendered directly in the 80 page, not in an iframe.
+  function renderInvestmentTest() {
+    const lesson = new URL(location.href).searchParams.get('testLesson');
+    const src = '/static/investment-test/index.html' + (lesson ? '?lesson=' + encodeURIComponent(lesson) : '');
+    $messages.innerHTML = `<article class="content-page investment-test-page"><iframe src="${src}" title="투자테스트 · 분석 실습" style="display:block;width:100%;height:calc(100dvh - 130px);min-height:480px;border:0;" loading="eager"></iframe></article>`;
+  }
+
   function renderDataVisualization() {
     const visualizations = [
       ['world', 'fa-earth-asia', '세계 시장', '국가별 시가총액 · 지수'],
@@ -1501,7 +1542,18 @@ KOSDAQ|웹젠|게임`,
       .catch(() => { chartDrawingReady = false; });
   }, { once: true });
 
-  function openIntegratedLesson(lessonId) {
+  const LESSON_PRACTICES = {
+    '04': [{ key:'simulation', label:'시장 충격 점검', note:'금리·인플레이션·급락이 자산별로 다르게 작용하는 이유를 확인하세요.' }],
+    '06': [{ key:'backtest', label:'분석 규칙 검증', note:'기술적 분석에서 배운 규칙을 과거 데이터로 검증하고 비용·낙폭을 비교하세요.' }],
+    '08': [{ key:'backtest', label:'LEAN 전략 검증', note:'거래 규칙과 테스트 기간을 정하고, 수익률과 위험 지표를 함께 해석하세요.' }, { key:'basis', label:'선현물 베이시스', note:'선물·옵션 학습과 연결해 KOSPI 200 현물, 이론 선물가격, 직접 입력한 실제 선물가격의 차이를 비교하세요. 이론값과 실제 시장값을 구분하고 기준 시점·만기·금리·배당 가정을 확인하세요.' }],
+    '09': [{ key:'simulation', label:'상품별 충격 비교', note:'주식·ETF, 채권, 대체자산의 충격 반응을 비교해 분산의 한계를 살펴보세요.' }],
+    '10': [
+      { key:'portfolio-simulation', label:'포트폴리오 계획', note:'목표·납입·위험성향을 바꾸며 5,000개 가상 경로의 결과 범위를 비교하세요.' },
+      { key:'simulation', label:'자산배분 충격 점검', note:'같은 충격에서도 자산별 손익이 달라지는 이유를 학습하고 배분 계획을 점검하세요.' },
+      { key:'backtest', label:'퀀트 전략 검증', note:'배분·퀀트 규칙을 정하고 LEAN 결과의 수익률·낙폭·비용 가정을 함께 확인하세요.' },
+    ],
+  };
+  function openIntegratedLesson(lessonId, practice = 'theory') {
     if (!lessonId) return;
     const lessonNumber = {
       'learn-10-1': '01', 'learn-10-2': '02', 'learn-10-3': '03', 'learn-11': '04',
@@ -1513,10 +1565,27 @@ KOSDAQ|웹젠|게임`,
     stopTickDashboard();
     stopDashboardAssets();
     state.activeView = 'learning';
+    ragTools.classList.add('hidden');
+    ragDocumentDialog.close();
+    state.activeLesson = lessonNumber;
+    state.activeLessonId = lessonId;
+    window.dispatchEvent(new CustomEvent('finance:view', { detail: 'learning' }));
     $viewButtons.forEach(btn => btn.classList.toggle('active', false));
     $integratedLessonButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.integratedLesson === lessonId));
     $chatInputArea.classList.add('hidden');
-    $messages.innerHTML = `<article class="content-page integrated-lesson-page"><div class="integrated-lesson-frame"><iframe src="${lessonUrl}" title="통합 학습 과정 ${lessonNumber}" loading="eager"></iframe></div></article>`;
+    const practices = LESSON_PRACTICES[lessonNumber] || [];
+    const selected = practices.find(item => item.key === practice);
+    $messages.innerHTML = `<article class="content-page integrated-lesson-page"><header class="lesson-practice-head"><strong>${escHtml(INTEGRATED_LESSONS.find(([number]) => number === lessonNumber)?.[2] || '통합 학습')}</strong><nav aria-label="이론과 연계 실습"><button type="button" data-lesson-practice="theory" aria-pressed="${!selected}">이론 학습</button>${practices.map(item => `<button type="button" data-lesson-practice="${item.key}" aria-pressed="${selected?.key === item.key}">${escHtml(item.label)}</button>`).join('')}</nav>${selected ? `<p>${escHtml(selected.note)}</p>` : practices.length ? '<p>이론을 읽은 뒤 위 연계 실습에서 직접 조건을 바꿔 결과를 확인하세요.</p>' : ''}</header><div id="lessonLearningContent"></div></article>`;
+    const mount = document.getElementById('lessonLearningContent');
+    if (!selected) mount.innerHTML = `<div class="integrated-lesson-frame"><iframe src="${lessonUrl}" title="통합 학습 과정 ${lessonNumber}" loading="eager"></iframe></div>`;
+    else if (selected.key === 'portfolio-simulation') renderPortfolioSimulation(mount);
+    else if (selected.key === 'simulation') renderSimulationGuide(mount);
+    else if (selected.key === 'backtest') renderBacktestWorkflow(mount);
+    else if (selected.key === 'basis') renderBasisWorkflow(mount);
+    const url = new URL(location.href);
+    url.searchParams.set('view', 'lessons'); url.searchParams.set('lesson', lessonNumber);
+    if (selected) url.searchParams.set('practice', selected.key); else url.searchParams.delete('practice');
+    history.replaceState(null, '', url);
     setPanel('left', false);
   }
 
@@ -1580,18 +1649,14 @@ KOSDAQ|웹젠|게임`,
     }
   }
 
-  function renderSimulationGuide() {
-    $messages.innerHTML = `<article class="content-page simulation-page"><header class="simulation-guide-head"><div><div class="content-kicker">MARKET SHOCK WORKBENCH</div><h1>시장 충격 <mark>시뮬레이션</mark></h1></div><p class="content-lead">다양한 시장 충격 시나리오를 골라 주식/ETF·채권·대체자산이 각각 어떻게 반응하는지 비교합니다.</p></header><div class="simulation-workbench" id="simulationMount"></div></article>`;
+  function renderSimulationGuide(target = $messages) {
+    target.innerHTML = `<article class="content-page simulation-page"><header class="simulation-guide-head"><div><div class="content-kicker">MARKET SHOCK WORKBENCH</div><h1>시장 충격 <mark>시뮬레이션</mark></h1></div><p class="content-lead">다양한 시장 충격 시나리오를 골라 주식/ETF·채권·대체자산이 각각 어떻게 반응하는지 비교합니다.</p></header><div class="simulation-workbench" id="simulationMount"></div></article>`;
     document.getElementById('simulationMount').appendChild($simulationPanel);
     renderScenarioResult();
   }
 
-  function renderInvestmentPracticeHub() {
-    $messages.innerHTML = `<article class="content-page investment-practice-page"><header class="practice-hub-head"><div><span>INVESTMENT PRACTICE</span><h1>투자 <mark>실습</mark></h1><p>포트폴리오 설계, 시장 충격 점검, 전략 검증을 하나의 실습 흐름으로 이어갑니다.</p></div></header><section class="practice-hub-grid" aria-label="투자 실습 세부 메뉴"><button data-practice-view="portfolio-simulation"><i class="fa-solid fa-chart-pie"></i><span>01 · 포트폴리오 계획</span><strong>목표 금액 · 납입 · 위험성향</strong><small>가상 경로로 장기 투자 결과 범위를 확인합니다.</small></button><button data-practice-view="simulation"><i class="fa-solid fa-bolt"></i><span>02 · 시장 충격 점검</span><strong>자산배분 스트레스 테스트</strong><small>급락·금리·인플레이션 시나리오를 비교합니다.</small></button><button data-practice-view="backtest"><i class="fa-solid fa-flask"></i><span>03 · 전략 검증</span><strong>LEAN 백테스트 리포트</strong><small>규칙과 과거 성과를 분리해 검토합니다.</small></button></section><section class="practice-flow"><span>포트폴리오 구성</span><i class="fa-solid fa-arrow-right"></i><span>시장 충격 확인</span><i class="fa-solid fa-arrow-right"></i><span>전략 검증</span></section></article>`;
-  }
-
-  function renderPortfolioSimulation() {
-    $messages.innerHTML = `<article class="content-page portfolio-simulation-page"><header class="simulation-guide-head"><div><div class="content-kicker">MONTE CARLO · PORTFOLIO PLAN</div><h1>포트폴리오 <mark>시뮬레이션</mark></h1></div><p class="content-lead">5,000개의 가상 시장 경로에서 투자 계획이 만들 수 있는 결과 범위를 확인합니다.</p></header><section class="portfolio-simulation-explainer"><i class="fa-solid fa-dice"></i><div><strong>한 가지 미래를 예측하지 않습니다</strong><p>보수적(10%), 중간(50%), 긍정적(90%) 결과를 함께 비교해 투자 기간과 납입 계획을 점검하세요.</p></div></section><div class="portfolio-simulation-layout"><section class="portfolio-simulation-form"><h2>내 투자 계획</h2><label>구성 성향<select id="portfolioProfile"><option value="stable">안정 중심</option><option value="balanced" selected>균형 중심</option><option value="growth">성장 중심</option></select></label><label>처음 투자할 금액<input id="portfolioInitial" type="number" min="0" step="100000" value="10000000" /></label><label>매달 더할 금액<input id="portfolioMonthly" type="number" min="0" step="10000" value="500000" /></label><label>투자 기간<select id="portfolioYears"><option value="3">3년</option><option value="5">5년</option><option value="10" selected>10년</option><option value="20">20년</option></select></label><button class="content-cta" id="runPortfolioSimulation"><i class="fa-solid fa-play"></i> 가상 시나리오 보기</button></section><section class="portfolio-simulation-result" id="portfolioSimulationResult"><div class="backtest-empty"><i class="fa-solid fa-chart-area"></i><p>투자 계획을 입력해 결과 범위를 확인하세요.</p></div></section></div><p class="content-disclaimer">교육용 가정에 따른 가상 결과이며 실제 수익률, 세금, 수수료, 물가 및 개인 상황을 반영하지 않습니다. 미래 성과를 보장하지 않습니다.</p></article>`;
+  function renderPortfolioSimulation(target = $messages) {
+    target.innerHTML = `<article class="content-page portfolio-simulation-page"><header class="simulation-guide-head"><div><div class="content-kicker">MONTE CARLO · PORTFOLIO PLAN</div><h1>포트폴리오 <mark>시뮬레이션</mark></h1></div><p class="content-lead">5,000개의 가상 시장 경로에서 투자 계획이 만들 수 있는 결과 범위를 확인합니다.</p></header><section class="portfolio-simulation-explainer"><i class="fa-solid fa-dice"></i><div><strong>한 가지 미래를 예측하지 않습니다</strong><p>보수적(10%), 중간(50%), 긍정적(90%) 결과를 함께 비교해 투자 기간과 납입 계획을 점검하세요.</p></div></section><div class="portfolio-simulation-layout"><section class="portfolio-simulation-form"><h2>내 투자 계획</h2><label>구성 성향<select id="portfolioProfile"><option value="stable">안정 중심</option><option value="balanced" selected>균형 중심</option><option value="growth">성장 중심</option></select></label><label>처음 투자할 금액<input id="portfolioInitial" type="number" min="0" step="100000" value="10000000" /></label><label>매달 더할 금액<input id="portfolioMonthly" type="number" min="0" step="10000" value="500000" /></label><label>투자 기간<select id="portfolioYears"><option value="3">3년</option><option value="5">5년</option><option value="10" selected>10년</option><option value="20">20년</option></select></label><button class="content-cta" id="runPortfolioSimulation"><i class="fa-solid fa-play"></i> 가상 시나리오 보기</button></section><section class="portfolio-simulation-result" id="portfolioSimulationResult"><div class="backtest-empty"><i class="fa-solid fa-chart-area"></i><p>투자 계획을 입력해 결과 범위를 확인하세요.</p></div></section></div><p class="content-disclaimer">교육용 가정에 따른 가상 결과이며 실제 수익률, 세금, 수수료, 물가 및 개인 상황을 반영하지 않습니다. 미래 성과를 보장하지 않습니다.</p></article>`;
     document.getElementById('runPortfolioSimulation').addEventListener('click', runPortfolioSimulation);
     runPortfolioSimulation();
   }
@@ -1870,8 +1935,8 @@ KOSDAQ|웹젠|게임`,
     renderBasisOutput();
   }
 
-  function renderBasisWorkflow() {
-    $messages.innerHTML = `
+  function renderBasisWorkflow(target = $messages) {
+    target.innerHTML = `
       <article class="content-page basis-page">
         <header>
           <div class="content-kicker">FUTURES · SPOT BASIS</div>
@@ -1947,12 +2012,12 @@ KOSDAQ|웹젠|게임`,
     { symbol: 'samsung-em', label: '삼성전기', caption: '매수 후 보유' },
   ];
 
-  function renderBacktestWorkflow() {
+  function renderBacktestWorkflow(target = $messages) {
     const today = new Date().toISOString().slice(0, 10);
     const strategyOptions = BACKTEST_STRATEGIES.map(s => `<option value="${s.value}">${escHtml(s.label)}</option>`).join('');
     const examples = BACKTEST_EXAMPLES.map((e, index) => `<button class="backtest-example ${index === 0 ? 'selected' : ''}" data-example="${e.id}" type="button"><span>${escHtml(e.tag)}</span><strong>${escHtml(e.title)}</strong><small>${escHtml(e.note)}</small><i class="fa-solid fa-arrow-right"></i></button>`).join('');
     const reportChoices = LEAN_REPORTS.map(report => `<button class="lean-report-choice" type="button" data-lean-report="${report.symbol}"><b>${escHtml(report.label)}</b><small>${escHtml(report.caption)}</small><i class="fa-solid fa-eye" aria-hidden="true"></i></button>`).join('');
-    $messages.innerHTML = `<article class="content-page backtest-page"><header class="backtest-page-head"><div class="content-kicker">QUANTCONNECT LEAN · YFINANCE WORKFLOW</div><h1>LEAN <mark>투자 판단 실습</mark></h1><p class="content-lead">테스트 하나를 고르고, 무엇을 검증하는지부터 결과 해석까지 순서대로 확인합니다.</p></header><div class="backtest-workspace"><aside class="backtest-examples" aria-label="저장된 LEAN 실행 결과와 백테스트 예시"><div><span>TEST LIBRARY</span><h2>무엇을 볼지 고르기</h2><p>저장된 실제 LEAN 실행 결과를 바로 보거나, 조건을 바꿔 직접 검증할 상황을 고릅니다.</p></div><nav class="bt-rail-group" aria-label="저장된 LEAN 실행 결과"><div class="bt-rail-label"><i class="fa-solid fa-file-circle-check" aria-hidden="true"></i> 저장된 실행 결과 <em>바로 보기</em></div><div class="bt-rail-list">${reportChoices}</div></nav><nav class="bt-rail-group" aria-label="직접 검증할 상황"><div class="bt-rail-label"><i class="fa-solid fa-flask" aria-hidden="true"></i> 직접 검증 <em>조건 수정 가능</em></div><div class="backtest-example-grid">${examples}</div></nav></aside><main class="backtest-main"><section class="backtest-test-detail" id="backtestTestDetail" aria-live="polite"></section><section class="backtest-canvas" aria-label="백테스트 설정"><div class="workflow-node input"><span>01 · 전략</span><select id="btStrategy" aria-label="예시 전략 선택">${strategyOptions}</select><small id="btStrategyHint">${escHtml(BACKTEST_STRATEGIES[0].hint)}</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node input"><span>02 · 종목 / ETF</span><input id="btTicker" value="005930.KS" maxlength="12" aria-label="종목 티커" /><small>한국: 005930.KS · 미국 ETF: SPY</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node input"><span>03 · 검증 기간</span><div><input id="btStart" type="date" value="2023-01-01" /><input id="btEnd" type="date" value="${today}" /></div><small>전략 성과를 계산할 기간</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node input"><span>04 · 비교 기간</span><div><input id="btCompareStart" type="date" value="2022-01-01" /><input id="btCompareEnd" type="date" value="${today}" /></div><small>다른 시장 국면에서도 확인</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node engine"><span>05 · 실행 엔진</span><strong><i class="fa-brands fa-docker"></i> LEAN</strong><small>가격 데이터 → 원격 Docker</small></div></section><section class="backtest-parameters" aria-label="전략 세부 조건"><label>단기 이동평균 <input id="btShortWindow" type="number" min="2" max="120" value="20" /></label><label>장기 이동평균 <input id="btLongWindow" type="number" min="5" max="300" value="60" /></label><label>적립 간격(거래일) <input id="btDcaInterval" type="number" min="1" max="120" value="21" /></label><label>돌파 기준(거래일) <input id="btBreakoutWindow" type="number" min="5" max="120" value="20" /></label><small>선택한 전략에 해당하는 값만 계산에 반영됩니다.</small></section><div class="backtest-actions"><button class="content-cta" id="runBacktest"><i class="fa-solid fa-play"></i> 이 조건으로 검증하기</button><span>교육용 과거 검증이며 투자 권유가 아닙니다.</span></div></main></div><div class="bt-mode" id="backtestMode" role="status" aria-live="polite"></div><section class="backtest-result" id="backtestResult"><div class="backtest-empty"><i class="fa-solid fa-diagram-project"></i><p>왼쪽 테스트를 고른 뒤 조건을 확인하고 실행하세요.</p></div></section></article>`;
+    target.innerHTML = `<article class="content-page backtest-page"><header class="backtest-page-head"><div class="content-kicker">QUANTCONNECT LEAN · YFINANCE WORKFLOW</div><h1>LEAN <mark>투자 판단 실습</mark></h1><p class="content-lead">테스트 하나를 고르고, 무엇을 검증하는지부터 결과 해석까지 순서대로 확인합니다.</p></header><div class="backtest-workspace"><aside class="backtest-examples" aria-label="저장된 LEAN 실행 결과와 백테스트 예시"><div><span>TEST LIBRARY</span><h2>무엇을 볼지 고르기</h2><p>저장된 실제 LEAN 실행 결과를 바로 보거나, 조건을 바꿔 직접 검증할 상황을 고릅니다.</p></div><nav class="bt-rail-group" aria-label="저장된 LEAN 실행 결과"><div class="bt-rail-label"><i class="fa-solid fa-file-circle-check" aria-hidden="true"></i> 저장된 실행 결과 <em>바로 보기</em></div><div class="bt-rail-list">${reportChoices}</div></nav><nav class="bt-rail-group" aria-label="직접 검증할 상황"><div class="bt-rail-label"><i class="fa-solid fa-flask" aria-hidden="true"></i> 직접 검증 <em>조건 수정 가능</em></div><div class="backtest-example-grid">${examples}</div></nav></aside><main class="backtest-main"><section class="backtest-test-detail" id="backtestTestDetail" aria-live="polite"></section><section class="backtest-canvas" aria-label="백테스트 설정"><div class="workflow-node input"><span>01 · 전략</span><select id="btStrategy" aria-label="예시 전략 선택">${strategyOptions}</select><small id="btStrategyHint">${escHtml(BACKTEST_STRATEGIES[0].hint)}</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node input"><span>02 · 종목 / ETF</span><input id="btTicker" value="005930.KS" maxlength="12" aria-label="종목 티커" /><small>한국: 005930.KS · 미국 ETF: SPY</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node input"><span>03 · 검증 기간</span><div><input id="btStart" type="date" value="2023-01-01" /><input id="btEnd" type="date" value="${today}" /></div><small>전략 성과를 계산할 기간</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node input"><span>04 · 비교 기간</span><div><input id="btCompareStart" type="date" value="2022-01-01" /><input id="btCompareEnd" type="date" value="${today}" /></div><small>다른 시장 국면에서도 확인</small></div><i class="fa-solid fa-arrow-right"></i><div class="workflow-node engine"><span>05 · 실행 엔진</span><strong><i class="fa-brands fa-docker"></i> LEAN</strong><small>가격 데이터 → 원격 Docker</small></div></section><section class="backtest-parameters" aria-label="전략 세부 조건"><label>단기 이동평균 <input id="btShortWindow" type="number" min="2" max="120" value="20" /></label><label>장기 이동평균 <input id="btLongWindow" type="number" min="5" max="300" value="60" /></label><label>적립 간격(거래일) <input id="btDcaInterval" type="number" min="1" max="120" value="21" /></label><label>돌파 기준(거래일) <input id="btBreakoutWindow" type="number" min="5" max="120" value="20" /></label><small>선택한 전략에 해당하는 값만 계산에 반영됩니다.</small></section><div class="backtest-actions"><button class="content-cta" id="runBacktest"><i class="fa-solid fa-play"></i> 이 조건으로 검증하기</button><span>교육용 과거 검증이며 투자 권유가 아닙니다.</span></div></main></div><div class="bt-mode" id="backtestMode" role="status" aria-live="polite"></div><section class="backtest-result" id="backtestResult"><div class="backtest-empty"><i class="fa-solid fa-diagram-project"></i><p>왼쪽 테스트를 고른 뒤 조건을 확인하고 실행하세요.</p></div></section></article>`;
     document.getElementById('runBacktest').addEventListener('click', runBacktest);
     document.getElementById('btStrategy').addEventListener('change', (event) => {
       const chosen = BACKTEST_STRATEGIES.find(s => s.value === event.target.value);
@@ -3083,6 +3148,9 @@ effective_date: [기준일]
 
   async function sendQuestion(question) {
     if (state.loading) return;
+    lastRagQuestion = question;
+    ragDocumentReady = false;
+    refreshRagRetry();
     clearWelcome();
 
     appendMessage('user', question);
@@ -3091,6 +3159,7 @@ effective_date: [기준일]
     state.loading = true;
     const startedAt = performance.now();
     setInputDisabled(true);
+    refreshRagRetry();
 
     try {
       let data;
@@ -3114,7 +3183,7 @@ effective_date: [기준일]
 
       removeTyping(typingId);
       state.lastRagLatencyMs = Math.round(performance.now() - startedAt);
-      appendMessage('bot', data.answer, data.references || []);
+      appendMessage('bot', data.answer, data.references || [], true);
       updateRefPanel(data.references || []);
     } catch (err) {
       removeTyping(typingId);
@@ -3122,11 +3191,12 @@ effective_date: [기준일]
     } finally {
       state.loading = false;
       setInputDisabled(false);
+      refreshRagRetry();
       $questionInput.focus();
     }
   }
 
-  function appendMessage(role, content, chunks = []) {
+  function appendMessage(role, content, chunks = [], evidenceKnown = false) {
     const isUser = role === 'user';
     const id = `msg-${Date.now()}`;
     const time = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
@@ -3142,6 +3212,7 @@ effective_date: [기준일]
           <div class="msg-meta">
             <span>${time}</span>
             ${refBtnHtml}
+            ${!isUser && evidenceKnown ? `<button type="button" class="ref-btn" data-rag-document-open>${chunks.length ? '답변 근거 보완 · 문서 첨부' : '참고 문서 없음 · 문서 첨부로 보완'}</button>` : ''}
           </div>
         </div>
       </div>
@@ -3151,6 +3222,9 @@ effective_date: [기준일]
     if (chunks.length) {
       const btn = document.getElementById(id).querySelector('.ref-btn');
       btn?.addEventListener('click', () => updateRefPanel(chunks));
+    }
+    if (!isUser && evidenceKnown && !chunks.length) {
+      document.getElementById(id)?.querySelector('.msg-meta')?.insertAdjacentHTML('beforeend', '<span class="rag-evidence-note">문서 검색 근거가 없습니다. 관련 자료를 등록한 뒤 다시 질문하세요.</span>');
     }
     scrollToBottom();
     state.chatHistory.push({ role, content, chunks });
@@ -3210,7 +3284,9 @@ effective_date: [기준일]
 
     try {
       const data = await fetchLocalBackendJson('/ingest/file', null, { method: 'POST', body: form });
-      showUploadStatus('success', `"${escHtml(data.title)}" 등록 완료 (${data.chunks}개 청크)`);
+      ragDocumentReady = true; refreshRagRetry();
+      showUploadStatus('success', `"${escHtml(data.title)}" 등록 완료 (${data.chunks}개 청크). ${lastRagQuestion ? '「이전 질문 다시 묻기」로 근거를 다시 검색하세요.' : 'RAG 화면에서 질문을 입력하세요.'}`);
+      $fileInput.value = '';
     } catch (err) {
       if (err && err.status != null) showUploadStatus('error', `오류: ${err.detail || err.statusText}`);
       else showUploadStatus('error', `네트워크 오류: ${err.message}`);
@@ -3240,7 +3316,8 @@ effective_date: [기준일]
           domain: state.domain,
         }),
       });
-      showUploadStatus('success', `"${escHtml(data.title || data.document_id)}" 등록 완료 (${data.chunks}개 청크)`);
+      ragDocumentReady = true; refreshRagRetry();
+      showUploadStatus('success', `"${escHtml(data.title || data.document_id)}" 등록 완료 (${data.chunks}개 청크). ${lastRagQuestion ? '「이전 질문 다시 묻기」로 근거를 다시 검색하세요.' : 'RAG 화면에서 질문을 입력하세요.'}`);
       $textTitle.value = '';
       $textContent.value = '';
     } catch (err) {
@@ -3414,7 +3491,7 @@ effective_date: [기준일]
   const requestedView = queryParams.get('view');
   const requestedLesson = queryParams.get('lesson');
   if (INTEGRATED_LESSONS.some(([number]) => number === requestedLesson)) state.activeLesson = requestedLesson;
-  const initialView = ['home', 'minute-chart', 'stocks', 'learn', 'lessons', 'simulation', 'portfolio-simulation', 'basis', 'backtest', 'calendar'].includes(requestedView)
+  const initialView = ['home', 'minute-chart', 'stocks', 'investment-test', 'learn', 'lessons', 'investment-practice', 'simulation', 'portfolio-simulation', 'basis', 'backtest', 'calendar'].includes(requestedView)
     ? requestedView
     : state.activeLesson ? 'lessons' : 'home';
   setView(initialView);

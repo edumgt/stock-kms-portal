@@ -2294,3 +2294,34 @@ html,body { background:#f5f5f5; color:#111; }.app-layout { grid-template-columns
   --accent-on: #000;          /* 노란 액센트 위에는 검정 글자 */
   /* 스크롤바는 공통 기본값(5px·transparent·--border·3px·--accent)과 같아 재정의하지 않는다 */
 }
+
+/* Learning owns its related exercises; retain a single portal shell. */
+.lesson-practice-head{padding:16px 18px;background:#fff;border:1px solid #dbe5f2;border-radius:12px;margin-bottom:14px}
+.lesson-practice-head>strong{display:block;font-size:16px;color:#183659;margin-bottom:10px}
+.lesson-practice-head nav{display:flex;flex-wrap:wrap;gap:7px}
+.lesson-practice-head button{padding:7px 12px;border:1px solid #d8e2ef;border-radius:8px;background:#f6f8fc;color:#425670;font-size:12px;cursor:pointer}
+.lesson-practice-head button[aria-pressed="true"]{color:#fff;background:#075fae;border-color:#075fae}
+.lesson-practice-head p{font-size:12px;line-height:1.6;margin:10px 0 0;color:#64748b}
+#lessonLearningContent>.content-page{padding:0;max-width:none}
+#lessonLearningContent .simulation-guide-head,#lessonLearningContent .backtest-page-head{margin-top:0}
+@media(max-width:600px){.lesson-practice-head{padding:12px}.lesson-practice-head nav{gap:5px}.lesson-practice-head button{font-size:11px;padding:6px 9px}}
+
+.rag-document-tools{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 18px;background:#eef5ff;border-bottom:1px solid #d8e4f2;font-size:12px;flex-shrink:0}
+.rag-document-tools.hidden{display:none}
+.rag-document-tools button,#ragDocumentDialog [data-rag-retry]{border:1px solid #075fae;border-radius:6px;padding:7px 10px;background:#fff;color:#075fae;font-size:12px;cursor:pointer}
+#ragDocumentDialog{width:min(580px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:0;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#183659;overflow:auto}
+#ragDocumentDialog::backdrop{background:#132f5066}
+#ragDocumentDialog>header{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;background:#fff;border-bottom:1px solid #e2e8f0;padding:15px 18px;z-index:1}
+#ragDocumentDialog h2{font-size:17px;margin:0}
+#ragDocumentDialog [data-rag-document-close]{font-size:24px;line-height:1;border:0;background:none;cursor:pointer;padding:5px 9px;color:#334155}
+#ragDocumentDialog .rag-document-help,#ragDocumentDialog>.rag-document-actions{padding:14px 18px;font-size:12px;line-height:1.7;margin:0}
+#ragDocumentDialog .rag-panel{padding:6px 18px 16px;border:0}
+#ragDocumentDialog .upload-area{cursor:pointer}
+#ragDocumentDialog .rag-document-actions p{font-size:11px;color:#64748b;margin:8px 0 0}
+.rag-evidence-note{display:block;flex-basis:100%;color:#9a6700;font-size:11px;line-height:1.6}
+[data-rag-retry][hidden]{display:none!important}
+@media(max-width:600px){.rag-document-tools{padding:8px 12px;font-size:11px}.rag-document-tools>span{width:100%}#ragDocumentDialog h2{font-size:15px}}
+
+#ragDocumentDialog .rag-document-actions{display:block;background:#f8fafc;border-top:1px solid #e2e8f0;white-space:normal;color:#334155}
+
+.messages>.investment-test-page{max-width:none;padding:0;width:100%}.investment-test-page iframe{background:#fff}

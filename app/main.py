@@ -167,6 +167,28 @@ def read_learning_document(path: str):
         raise HTTPException(status_code=500, detail="학습 문서를 읽을 수 없습니다.") from error
 
 
+@app.api_route("/api/investment-test/quant/{action}", methods=["GET", "POST"])
+async def investment_test_quant(action: str, request: Request):
+    """Only the migrated learning workspace's quant operations; no broker orders."""
+    methods = {"overview": "GET", "market-data": "GET", "signals": "GET", "results": "GET",
+               "factor-analysis": "GET", "backtests": "POST"}
+    if action not in methods:
+        raise HTTPException(status_code=404, detail="지원하지 않는 투자테스트 기능입니다.")
+    if request.method != methods[action]:
+        raise HTTPException(status_code=405, detail="지원하지 않는 요청 방식입니다.")
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=60) as client:
+            upstream = await client.request(request.method,
+                f"{settings.investment_test_api_base.rstrip('/')}/api/quant/{action}",
+                params=request.query_params, content=await request.body(),
+                headers={"Content-Type": "application/json", "Accept": "application/json"})
+    except httpx.RequestError:
+        raise HTTPException(status_code=502, detail="투자테스트 데이터 서버에 연결하지 못했습니다.")
+    return Response(content=upstream.content, status_code=upstream.status_code,
+                    media_type=upstream.headers.get("content-type", "application/json"))
+
+
 @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 async def proxy_investment_api(path: str, request: Request):
     """Expose the migrated investment API through the single port-80 origin."""
