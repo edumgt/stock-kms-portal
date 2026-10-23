@@ -63,7 +63,6 @@ function indexChartCard(idx) {
         <span>일봉 · MA20 · 거래량</span>
         <span data-idx-source="${idx.id}"></span>
       </div>
-      <footer class="site-footer-unified">© 2026 (주)에듀엠지티 All rights reserved.</footer>
     </section>`;
 }
 
