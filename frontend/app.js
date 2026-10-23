@@ -1516,14 +1516,6 @@ KOSDAQ|웹젠|게임`,
     ];
     $messages.innerHTML = `
       <article class="content-page investment-native-module-page data-visualization-page">
-        <header class="data-viz-hero">
-          <div>
-            <span class="data-viz-eyebrow"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i> 시장 데이터 탐색</span>
-            <div class="data-viz-title" role="heading" aria-level="1">데이터 시각화</div>
-            <p>시장 규모와 거래 흐름을 여러 관점에서 살펴보세요.</p>
-          </div>
-          <div class="data-viz-hero-count" aria-label="시각화 주제 ${visualizations.length}개"><strong>${String(visualizations.length).padStart(2, '0')}</strong><span>시각화 주제</span></div>
-        </header>
         <div class="data-viz-menu-heading"><h2>주제 선택</h2><span>관심 있는 주제를 선택하면 아래에 표시됩니다.</span></div>
         <nav class="data-viz-scroll" aria-label="데이터 시각화 메뉴">${visualizations.map(([id, icon, title, sub], index) => `<button type="button" data-viz="${id}" class="${index === 0 ? 'active' : ''}" aria-pressed="${index === 0}"><span class="data-viz-icon"><i class="fa-solid ${icon}" aria-hidden="true"></i></span><b>${title}</b><small>${sub}</small></button>`).join('')}</nav>
         <p class="data-viz-scroll-hint"><i class="fa-solid fa-arrow-left-long" aria-hidden="true"></i> 메뉴를 좌우로 넘겨보세요 <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i></p>
