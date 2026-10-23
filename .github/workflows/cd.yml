@@ -1,17 +1,20 @@
 name: CD — Deploy to EC2
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI — Lint & Test"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: domain-rag-production
+  group: stock-kms-portal-production
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Sync and deploy production stack
+    name: Sync and deploy iv.edumgt.co.kr
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -19,16 +22,58 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Configure SSH key
+      - name: Validate deployment configuration
+        env:
+          EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_APP_DIR: ${{ secrets.EC2_APP_DIR }}
+        run: |
+          set -euo pipefail
+          for name in EC2_SSH_PRIVATE_KEY EC2_HOST EC2_USER EC2_APP_DIR; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing GitHub Actions secret: $name"
+              exit 1
+            fi
+          done
+          if [[ "$EC2_APP_DIR" != /opt/stock-kms-portal ]]; then
+            echo '::error::EC2_APP_DIR must be /opt/stock-kms-portal for the iv.edumgt.co.kr deployment.'
+            exit 1
+          fi
+
+      - name: Configure SSH
+        # The dedicated key in EC2 authorized_keys expires on 2026-11-23.
         env:
           EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/domain-rag-deploy.pem
-          chmod 600 ~/.ssh/domain-rag-deploy.pem
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          set -euo pipefail
+          install -m 700 -d "$HOME/.ssh"
+          install -m 600 /dev/null "$HOME/.ssh/stock-kms-portal-deploy.pem"
+          printf '%s\n' "$EC2_SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/stock-kms-portal-deploy.pem"
+          if ! ssh-keyscan -T 10 -H "$EC2_HOST" >> "$HOME/.ssh/known_hosts"; then
+            echo "::error::Could not retrieve the SSH host key for EC2_HOST. Check its address and port 22 access."
+            exit 1
+          fi
+
+      - name: Check production target
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -o BatchMode=yes -o ConnectTimeout=10 \
+            -i "$HOME/.ssh/stock-kms-portal-deploy.pem" \
+            "$EC2_USER@$EC2_HOST" bash -se <<'REMOTE'
+          set -euo pipefail
+          test -d /opt/stock-kms-portal || { echo 'ERROR: Production application directory is missing.' >&2; exit 1; }
+          test -f /opt/stock-kms-portal/.env.prod || { echo 'ERROR: Production .env.prod is missing.' >&2; exit 1; }
+          sudo -n test -f /opt/stock-kms-portal/secrets/lean-runner.key || { echo 'ERROR: Production LEAN SSH key is missing.' >&2; exit 1; }
+          sudo -n docker compose version >/dev/null
+          sudo -n docker network inspect stock-coin-trade_internal >/dev/null
+          REMOTE
 
       - name: Synchronize application files
         env:
@@ -36,33 +81,39 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_APP_DIR: ${{ secrets.EC2_APP_DIR }}
         run: |
-          rsync -az --delete \
-            --exclude '.env' \
-            --exclude '.env.*' \
-            --exclude '.git' \
-            --exclude '.claude' \
-            --exclude '__pycache__' \
+          rsync -azc \
+            --exclude '/.env*' \
+            --exclude '/.git/' \
+            --exclude '/.claude/' \
+            --exclude '/secrets/' \
+            --exclude '/data/lean-workflows/' \
+            --exclude '/data/processed/' \
+            --exclude '/data/uploads/' \
+            --exclude '/rag/snapshots/' \
+            --exclude '__pycache__/' \
             --exclude '*.pyc' \
             --exclude '*.pem' \
-            --exclude 'data/lean-workflows' \
-            --filter 'protect data/' \
-            -e 'ssh -i ~/.ssh/domain-rag-deploy.pem' \
+            -e "ssh -o BatchMode=yes -i $HOME/.ssh/stock-kms-portal-deploy.pem" \
             ./ "$EC2_USER@$EC2_HOST:$EC2_APP_DIR/"
 
-      - name: Build and restart services
+      - name: Build and restart the portal API
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_APP_DIR: ${{ secrets.EC2_APP_DIR }}
         run: |
-          ssh -i ~/.ssh/domain-rag-deploy.pem "$EC2_USER@$EC2_HOST" <<EOF
+          ssh -o BatchMode=yes -i "$HOME/.ssh/stock-kms-portal-deploy.pem" \
+            "$EC2_USER@$EC2_HOST" bash -se <<'REMOTE'
           set -euo pipefail
-          cd "$EC2_APP_DIR"
-          if [ ! -f .env.prod ]; then
-            echo "ERROR: $EC2_APP_DIR/.env.prod is missing. Restore the production environment file on EC2 before deploying." >&2
-            exit 1
-          fi
-          sudo docker compose -p domain-rag-lab --env-file .env.prod -f docker-compose.prod.yml up --build -d
-          sudo docker compose -p domain-rag-lab --env-file .env.prod -f docker-compose.prod.yml ps
-          curl --fail --retry 12 --retry-delay 5 --retry-connrefused http://localhost/health
-          EOF
+          cd /opt/stock-kms-portal
+          compose=(sudo -n docker compose -p stock-kms-portal -f deploy/st-iv/compose.yml)
+          "${compose[@]}" up -d --build api
+          "${compose[@]}" ps
+          for attempt in {1..12}; do
+            if "${compose[@]}" exec -T api curl --fail --silent --show-error --max-time 5 http://127.0.0.1:8000/health; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo 'ERROR: Portal API did not become healthy.' >&2
+          exit 1
+          REMOTE

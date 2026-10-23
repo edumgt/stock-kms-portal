@@ -112,6 +112,8 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up --build -d
 
 Do not commit PEM keys, `.env` files, API keys, database passwords, or volume data to Git.
 
+For `iv.edumgt.co.kr`, the [EC2 deployment workflow](.github/workflows/cd.yml) runs after CI succeeds on `main` and can also be started manually. It syncs the repository to `/opt/stock-kms-portal` and rebuilds the `api` service with `deploy/st-iv/compose.yml`, preserving the server's `.env.prod`, `secrets/`, and runtime data. The workflow requires GitHub Actions secrets `EC2_HOST`, `EC2_USER`, `EC2_APP_DIR`, and `EC2_SSH_PRIVATE_KEY`. The current dedicated deployment key expires on November 23, 2026 and must be rotated before then.
+
 ## RAG data operations
 
 After changing documents, reindex them into Qdrant's `domain_docs` collection. For example, run this in the deployment environment:
