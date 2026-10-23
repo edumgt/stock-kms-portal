@@ -97,6 +97,22 @@ jobs:
             -e "ssh -o BatchMode=yes -i $HOME/.ssh/stock-kms-portal-deploy.pem" \
             ./ "$EC2_USER@$EC2_HOST:$EC2_APP_DIR/"
 
+      - name: Install OpenDART key on production
+        env:
+          DART_API_KEY: ${{ secrets.DART_API_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$DART_API_KEY" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo '::error::DART_API_KEY secret must be a 40-character OpenDART key.'
+            exit 1
+          fi
+          printf '%s' "$DART_API_KEY" | ssh -o BatchMode=yes \
+            -i "$HOME/.ssh/stock-kms-portal-deploy.pem" \
+            "$EC2_USER@$EC2_HOST" \
+            "sudo -n sh -c 'umask 077; install -d -m 700 /opt/stock-kms-portal/secrets; cat > /opt/stock-kms-portal/secrets/dart-api.key'"
+
       - name: Build and restart the portal API
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}

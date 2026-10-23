@@ -81,11 +81,13 @@ services:
       LEAN_SSH_KEY_PATH: /run/secrets/lean-runner.key
       LEAN_REMOTE_WORKDIR: /home/lean-iv/workflows
       LEAN_DOCKER_IMAGE: quantconnect/lean:latest
+      DART_API_KEY_FILE: /run/secrets/dart-api.key
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - app_uploads:/app/data/uploads
       - ../../secrets/lean-runner.key:/run/secrets/lean-runner.key:ro
+      - ../../secrets/dart-api.key:/run/secrets/dart-api.key:ro
     networks:
       default: {}
       st_proxy:

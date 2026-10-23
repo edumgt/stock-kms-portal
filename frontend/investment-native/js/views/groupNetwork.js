@@ -31,11 +31,11 @@ export function groupNetworkView(container) {
   container.innerHTML = `
     <div style="margin-bottom:24px;">
       <h1 style="font-weight:700; color:#131722; margin-bottom:8px;">
-        <i class="fa-solid fa-sitemap"></i> 그룹사 상장 계열사 네트워크
+        <i class="fa-solid fa-sitemap"></i> 그룹사 네트워크
       </h1>
       <p style="font-size:0.88rem; color:#6b7280; line-height:1.65;">
-        대기업 그룹명 또는 키워드를 입력하면 해당 이름을 포함한 상장 계열사·자회사를 시가총액 순으로 보여줍니다.<br>
-        데이터 출처: OpenDART 회사코드 목록 &amp; 한국거래소(pykrx).
+        그룹명 또는 키워드를 입력하면 회사명에 해당 단어가 포함된 상장기업을 보여줍니다.<br>
+        기업의 실제 계열·지분 관계는 각 기업의 DART 공시 원문에서 확인하세요.
       </p>
     </div>
 
@@ -76,7 +76,7 @@ export function groupNetworkView(container) {
         </button>
       </div>
       <p style="font-size:0.78rem; color:#9ca3af; margin-top:10px; margin-bottom:0;">
-        서버 환경변수 <code>DART_API_KEY</code>가 설정되어 있어야 하며, 시가총액 조회에는 KRX 서버 연결이 필요합니다.
+        회사명은 OpenDART 기준입니다. 이 목록은 이름 검색 결과이며 실제 계열 관계를 확정하지 않습니다.
       </p>
     </section>
 
@@ -120,7 +120,7 @@ export function groupNetworkView(container) {
     result.innerHTML = `
       <div style="padding:32px; text-align:center; color:#6b7280; font-size:0.9rem;">
         <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; color:#2962ff; display:block; margin-bottom:12px;"></i>
-        DART 회사코드 목록 및 KRX 시장 데이터를 조회하는 중입니다…
+        DART 상장기업 목록을 조회하는 중입니다…
       </div>`;
 
     try {
@@ -138,6 +138,7 @@ export function groupNetworkView(container) {
 
       // ── 탭 필터 상태
       let activeFilter = '전체';
+      const marketAvailable = data.market_data_available === true;
 
       const render = (filter) => {
         activeFilter = filter;
@@ -145,7 +146,7 @@ export function groupNetworkView(container) {
           ? data.results
           : data.results.filter(r => r.market === filter);
 
-        const tabs = ['전체', 'KOSPI', 'KOSDAQ', '기타'];
+        const tabs = marketAvailable ? ['전체', 'KOSPI', 'KOSDAQ', '기타'] : [];
         const tabHtml = tabs.map(t => {
           const cnt = t === '전체' ? data.results.length
             : data.results.filter(r => r.market === t).length;
@@ -176,10 +177,10 @@ export function groupNetworkView(container) {
                 <div style="font-size:1rem; font-weight:700; color:#131722; line-height:1.35;">
                   ${escapeHtml(item.corp_name)}
                 </div>
-                <span style="flex-shrink:0; padding:2px 8px; border-radius:12px; font-size:0.72rem;
+                ${marketAvailable ? `<span style="flex-shrink:0; padding:2px 8px; border-radius:12px; font-size:0.72rem;
                              font-weight:700; color:#fff; background:${mktColor};">
                   ${escapeHtml(item.market)}
-                </span>
+                </span>` : ''}
               </div>
 
               <!-- 종목코드 -->
@@ -188,7 +189,7 @@ export function groupNetworkView(container) {
               </div>
 
               <!-- 시가총액 / 주가 -->
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+              ${marketAvailable ? `<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
                 <div style="background:#f8fafc; border-radius:6px; padding:8px 10px;">
                   <div style="font-size:0.7rem; color:#6b7280; margin-bottom:2px;">시가총액</div>
                   <div style="font-size:0.95rem; font-weight:700; color:#131722;">${escapeHtml(mcap)}</div>
@@ -197,7 +198,7 @@ export function groupNetworkView(container) {
                   <div style="font-size:0.7rem; color:#6b7280; margin-bottom:2px;">현재가</div>
                   <div style="font-size:0.95rem; font-weight:700; color:#131722;">${escapeHtml(price)}</div>
                 </div>
-              </div>
+              </div>` : ''}
 
               <!-- DART 링크 -->
               <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -218,14 +219,14 @@ export function groupNetworkView(container) {
           <div style="background:linear-gradient(135deg,#1d4ed8 0%,#2962ff 60%,#0ea5e9 100%);
                       border-radius:10px; padding:20px 24px; margin-bottom:18px; color:#fff;">
             <div style="font-size:0.85rem; opacity:.85; margin-bottom:6px;">
-              '<strong>${escapeHtml(data.query)}</strong>' 그룹 검색 결과 (OpenDART + KRX)
+              '<strong>${escapeHtml(data.query)}</strong>' 회사명 검색 결과 (OpenDART)
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:20px; margin-top:4px;">
               <div>
                 <div style="font-size:1.6rem; font-weight:800;">${data.count}개</div>
-                <div style="font-size:0.78rem; opacity:.8;">상장 계열사</div>
+                <div style="font-size:0.78rem; opacity:.8;">검색된 상장기업</div>
               </div>
-              <div>
+              ${marketAvailable ? `<div>
                 <div style="font-size:1.6rem; font-weight:800;">${formatMarketCap(data.total_market_cap)}</div>
                 <div style="font-size:0.78rem; opacity:.8;">합산 시가총액</div>
               </div>
@@ -236,14 +237,14 @@ export function groupNetworkView(container) {
               <div>
                 <div style="font-size:1.6rem; font-weight:800;">${data.kosdaq_count}</div>
                 <div style="font-size:0.78rem; opacity:.8;">KOSDAQ</div>
-              </div>
+              </div>` : ''}
             </div>
           </div>
 
           <!-- 탭 필터 -->
-          <div id="gn-tabs" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+          ${marketAvailable ? `<div id="gn-tabs" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
             ${tabHtml}
-          </div>
+          </div>` : ''}
 
           <!-- 카드 그리드 -->
           <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:14px;">
@@ -252,7 +253,7 @@ export function groupNetworkView(container) {
 
           <!-- 출처 -->
           <p style="font-size:0.75rem; color:#9ca3af; margin-top:16px; text-align:right;">
-            출처: ${escapeHtml(data.source)} · 시가총액 미조회 기업은 0으로 표시됩니다.
+            출처: ${escapeHtml(data.source)} · 기업의 계열 관계는 DART 공시에서 확인하세요.
           </p>
         `;
 
@@ -270,7 +271,7 @@ export function groupNetworkView(container) {
           <strong><i class="fa-solid fa-triangle-exclamation"></i> 조회 실패</strong>
           <p style="margin:8px 0 0; font-size:0.88rem;">${escapeHtml(err.message)}</p>
           <p style="margin:6px 0 0; font-size:0.82rem; color:#b45309;">
-            OpenDART 인증키(<code>DART_API_KEY</code>)를 서버에 설정한 뒤 다시 시도하세요.
+            잠시 후 다시 시도해 주세요. 계속 실패하면 DART 서비스 연결 상태를 확인해 주세요.
           </p>
         </div>`;
     } finally {

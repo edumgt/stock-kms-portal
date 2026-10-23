@@ -1509,7 +1509,7 @@ KOSDAQ|웹젠|게임`,
       ['world', 'fa-earth-asia', '세계 시장', '국가별 시가총액 · 지수'],
       ['volume', 'fa-cloud', '거래량 클라우드', '평균 대비 거래량'],
       ['sector', 'fa-table-cells-large', '섹터 클라우드', '거래대금 · 등락률'],
-      ['group', 'fa-sitemap', '그룹사 네트워크', '상장 계열사 연결'],
+      ['group', 'fa-sitemap', '그룹사 네트워크', '회사명 일치 상장기업'],
       ['tree', 'fa-code-branch', '투자 성향 트리', '의사결정 시각화'],
       ['regime', 'fa-chart-pie', '자산배분 국면', '위험선호도 모델'],
     ];
