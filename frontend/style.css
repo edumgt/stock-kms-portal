@@ -2371,3 +2371,15 @@ html,body { background:#f5f5f5; color:#111; }.app-layout { grid-template-columns
 #ragDocumentDialog .rag-document-actions{display:block;background:#f8fafc;border-top:1px solid #e2e8f0;white-space:normal;color:#334155}
 
 .messages>.investment-test-page{max-width:none;padding:0;width:100%}.investment-test-page iframe{background:#fff}
+
+/* Keep the group shortcuts and keyword search on one row when space allows. */
+.gn-search-panel{padding:14px 18px;margin-bottom:14px;border:1px solid #d9e1ec;border-radius:10px;background:#fff}
+.gn-search-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,39%);gap:20px;align-items:start}
+.gn-field-label{display:block;margin-bottom:6px;color:#374151;font-size:12px;font-weight:700;line-height:1.4}
+.gn-presets{display:flex;flex-wrap:wrap;gap:6px}
+.gn-input-row{display:flex;align-items:stretch;gap:8px}
+.gn-input-row input{flex:1;min-width:0}
+.gn-input-row button{flex:none}
+.gn-search-note{margin:6px 0 0;color:#718096;font-size:11px;line-height:1.45}
+.data-viz-mount:has(.gn-search-panel){min-height:0}
+@media(max-width:850px){.gn-search-layout{grid-template-columns:minmax(0,1fr);gap:12px}.gn-search-block{grid-row:1}}

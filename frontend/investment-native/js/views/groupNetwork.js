@@ -29,7 +29,7 @@ const PRESET_GROUPS = [
 
 export function groupNetworkView(container) {
   container.innerHTML = `
-    <div style="margin-bottom:24px;">
+    <div style="margin-bottom:14px;">
       <h1 style="font-weight:700; color:#131722; margin-bottom:8px;">
         <i class="fa-solid fa-sitemap"></i> 그룹사 네트워크
       </h1>
@@ -40,44 +40,37 @@ export function groupNetworkView(container) {
     </div>
 
     <!-- 검색 패널 -->
-    <section style="background:#fff; border:1px solid #d9e1ec; border-radius:10px; padding:20px 24px; margin-bottom:20px;">
-      <!-- 프리셋 버튼 -->
-      <div style="margin-bottom:14px;">
-        <div style="font-size:0.78rem; color:#6b7280; margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">
-          주요 그룹 바로가기
+    <section class="gn-search-panel">
+      <div class="gn-search-layout">
+        <div class="gn-preset-block">
+          <div class="gn-field-label">주요 그룹 바로가기</div>
+          <div id="gn-presets" class="gn-presets">
+            ${PRESET_GROUPS.map(g => `
+              <button type="button" class="gn-preset-btn" data-group="${escapeHtml(g)}"
+                style="padding:4px 12px; border-radius:20px; border:1px solid #d9e1ec;
+                       background:#f8fafc; font-size:0.82rem; color:#374151; cursor:pointer;
+                       transition:background .15s, border-color .15s;">
+                ${escapeHtml(g)}
+              </button>
+            `).join('')}
+          </div>
         </div>
-        <div id="gn-presets" style="display:flex; flex-wrap:wrap; gap:6px;">
-          ${PRESET_GROUPS.map(g => `
-            <button type="button" class="gn-preset-btn" data-group="${escapeHtml(g)}"
-              style="padding:4px 12px; border-radius:20px; border:1px solid #d9e1ec;
-                     background:#f8fafc; font-size:0.82rem; color:#374151; cursor:pointer;
-                     transition:background .15s, border-color .15s;">
-              ${escapeHtml(g)}
+        <div class="gn-search-block">
+          <label for="gn-input" class="gn-field-label">그룹명 / 키워드</label>
+          <div class="gn-input-row">
+            <input id="gn-input" type="text" value="삼성"
+              placeholder="예: 삼성, SK, 현대, LG …"
+              style="width:100%; padding:9px 13px; border:1px solid #d9e1ec; border-radius:8px;
+                     font-size:0.95rem; outline:none;" />
+            <button id="gn-run"
+              style="padding:9px 22px; background:#2962ff; color:#fff; border:none; border-radius:8px;
+                     font-size:0.9rem; font-weight:600; white-space:nowrap; transition:background .15s;">
+              <i class="fa-solid fa-magnifying-glass"></i> 검색
             </button>
-          `).join('')}
+          </div>
+          <p class="gn-search-note">회사명은 OpenDART 기준입니다. 실제 계열 관계는 공시에서 확인하세요.</p>
         </div>
       </div>
-
-      <!-- 입력 행 -->
-      <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-        <div style="flex:1; min-width:220px;">
-          <label style="display:block; font-size:0.8rem; font-weight:600; color:#374151; margin-bottom:5px;">
-            그룹명 / 키워드
-          </label>
-          <input id="gn-input" type="text" value="삼성"
-            placeholder="예: 삼성, SK, 현대, LG …"
-            style="width:100%; padding:9px 13px; border:1px solid #d9e1ec; border-radius:8px;
-                   font-size:0.95rem; outline:none;" />
-        </div>
-        <button id="gn-run"
-          style="padding:9px 22px; background:#2962ff; color:#fff; border:none; border-radius:8px;
-                 font-size:0.9rem; font-weight:600; white-space:nowrap; transition:background .15s;">
-          <i class="fa-solid fa-magnifying-glass"></i> 검색
-        </button>
-      </div>
-      <p style="font-size:0.78rem; color:#9ca3af; margin-top:10px; margin-bottom:0;">
-        회사명은 OpenDART 기준입니다. 이 목록은 이름 검색 결과이며 실제 계열 관계를 확정하지 않습니다.
-      </p>
     </section>
 
     <!-- 결과 영역 -->
