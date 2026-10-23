@@ -1574,6 +1574,7 @@ KOSDAQ|웹젠|게임`,
       { key:'backtest', label:'퀀트 전략 검증', note:'배분·퀀트 규칙을 정하고 LEAN 결과의 수익률·낙폭·비용 가정을 함께 확인하세요.' },
     ],
   };
+  let lessonFrameObserver = null;
   function openIntegratedLesson(lessonId, practice = 'theory') {
     if (!lessonId) return;
     const lessonNumber = {
@@ -1581,6 +1582,8 @@ KOSDAQ|웹젠|게임`,
       'learn-03': '05', 'learn-05': '06', 'learn-04': '07', 'learn-06': '08', 'learn-07': '09', 'learn-10': '10',
     }[lessonId];
     if (!lessonNumber) return;
+    lessonFrameObserver?.disconnect();
+    lessonFrameObserver = null;
     // 학습 단원은 80 포트의 하드코딩 페이지(/static/lessons)를 포털 본문 iframe으로 띄운다.
     const lessonUrl = `/static/lessons/${lessonNumber}.html?embedded=1`;
     stopTickDashboard();
@@ -1598,7 +1601,22 @@ KOSDAQ|웹젠|게임`,
     const selected = practices.find(item => item.key === practice);
     $messages.innerHTML = `<article class="content-page integrated-lesson-page"><header class="lesson-practice-head"><strong>${escHtml(INTEGRATED_LESSONS.find(([number]) => number === lessonNumber)?.[2] || '통합 학습')}</strong><nav aria-label="이론과 연계 실습"><button type="button" data-lesson-practice="theory" aria-pressed="${!selected}">이론 학습</button>${practices.map(item => `<button type="button" data-lesson-practice="${item.key}" aria-pressed="${selected?.key === item.key}">${escHtml(item.label)}</button>`).join('')}</nav>${selected ? `<p>${escHtml(selected.note)}</p>` : practices.length ? '<p>이론을 읽은 뒤 위 연계 실습에서 직접 조건을 바꿔 결과를 확인하세요.</p>' : ''}</header><div id="lessonLearningContent"></div></article>`;
     const mount = document.getElementById('lessonLearningContent');
-    if (!selected) mount.innerHTML = `<div class="integrated-lesson-frame"><iframe src="${lessonUrl}" title="통합 학습 과정 ${lessonNumber}" loading="eager"></iframe></div>`;
+    if (!selected) {
+      mount.innerHTML = `<div class="integrated-lesson-frame"><iframe src="${lessonUrl}" title="통합 학습 과정 ${lessonNumber}" loading="eager" scrolling="no"></iframe></div>`;
+      const frame = mount.querySelector('iframe');
+      frame.addEventListener('load', () => {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        const resize = () => {
+          if (!frame.isConnected) return;
+          frame.style.height = `${Math.ceil(Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight))}px`;
+        };
+        resize();
+        lessonFrameObserver = new ResizeObserver(resize);
+        lessonFrameObserver.observe(doc.body);
+        doc.fonts?.ready.then(resize);
+      }, { once: true });
+    }
     else if (selected.key === 'portfolio-simulation') renderPortfolioSimulation(mount);
     else if (selected.key === 'simulation') renderSimulationGuide(mount);
     else if (selected.key === 'backtest') renderBacktestWorkflow(mount);

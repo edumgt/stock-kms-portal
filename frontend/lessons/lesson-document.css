@@ -1,0 +1,44 @@
+/* One reading layout for the ten standalone and embedded lesson chapters. */
+:root { color: #182c43; background: #f4f7fb; }
+.lesson-main { background: #f4f7fb; }
+.lesson-gnb, .lesson-lnb-head { background: #0e2340; border-bottom: 0; }
+.lesson-gnb nav a:hover { background: #174c7a; color: #fff; }
+.lesson-lnb { border-color: #dbe5ef; }
+.lesson-lnb p, .lesson-lnb a b { color: #1263a6; }
+.lesson-lnb a:hover, .lesson-lnb a[aria-current=page] { border-color: #1263a6; background: #e9f2fa; color: #0e2340; }
+.lesson-content, html.embedded .lesson-content { width: min(100%, 1240px); max-width: 1240px; margin: 0 auto; padding: 22px clamp(16px, 2.4vw, 32px) 56px; }
+.lesson-title, html.embedded .lesson-title { min-height: 0; padding: 0 2px 14px; border-color: #dbe5ef; }
+.lesson-title b { color: #0e2340; font-size: 18px; }
+.lesson-title span { color: #607287; }
+.lesson-doc { margin-top: 18px; padding: clamp(20px, 3vw, 32px); border: 1px solid #dbe5ef; border-radius: 12px; color: #21364d; box-shadow: 0 3px 16px rgba(14,35,64,.05); line-height: 1.8; overflow-wrap: anywhere; }
+.lesson-content > article.lesson-doc:first-of-type { margin-top: 18px; }
+.lesson-doc h2 { margin-top: 32px; padding-bottom: 10px; border-color: #dbe5ef; color: #0e2340; }
+.lesson-doc h2:first-child { margin-top: 0; }
+.lesson-doc h3, .lesson-doc h4 { color: #173a60; }
+.lesson-doc a { color: #1263a6; text-underline-offset: 2px; }
+.lesson-doc th { background: #0e2340; }
+.lesson-doc th, .lesson-doc td { border-color: #dbe5ef; }
+.lesson-doc blockquote, .lesson-doc .lesson-note, .lesson-doc .note, .lesson-doc .glossary-item, .note { border-color: #1263a6; background: #eef5fb; }
+.lesson-doc .lesson-formula, .lesson-doc pre { border-color: #dbe5ef; background: #f5f8fc; }
+.lesson-doc .visual-card, .lesson-doc .flow-node, .lesson-doc .step { border-color: #dbe5ef; border-radius: 8px; background: #f9fbfd; }
+.lesson-doc .flow-arrow, .lesson-doc .visual-kicker, .lesson-doc caption { color: #1263a6; }
+.lesson-core, .lesson-supplement { margin-top: 28px; }
+.lesson-supplement-head, .lesson-core-head { padding: 18px 24px; border: 1px solid #dbe5ef; border-left: 4px solid #1263a6; border-bottom: 0; border-radius: 12px 12px 0 0; background: #eef5fb; color: #0e2340; }
+.lesson-supplement-head .lesson-kicker { color: #1263a6; }
+.lesson-supplement-head p { color: #52677d; }
+.lesson-toc { padding: 16px 24px; border: 1px solid #dbe5ef; border-top: 0; border-radius: 0 0 12px 12px; background: #fff; }
+.lesson-toc b { color: #0e2340; }
+.lesson-toc li { break-inside: avoid; overflow-wrap: anywhere; }
+.lesson-toc a { color: #304962; }
+.lesson-toc a:hover { color: #1263a6; }
+.lesson-core-doc, .lesson-theory { margin-top: 14px; border: 1px solid #dbe5ef; }
+html.embedded .lesson-main { background: #fff; }
+html.embedded .lesson-content { padding-top: 20px; padding-bottom: 44px; }
+@media (max-width: 640px) {
+  .lesson-content, html.embedded .lesson-content { padding: 14px 12px 32px; }
+  .lesson-title, html.embedded .lesson-title { align-items: flex-start; flex-direction: column; gap: 4px; padding: 0 0 12px; }
+  .lesson-doc { margin-top: 14px; padding: 18px 16px; }
+  .lesson-content > article.lesson-doc:first-of-type { margin-top: 14px; }
+  .lesson-supplement-head, .lesson-core-head { padding: 16px; }
+  .lesson-toc { padding: 14px 16px; }
+}
