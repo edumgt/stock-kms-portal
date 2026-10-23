@@ -81,7 +81,8 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_APP_DIR: ${{ secrets.EC2_APP_DIR }}
         run: |
-          rsync -azc \
+          # The server contains some root-owned files; compare content without changing their metadata.
+          rsync -azc --no-times --no-perms --no-owner --no-group \
             --exclude '/.env*' \
             --exclude '/.git/' \
             --exclude '/.claude/' \
