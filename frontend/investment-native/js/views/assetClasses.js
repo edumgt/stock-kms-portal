@@ -70,6 +70,10 @@ function assetChartCard(asset) {
         <div class="home-market-chart" data-idx-chart="${asset.id}"></div>
         <div class="home-market-loading" data-idx-loading="${asset.id}"><i class="fa-solid fa-spinner fa-spin"></i> 데이터 불러오는 중…</div>
       </div>
+      <div class="home-market-foot">
+        <span>일봉 · MA20 · 거래량</span>
+        <span data-idx-source="${asset.id}"></span>
+      </div>
       <footer class="site-footer-unified">© 2026 (주)에듀엠지티 All rights reserved.</footer>
     </section>`;
 }

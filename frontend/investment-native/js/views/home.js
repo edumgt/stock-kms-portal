@@ -391,11 +391,6 @@ function chartModal() {
             <h3 id="home-chart-trend-title"><i class="fa-solid fa-chart-line"></i> 추세 해설 <small>기술적 참고 정보</small></h3>
             <div id="home-chart-modal-trend">데이터를 불러오는 중…</div>
           </section>
-          <section class="home-chart-learning home-chart-ai" aria-labelledby="home-chart-learning-title">
-            <header><h3 id="home-chart-learning-title"><i class="fa-solid fa-robot"></i> Qwen 차트 분석</h3><span id="home-chart-ai-model">Docker Ollama · Qwen</span></header>
-            <div id="home-chart-ai-message" role="status" aria-live="polite">차트 데이터를 기다리고 있습니다.</div>
-            <div class="home-chart-ai-actions"><small id="home-chart-ai-context"></small><button type="button" id="home-chart-ai-retry">분석 다시 요청</button></div>
-          </section>
           <div class="home-market-foot">
             <span id="home-chart-modal-foot-label"><i class="fa-solid fa-chart-line"></i> ${barsFootLabel('3mo', true)}</span>
             <span id="home-chart-modal-source"></span>
@@ -471,8 +466,6 @@ export function homeView(container) {
   let modalAbortController = null;
   let modalSearchAbortController = null;
   let modalSearchTimer = null;
-  let modalAnalysisController = null;
-  let modalAnalysisData = null;
 
   function destroyChart(id) {
     const chart = charts.get(id);
@@ -541,40 +534,6 @@ export function homeView(container) {
     }
   }
 
-  async function analyzeModalChart(payload) {
-    modalAnalysisController?.abort();
-    const controller = new AbortController();
-    modalAnalysisController = controller;
-    const message = container.querySelector('#home-chart-ai-message');
-    const context = container.querySelector('#home-chart-ai-context');
-    const button = container.querySelector('#home-chart-ai-retry');
-    message.textContent = 'Qwen이 현재 차트의 추세·보조지표·거래량을 분석하고 있습니다…';
-    context.textContent = `${payload.name} · ${payload.interval}봉 · ${payload.is_simulated ? '시뮬레이션' : '지연 시세'} · 마지막 봉 ${payload.ohlcv.at(-1).date}`;
-    button.disabled = true;
-    try {
-      let response;
-      for (let attempt = 0; attempt < 31; attempt++) {
-        if (controller.signal.aborted) return;
-        response = await fetch('/api/home/chart-analysis', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload), signal: controller.signal,
-        });
-        if (response.status !== 429 || attempt === 30) break;
-        message.textContent = 'Qwen 분석 대기 중입니다. 앞선 분석이 끝나면 자동으로 이어집니다…';
-        await new Promise(resolve => setTimeout(resolve, 5000));
-      }
-      const data = await response.json();
-      if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : '차트 분석 요청을 처리하지 못했습니다.');
-      if (controller.signal.aborted) return;
-      message.textContent = data.message;
-      container.querySelector('#home-chart-ai-model').textContent = `${data.provider} · ${data.model}`;
-    } catch (error) {
-      if (error.name !== 'AbortError') message.textContent = error.message;
-    } finally {
-      if (modalAnalysisController === controller) button.disabled = false;
-    }
-  }
-
   async function loadModalChart(market, period, interval) {
     const chartEl = container.querySelector('#home-chart-modal-chart');
     const macdEl = container.querySelector('#home-chart-modal-macd');
@@ -585,11 +544,6 @@ export function homeView(container) {
     const source = container.querySelector('#home-chart-modal-source');
     const footLabel = container.querySelector('#home-chart-modal-foot-label');
     const trend = container.querySelector('#home-chart-modal-trend');
-    modalAnalysisController?.abort();
-    modalAnalysisData = null;
-    container.querySelector('#home-chart-ai-message').textContent = '차트 데이터를 불러오는 중…';
-    container.querySelector('#home-chart-ai-context').textContent = '';
-    container.querySelector('#home-chart-ai-retry').disabled = true;
     loading.style.display = 'flex';
     loading.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 데이터 불러오는 중…';
     modalAbortController?.abort();
@@ -626,19 +580,15 @@ export function homeView(container) {
 
       modalRsiChart = new HomeFinancialChart(rsiEl, buildRsiConfig(series, period, '100%', interval));
       await modalRsiChart.render();
-      modalAnalysisData = { name: market.name, ticker: market.ticker, interval, is_simulated: Boolean(data.is_simulated), display_from: data.display_from || null, ohlcv };
-      analyzeModalChart(modalAnalysisData);
 
       loading.style.display = 'none';
     } catch (error) {
       if (error.name === 'AbortError') return;
       trend.textContent = '추세 해설을 계산할 수 없습니다.';
-      container.querySelector('#home-chart-ai-message').textContent = '차트 데이터가 없어 분석할 수 없습니다.';
       loading.innerHTML = `<span class="home-market-error">데이터 오류: ${describeChartError(error)}</span>`;
     }
   }
 
-  container.querySelector('#home-chart-ai-retry').addEventListener('click', () => { if (modalAnalysisData) analyzeModalChart(modalAnalysisData); });
   const modalEl = container.querySelector('#home-chart-modal');
   const modalPanel = modalEl.querySelector('.home-chart-modal');
   const modalSearchInput = container.querySelector('#home-chart-modal-search');
@@ -665,7 +615,6 @@ export function homeView(container) {
   function closeModal() {
     modalEl.hidden = true;
     modalAbortController?.abort();
-    modalAnalysisController?.abort();
     modalSearchAbortController?.abort();
     destroyModalCharts();
     modalTrigger?.focus();
@@ -802,7 +751,6 @@ export function homeView(container) {
 
   window._viewCleanup = () => {
     quoteAbortController?.abort();
-    modalAnalysisController?.abort();
     charts.forEach((chart) => {
       try { chart.destroy(); } catch {}
     });

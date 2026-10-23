@@ -35,6 +35,7 @@
     calendarCursor: null,
     activeLesson: null,
   };
+  let visualizationCleanup = null;
 
   const INTEGRATED_LESSONS = [
     ['01', ['10-1'], '법인과 회사 구조 1: 시작하기 전에'],
@@ -787,6 +788,10 @@ KOSDAQ|웹젠|게임`,
   function setView(view) {
     const legacyPractice = { 'investment-practice': ['learn-10', 'theory'], 'portfolio-simulation': ['learn-10', 'portfolio-simulation'], simulation: ['learn-11', 'simulation'], backtest: ['learn-06', 'backtest'], basis: ['learn-06', 'basis'] }[view];
     if (legacyPractice) { openIntegratedLesson(...legacyPractice); return; }
+    if (state.activeView === 'data-visualization') {
+      visualizationCleanup?.();
+      visualizationCleanup = null;
+    }
     stopTickDashboard();
     stopDashboardAssets();
     state.activeView = view;
@@ -1507,9 +1512,23 @@ KOSDAQ|웹젠|게임`,
       ['sector', 'fa-table-cells-large', '섹터 클라우드', '거래대금 · 등락률'],
       ['group', 'fa-sitemap', '그룹사 네트워크', '상장 계열사 연결'],
       ['tree', 'fa-code-branch', '투자 성향 트리', '의사결정 시각화'],
-      ['regime', 'fa-chart-diagram', '자산배분 국면', '위험선호도 모델'],
+      ['regime', 'fa-chart-pie', '자산배분 국면', '위험선호도 모델'],
     ];
-    $messages.innerHTML = `<article class="content-page investment-native-module-page data-visualization-page"><header class="compact-menu-head"><strong>데이터 시각화</strong><span>8000 분석 소스의 시장·거래량·섹터·네트워크 시각화 기능을 80 포트에서 직접 실행합니다.</span></header><nav class="data-viz-scroll" aria-label="데이터 시각화 메뉴">${visualizations.map(([id, icon, title, sub], index) => `<button type="button" data-viz="${id}" class="${index === 0 ? 'active' : ''}"><i class="fa-solid ${icon}"></i><b>${title}</b><small>${sub}</small></button>`).join('')}</nav><div id="investmentNativeVisualization" class="data-viz-mount"><div class="backtest-empty"><i class="fa-solid fa-spinner fa-spin"></i><p>시장 데이터를 시각화하고 있습니다.</p></div></div></article>`;
+    $messages.innerHTML = `
+      <article class="content-page investment-native-module-page data-visualization-page">
+        <header class="data-viz-hero">
+          <div>
+            <span class="data-viz-eyebrow"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i> 시장 데이터 탐색</span>
+            <div class="data-viz-title" role="heading" aria-level="1">데이터 시각화</div>
+            <p>시장 규모와 거래 흐름을 여러 관점에서 살펴보세요.</p>
+          </div>
+          <div class="data-viz-hero-count" aria-label="시각화 주제 ${visualizations.length}개"><strong>${String(visualizations.length).padStart(2, '0')}</strong><span>시각화 주제</span></div>
+        </header>
+        <div class="data-viz-menu-heading"><h2>주제 선택</h2><span>관심 있는 주제를 선택하면 아래에 표시됩니다.</span></div>
+        <nav class="data-viz-scroll" aria-label="데이터 시각화 메뉴">${visualizations.map(([id, icon, title, sub], index) => `<button type="button" data-viz="${id}" class="${index === 0 ? 'active' : ''}" aria-pressed="${index === 0}"><span class="data-viz-icon"><i class="fa-solid ${icon}" aria-hidden="true"></i></span><b>${title}</b><small>${sub}</small></button>`).join('')}</nav>
+        <p class="data-viz-scroll-hint"><i class="fa-solid fa-arrow-left-long" aria-hidden="true"></i> 메뉴를 좌우로 넘겨보세요 <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i></p>
+        <div id="investmentNativeVisualization" class="data-viz-mount"><div class="backtest-empty"><i class="fa-solid fa-spinner fa-spin"></i><p>시장 데이터를 시각화하고 있습니다.</p></div></div>
+      </article>`;
     const mount = document.getElementById('investmentNativeVisualization');
     const modules = {
       world: ['/static/investment-native/js/views/worldMarkets.js', 'worldMarketsView'],
@@ -1520,15 +1539,25 @@ KOSDAQ|웹젠|게임`,
       regime: ['/static/investment-native/js/views/portfolioRegime.js', 'portfolioRegimeView'],
     };
     let cleanup = null;
+    let requestId = 0;
     const show = (id) => {
+      const currentRequest = ++requestId;
       cleanup?.(); cleanup = null;
+      visualizationCleanup = null;
       mount.innerHTML = '<div class="backtest-empty"><i class="fa-solid fa-spinner fa-spin"></i><p>시각화 모듈을 준비하고 있습니다.</p></div>';
-      $messages.querySelectorAll('[data-viz]').forEach((button) => button.classList.toggle('active', button.dataset.viz === id));
+      $messages.querySelectorAll('[data-viz]').forEach((button) => {
+        const active = button.dataset.viz === id;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
       const [path, viewName] = modules[id];
       import(path).then((module) => {
-        if (state.activeView !== 'data-visualization') return;
-        cleanup = module[viewName](mount) || null;
-      }).catch(() => { if (mount) mount.innerHTML = '<div class="backtest-error">선택한 시각화 모듈을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>'; });
+        if (state.activeView !== 'data-visualization' || currentRequest !== requestId) return;
+        const previousCleanup = window._viewCleanup;
+        const returnedCleanup = module[viewName](mount);
+        cleanup = typeof returnedCleanup === 'function' ? returnedCleanup : window._viewCleanup !== previousCleanup ? window._viewCleanup : null;
+        visualizationCleanup = cleanup;
+      }).catch(() => { if (state.activeView === 'data-visualization' && currentRequest === requestId) mount.innerHTML = '<div class="backtest-error">선택한 시각화 모듈을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>'; });
     };
     $messages.querySelectorAll('[data-viz]').forEach((button) => button.addEventListener('click', () => show(button.dataset.viz)));
     show('world');

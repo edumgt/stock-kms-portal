@@ -2600,13 +2600,6 @@ body.modal-open { overflow: hidden; }
 html.embedded-dashboard,html.embedded-dashboard body { height:auto; min-height:100%; overflow:auto; background:#f5f5f5; }html.embedded-dashboard .topbar,html.embedded-dashboard .sidebar,html.embedded-dashboard .overlay,html.embedded-dashboard .floating-chatbot,html.embedded-dashboard .enterprise-modal-overlay { display:none!important; }html.embedded-dashboard .layout { height:auto; min-height:100vh; padding-top:0; overflow:visible; }html.embedded-dashboard .content-wrap { width:100%; height:auto; min-height:100vh; margin-left:0; overflow:visible; }html.embedded-dashboard .content-main { overflow:visible; padding:24px clamp(18px,3vw,46px) 42px; }html.embedded-dashboard .breadcrumb,html.embedded-dashboard .site-footer { display:none; }html.embedded-dashboard .home-dashboard { max-width:1420px; margin:0 auto; }html.embedded-dashboard .home-market-grid { gap:20px; }html.embedded-dashboard .home-quote-dashboard { margin-top:22px; padding:24px; }
 @media (max-width:760px) { .content-main,html.embedded-dashboard .content-main { padding:16px; }.topbar-ticker,.visitor-badge,.health-badge { display:none; }.home-market-grid { gap:12px; } }
 
-/* Live Docker Qwen chart commentary */
-#home-chart-ai-message { padding: 16px 18px; background: #f5f8ff; border: 1px solid #dce6f7; border-radius: 10px; color: #263b57; font-size: 14px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
-.home-chart-ai-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-.home-chart-ai-actions small { color: #6b7c96; }
-.home-chart-ai-actions button { border: 1px solid #c4d5f1; border-radius: 7px; background: white; color: #245bc4; padding: 7px 12px; cursor: pointer; }
-.home-chart-ai-actions button:disabled { opacity: .5; cursor: wait; }
-
 /* 공통 스타일(한글 스케일·최소 글자 크기·타이틀 고정·공통 푸터)은 https://www.edumgt.co.kr/css/common.css 정본에 있다. 여기에 다시 복제하지 말 것. */
 
 /* 6-11: Lex 확인 단계(네/아니오) 빠른 응답 */
