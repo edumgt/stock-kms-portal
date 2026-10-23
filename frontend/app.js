@@ -31,7 +31,6 @@
     activeView: 'home',
     activeTheoryDay: 1,
     activeScenario: 'equity',
-    lastRagLatencyMs: null,
     calendarCursor: null,
     activeLesson: null,
   };
@@ -3140,14 +3139,6 @@ effective_date: [기준일]
 
     $messages.innerHTML = `
       <div class="welcome-msg">
-        <div class="welcome-heading">
-          <span class="welcome-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-          <h2>금융·투자 RAG 질문</h2>
-        </div>
-        <p>4일 이론에서 읽은 내용을 바탕으로 궁금한 점을 자유롭게 질문하세요. 답변에 사용한 참고 문서도 함께 확인할 수 있습니다.</p>
-        <section class="rag-runtime" aria-label="현재 RAG 실행 상태"><span><b>연동 LLM</b><strong id="ragModel">확인 중…</strong></span><span><b>최근 답변 시간</b><strong id="ragLatency">${state.lastRagLatencyMs == null ? '아직 없음' : `${(state.lastRagLatencyMs / 1000).toFixed(1)}초`}</strong></span><span><b>현재 CPU 사용률</b><strong id="ragCpu">측정 중…</strong></span></section>
-        <section class="rag-source-guide" aria-label="AI Hub 데이터로 RAG 시작하기"><span>AI HUB · RAG 시작하기</span><p>금융·법률 데이터셋은 이용 조건·출처 표기·버전·개인정보 조건을 확인한 뒤, 허용된 원문만 등록합니다. 금융 FAQ는 질문·답변·기준일 단위로, 법률 자료는 법령명·조문·항·호·시행일이 이어지도록 정리하고 <code>source</code>·<code>dataset</code>·<code>version</code>·<code>license</code>·<code>topic</code>·<code>effective_date</code>를 남기세요. 답변에는 출처와 기준일을 표시하고, 개정될 수 있는 금융법률은 최신 공식 원문으로 다시 확인합니다.</p></section>
-
         <section class="rag-flow" aria-label="RAG 답변 과정"><div><i class="fa-solid fa-keyboard"></i><b>질문</b><span>궁금한 점을 입력</span></div><i class="fa-solid fa-arrow-right"></i><div><i class="fa-solid fa-file-lines"></i><b>문서 탐색</b><span>등록 자료에서 근거 찾기</span></div><i class="fa-solid fa-arrow-right"></i><div><i class="fa-solid fa-lightbulb"></i><b>답변</b><span>핵심 내용과 참고 문서</span></div></section>
 
         <div class="quick-examples" id="quickExamples">
@@ -3159,21 +3150,6 @@ effective_date: [기준일]
 
     $messages.querySelectorAll('.example-chip').forEach(chip => {
       chip.addEventListener('click', () => sendQuestion(chip.dataset.q));
-    });
-    refreshRagRuntime();
-  }
-
-  function refreshRagRuntime() {
-    fetchLocalBackendJson('/rag/status').then((data) => {
-      const model = document.getElementById('ragModel');
-      const cpu = document.getElementById('ragCpu');
-      if (model) model.textContent = `${data.provider} · ${data.model}`;
-      if (cpu) cpu.textContent = data.cpu_percent == null ? '측정 중…' : `${data.cpu_percent.toFixed(1)}%`;
-    }).catch(() => {
-      const cpu = document.getElementById('ragCpu');
-      if (cpu) cpu.textContent = '측정 불가';
-    }).finally(() => {
-      if (state.activeView === 'learn') setTimeout(refreshRagRuntime, 5000);
     });
   }
 
@@ -3196,7 +3172,6 @@ effective_date: [기준일]
     const typingId = appendTyping();
 
     state.loading = true;
-    const startedAt = performance.now();
     setInputDisabled(true);
     refreshRagRetry();
 
@@ -3221,7 +3196,6 @@ effective_date: [기준일]
       }
 
       removeTyping(typingId);
-      state.lastRagLatencyMs = Math.round(performance.now() - startedAt);
       appendMessage('bot', data.answer, data.references || [], true);
       updateRefPanel(data.references || []);
     } catch (err) {
