@@ -7,12 +7,12 @@
   width: 100%;
   max-width: none;
   min-height: calc(100dvh - 89px);
-  padding: 22px clamp(16px, 2.4vw, 40px) 54px;
+  padding: 22px clamp(20px, 3vw, 46px) 54px;
   background: #f4f7fb;
   color: #182c43;
 }
 .integrated-lesson-page .lesson-practice-head,
-.integrated-lesson-page #lessonLearningContent { width: min(100%, 1440px); margin-inline: auto; }
+.integrated-lesson-page #lessonLearningContent { width: 100%; margin-inline: 0; }
 .integrated-lesson-page .lesson-practice-head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

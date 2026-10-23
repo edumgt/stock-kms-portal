@@ -7,6 +7,7 @@
 .lesson-lnb p, .lesson-lnb a b { color: #1263a6; }
 .lesson-lnb a:hover, .lesson-lnb a[aria-current=page] { border-color: #1263a6; background: #e9f2fa; color: #0e2340; }
 .lesson-content, html.embedded .lesson-content { width: min(100%, 1240px); max-width: 1240px; margin: 0 auto; padding: 22px clamp(16px, 2.4vw, 32px) 56px; }
+html.embedded .lesson-content { width: 100%; max-width: none; margin: 0; }
 .lesson-title, html.embedded .lesson-title { min-height: 0; padding: 0 2px 14px; border-color: #dbe5ef; }
 .lesson-title b { color: #0e2340; font-size: 18px; }
 .lesson-title span { color: #607287; }
