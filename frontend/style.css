@@ -1609,10 +1609,15 @@ body.modal-open { overflow: hidden; }
 .simulation-live { display: inline-flex; align-items: center; gap: 6px; color: var(--success); font-size: 15.95px; font-weight: 750; }
 .simulation-live i { font-size: 15.95px; }
 .sim-scenario-lab { margin: 0 26px; padding: 20px 0 22px; border-top: 1px solid var(--border); }
+.sim-scenario-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 22px; align-items: start; }
+.sim-scenario-controls { display: grid; gap: 10px; align-content: start; padding: 18px; border: 1px solid var(--border); border-radius: 14px; background: linear-gradient(180deg, #fff, #f8fbff); }
+.sim-scenario-controls strong { color: var(--text); font-size: 18px; }
+.sim-scenario-controls > p { margin: 0; color: var(--text-muted); font-size: 15.95px; line-height: 1.55; }
+.sim-scenario-output { min-width: 0; }
 .scenario-lab-heading { display: flex; justify-content: space-between; gap: 20px; align-items: end; }
 .scenario-lab-heading h4 { font-size: 18px; }
 .scenario-lab-heading > p { color: var(--text-muted); font-size: 15.95px; }
-.scenario-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 15px 0 12px; }
+.scenario-actions { display: grid; gap: 8px; margin: 4px 0 0; }
 .sim-scenario { padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text-2); font: 700 14.5px var(--font); cursor: pointer; }
 .sim-scenario:hover, .sim-scenario.active { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
 .scenario-result { padding: 16px; border-radius: 10px; background: #fff7ed; color: var(--text-2); }
@@ -2002,6 +2007,7 @@ html,body { background:#f5f5f5; color:#111; }.app-layout { grid-template-columns
 @media (max-width: 900px) {
   .simulation-guide-head { align-items: flex-start; flex-direction: column; gap: 8px; }
   .simulation-guide-head .content-lead { max-width: none; text-align: left; }
+  .sim-scenario-layout { grid-template-columns: 1fr; }
   .magazine-hero, .magazine-lead-grid, .sector-lens, .daily-magazine-hero, .daily-magazine-story, .market-comparison, .daily-checklist { grid-template-columns: 1fr; }
   .company-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .atlas-header { grid-template-columns: 1fr; }.atlas-number-board { justify-self: start; width: 150px; height: 150px; }.atlas-number-board b { font-size: 58px; }.atlas-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2247,7 +2253,7 @@ html,body { background:#f5f5f5; color:#111; }.app-layout { grid-template-columns
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .simulation-workbench .simulation-panel { border-top: 0; }
 .simulation-workbench .sim-scenario-lab { max-width: 960px; margin: 0 auto; padding: 16px 0 22px; border-top: 0; }
-.simulation-workbench .scenario-actions { margin: 0 0 10px; }
+.simulation-workbench .scenario-actions { margin: 0; }
 .simulation-workbench .sim-scenario-lab > .section-copy { margin: 0 0 12px; color: var(--text-muted); font-size: 15.95px; line-height: 1.45; }
 
 /* RAG 화면의 데이터 이용·근거 안내 */

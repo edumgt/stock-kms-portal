@@ -3423,7 +3423,7 @@ effective_date: [기준일]
       </div>`;
     if (!window.ApexCharts) return;
     scenarioChart = new ApexCharts(document.getElementById('scenarioShockChart'), {
-      chart: { type: 'bar', height: 250, toolbar: { show: false }, animations: { enabled: true } },
+      chart: { type: 'bar', height: 210, toolbar: { show: false }, animations: { enabled: true } },
       series: [{ name: '교육용 가정 수익률', data: [scenario.stock * 100, scenario.bond * 100, scenario.alt * 100] }],
       colors: ['#2563eb', '#16a34a', '#f59e0b'],
       plotOptions: { bar: { horizontal: false, distributed: true, borderRadius: 5, columnWidth: '42%' } },
