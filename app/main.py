@@ -222,6 +222,10 @@ if os.path.isdir(_frontend_dir):
     if os.path.isdir(_investment_frontend_dir):
         app.mount("/investment-static", StaticFiles(directory=_investment_frontend_dir), name="investment-static")
 
+    @app.get("/favicon.ico", include_in_schema=False)
+    def serve_favicon():
+        return FileResponse(os.path.join(_frontend_dir, "favicon.ico"))
+
     @app.get("/", include_in_schema=False)
     def serve_index():
         # The client shell references versioned static assets, but the HTML itself
