@@ -1,6 +1,76 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>학습 08 | 투자 학습 포털</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"><link rel="stylesheet" href="lesson-page.css?v=7"><script>if(new URLSearchParams(location.search).get("embedded")==="1")document.documentElement.classList.add("embedded");</script><link rel="stylesheet" href="https://www.edumgt.co.kr/css/common.css?v=20261012-common-3" /><link rel="stylesheet" href="lesson-document.css?v=20261023-1" /><script defer src="/static/assets/compact-typography.js?v=20261022-92"></script>
 <link rel="icon" href="/favicon.ico?v=20261027-avatar">
-</head><body><div class="lesson-layout"><aside class="lesson-lnb"><div class="lesson-lnb-head"><b>EDUMGT Finance</b><span>투자 분석 · 금융 학습 · RAG 실습</span></div><nav><p>통합 학습 과정 · 10개</p><a href="01.html"><b>01</b>법인과 회사 구조 1</a><a href="02.html"><b>02</b>법인과 회사 구조 2</a><a href="03.html"><b>03</b>법인과 회사 구조 3</a><a href="04.html"><b>04</b>거시경제와 주식시장</a><a href="05.html"><b>05</b>주식 기초</a><a href="06.html"><b>06</b>주식 분석</a><a href="07.html"><b>07</b>가치와 재무</a><a href="08.html" aria-current="page"><b>08</b>거래 전략 · LEAN</a><a href="09.html"><b>09</b>펀드 · ETF · 채권</a><a href="10.html"><b>10</b>자산배분 · 퀀트</a></nav></aside><main class="lesson-main"><header class="lesson-gnb"><a class="lesson-brand" href="/?view=home">투자 학습 포털</a><nav><a href="/?view=home">대시보드</a><a href="/?view=minute-chart">시장정보</a><a href="/?view=chart-drawing">드로잉 차트</a><a href="/?view=data-visualization">데이터 시각화</a><a href="/?view=learn">RAG</a></nav></header><div class="lesson-content"><header class="lesson-title"><b>학습 08 · 거래 전략 · LEAN · 선물·옵션</b><span>규칙 검증과 파생상품 위험</span></header><article class="lesson-doc"><h2>전략 검증</h2><p>백테스트는 과거 데이터에서 규칙을 검토하는 절차입니다. 수수료·슬리피지·생존자 편향·과적합을 고려하지 않은 성과는 실제 운용 결과와 다를 수 있습니다.</p><h2>선물과 옵션</h2><p>선물은 미래 가격과 연결된 계약이고, 옵션은 정한 가격으로 사고팔 수 있는 권리입니다. 증거금·만기·변동성 때문에 현물보다 손익이 빠르게 확대될 수 있습니다.</p><p class="note">LEAN 결과는 교육용 검증 자료이며 미래 수익을 보장하지 않습니다.</p></article><section class="lesson-core" aria-labelledby="core-title"><header class="lesson-supplement-head lesson-core-head"><p class="lesson-kicker">학습 본문</p><h2 id="core-title">주식 4</h2></header><nav class="lesson-toc" aria-label="학습 본문 목차"><b>학습 본문 목차</b><ol><li><a href="#삼성전자-과거-데이터를-활용한-퀀트-분석-사례">삼성전자 과거 데이터를 활용한 퀀트 분석 사례</a></li><li><a href="#백데이터historical-data와-백테스팅backtesting은-퀀트-투자나-매매-전략을-개발할-때-과거-데이터를-기반으로-내-투자-아이디어가-실제로-수익을-냈을지-시뮬레이션하고-검증하는-핵심-프로세스입니다">백데이터(Historical Data)와 백테스팅(Backtesting)은 퀀트 투자나 매매 전략을 개발할 때 &quot;과거 데이터를 기반으로 내 투자 아이디어가 실제로 수익을 냈을지 시뮬레이션하고 검증하는 핵심 프로세스&quot;입니다.</a></li><li><a href="#1-백데이터-backdata-과거-데이터">1. 백데이터 (Backdata / 과거 데이터)</a></li><li><a href="#2-백테스팅-backtesting-과거-검증">2. 백테스팅 (Backtesting / 과거 검증)</a></li><li><a href="#3-백테스팅-시-빠지기-쉬운-3대-함정">3. 백테스팅 시 빠지기 쉬운 3대 함정</a></li><li><a href="#부록-docker-compose로-삼성전자-lean-백테스트-실행하기">부록: Docker Compose로 삼성전자 LEAN 백테스트 실행하기</a></li><li><a href="#httpshubdockercomrquantconnectlean">https://hub.docker.com/r/quantconnect/lean</a></li><li><a href="#1-lean의-핵심-프레임워크-구조">1. LEAN의 핵심 프레임워크 구조</a></li><li><a href="#2-lean-엔진의-주요-특징">2. LEAN 엔진의 주요 특징</a></li><li><a href="#3-lean-사용-시-장단점">3. LEAN 사용 시 장단점</a></li></ol></nav><article class="lesson-doc lesson-core-doc">
+</head><body><div class="lesson-layout"><aside class="lesson-lnb"><div class="lesson-lnb-head"><b>EDUMGT Finance</b><span>투자 분석 · 금융 학습 · RAG 실습</span></div><nav><p>통합 학습 과정 · 10개</p><a href="01.html"><b>01</b>법인과 회사 구조 1</a><a href="02.html"><b>02</b>법인과 회사 구조 2</a><a href="03.html"><b>03</b>법인과 회사 구조 3</a><a href="04.html"><b>04</b>거시경제와 주식시장</a><a href="05.html"><b>05</b>주식 기초</a><a href="06.html"><b>06</b>주식 분석</a><a href="07.html"><b>07</b>가치와 재무</a><a href="08.html" aria-current="page"><b>08</b>거래 전략 · LEAN</a><a href="09.html"><b>09</b>펀드 · ETF · 채권</a><a href="10.html"><b>10</b>자산배분 · 퀀트</a></nav></aside><main class="lesson-main"><header class="lesson-gnb"><a class="lesson-brand" href="/?view=home">투자 학습 포털</a><nav><a href="/?view=home">대시보드</a><a href="/?view=minute-chart">시장정보</a><a href="/?view=chart-drawing">드로잉 차트</a><a href="/?view=data-visualization">데이터 시각화</a><a href="/?view=learn">RAG</a></nav></header><div class="lesson-content"><header class="lesson-title"><b>학습 08 · 거래 전략 · LEAN · 선물·옵션</b><span>규칙 검증과 파생상품 위험</span></header><article class="lesson-doc"><h2>전략 검증</h2><p>백테스트는 과거 데이터에서 규칙을 검토하는 절차입니다. 수수료·슬리피지·생존자 편향·과적합을 고려하지 않은 성과는 실제 운용 결과와 다를 수 있습니다.</p><h2>선물과 옵션</h2><p>선물은 미래 가격과 연결된 계약이고, 옵션은 정한 가격으로 사고팔 수 있는 권리입니다. 증거금·만기·변동성 때문에 현물보다 손익이 빠르게 확대될 수 있습니다.</p><p class="note">LEAN 결과는 교육용 검증 자료이며 미래 수익을 보장하지 않습니다.</p></article><section class="lesson-core" aria-labelledby="core-title"><header class="lesson-supplement-head lesson-core-head"><p class="lesson-kicker">학습 본문</p><h2 id="core-title">주식 4</h2></header><nav class="lesson-toc" aria-label="학습 본문 목차"><b>학습 본문 목차</b><ol><li><a href="#시장-참여자와-프랍트레이딩">시장 참여자와 프랍트레이딩</a></li><li><a href="#삼성전자-과거-데이터를-활용한-퀀트-분석-사례">삼성전자 과거 데이터를 활용한 퀀트 분석 사례</a></li><li><a href="#백데이터historical-data와-백테스팅backtesting은-퀀트-투자나-매매-전략을-개발할-때-과거-데이터를-기반으로-내-투자-아이디어가-실제로-수익을-냈을지-시뮬레이션하고-검증하는-핵심-프로세스입니다">백데이터(Historical Data)와 백테스팅(Backtesting)은 퀀트 투자나 매매 전략을 개발할 때 &quot;과거 데이터를 기반으로 내 투자 아이디어가 실제로 수익을 냈을지 시뮬레이션하고 검증하는 핵심 프로세스&quot;입니다.</a></li><li><a href="#1-백데이터-backdata-과거-데이터">1. 백데이터 (Backdata / 과거 데이터)</a></li><li><a href="#2-백테스팅-backtesting-과거-검증">2. 백테스팅 (Backtesting / 과거 검증)</a></li><li><a href="#3-백테스팅-시-빠지기-쉬운-3대-함정">3. 백테스팅 시 빠지기 쉬운 3대 함정</a></li><li><a href="#부록-docker-compose로-삼성전자-lean-백테스트-실행하기">부록: Docker Compose로 삼성전자 LEAN 백테스트 실행하기</a></li><li><a href="#httpshubdockercomrquantconnectlean">https://hub.docker.com/r/quantconnect/lean</a></li><li><a href="#1-lean의-핵심-프레임워크-구조">1. LEAN의 핵심 프레임워크 구조</a></li><li><a href="#2-lean-엔진의-주요-특징">2. LEAN 엔진의 주요 특징</a></li><li><a href="#3-lean-사용-시-장단점">3. LEAN 사용 시 장단점</a></li></ol></nav><article class="lesson-doc lesson-core-doc">
+<h2 id="시장-참여자와-프랍트레이딩">시장 참여자와 프랍트레이딩</h2>
+<p><strong>프랍트레이더(Prop Trader)</strong>는 회사의 <strong>자기자본</strong>을 운용해 매매 손익을 내는 트레이더입니다. 고객이 맡긴 돈이 아니라 회사가 보유한 자금으로 거래한다는 점이 핵심입니다.</p>
+<table>
+<thead>
+<tr>
+<th>역할</th>
+<th>주된 대상 자금·업무</th>
+<th>프랍트레이더와의 차이</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>프랍트레이더</td>
+<td>회사 자기자본을 직접 매매하고, 전략·손실 한도·포지션을 관리</td>
+<td>매매 손익이 회사 성과에 직접 반영됩니다.</td>
+</tr>
+<tr>
+<td>PB(프라이빗뱅커)</td>
+<td>고객의 자산관리·상품 제안·상담</td>
+<td>고객 자산의 목표와 위험 성향을 바탕으로 관리합니다.</td>
+</tr>
+<tr>
+<td>IB(투자은행)</td>
+<td>기업의 자금조달, IPO, 채권 발행, 인수합병 자문</td>
+<td>기업 거래를 설계·주선하는 일이 중심입니다.</td>
+</tr>
+<tr>
+<td>RA(리서치 애널리스트)</td>
+<td>산업·기업 분석, 실적 전망, 보고서 작성</td>
+<td>직접 주문을 내기보다 분석 자료를 만드는 역할이 중심입니다.</td>
+</tr>
+</tbody>
+</table>
+<p>프랍트레이더의 업무는 차트를 보고 단기 매매하는 일에만 한정되지 않습니다. 시장·기업·거시지표를 분석하고, 데이터로 전략을 검증하며, 주문 집행과 위험을 관리합니다.</p>
+<table>
+<thead>
+<tr>
+<th>유형</th>
+<th>특징</th>
+<th>예시</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>디스크레셔너리 트레이더</td>
+<td>사람이 뉴스·차트·수급·시장 상황을 판단해 매매</td>
+<td>주식·선물·옵션의 방향성 또는 상대가치 매매</td>
+</tr>
+<tr>
+<td>퀀트 트레이더</td>
+<td>데이터·통계 모형과 규칙 기반으로 전략을 설계·검증</td>
+<td>알고리즘 매매, 포트폴리오 최적화, 백테스트</td>
+</tr>
+<tr>
+<td>HFT(초단타·고빈도) 트레이더</td>
+<td>매우 짧은 시간 단위의 호가·체결 데이터를 다루며 기술 인프라가 중요</td>
+<td>시장조성, 차익거래 등</td>
+</tr>
+</tbody>
+</table>
+<p>성과급 비중이 큰 직무일 수 있지만, 손실 한도·포지션 한도·리스크 승인 절차를 지켜야 합니다. 회사 자본으로 거래한다고 해서 손실 위험이 사라지는 것은 아니며, 손실이 누적되면 운용 한도가 줄거나 전략이 중단될 수 있습니다.</p>
+<h3 id="개인-대상-프랍펌-평가는-무엇을-확인해야-할까요">개인 대상 프랍펌 평가는 무엇을 확인해야 할까요?</h3>
+<p>해외 프랍펌 가운데는 개인에게 평가 프로그램을 제공하고, 정해진 수익 목표·최대손실·일일손실 규칙을 통과하면 거래 한도를 제공하거나 수익을 분배한다고 안내하는 곳도 있습니다. 다만 이를 전통적인 금융회사 고용이나 실제 회사 자금을 받는 것과 동일하게 보면 안 됩니다.</p>
+<ol>
+<li>실제 시장 주문인지, 모의 거래인지와 거래 상대방은 누구인지 확인합니다.</li>
+<li>평가비·데이터비·환불 조건 및 수익 배분·출금 조건을 확인합니다.</li>
+<li>최대손실·일일손실 규칙, 레버리지, 뉴스·야간 보유 제한을 확인합니다.</li>
+<li>국내 제공 서비스의 인가·등록 대상 여부와 분쟁 발생 시 적용 법률·관할을 확인합니다.</li>
+<li>고수익 광고보다 계약서, 회사 소재지, 고객 지원과 위험 고지를 먼저 확인합니다.</li>
+</ol>
 <h2 id="삼성전자-과거-데이터를-활용한-퀀트-분석-사례">삼성전자 과거 데이터를 활용한 퀀트 분석 사례</h2>
 <p>삼성전자 과거 데이터를 활용해 **“3일 연속 주가 하락 후 반등(상승)”**하는 패턴을 퀀트 시스템 관점에서 분석하는 실제 사례 예시를 소개합니다.</p>
 <h3 id="1-가상의-분석-아이디어-가설-수립">1. 가상의 분석 아이디어 (가설 수립)</h3>
