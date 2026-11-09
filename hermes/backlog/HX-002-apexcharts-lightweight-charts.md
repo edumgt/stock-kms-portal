@@ -2,7 +2,7 @@
 id: HX-002
 title: ApexCharts/Lightweight Charts 선택 미확인
 priority: P1
-status: proposed
+status: todo
 area: frontend
 stages: [dev, qa]
 acceptance:
