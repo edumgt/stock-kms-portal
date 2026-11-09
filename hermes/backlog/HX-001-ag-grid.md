@@ -2,7 +2,7 @@
 id: HX-001
 title: AG Grid 사용 미확인
 priority: P1
-status: proposed
+status: todo
 area: frontend
 stages: [dev, qa]
 acceptance:
